@@ -29,7 +29,7 @@
   --paper: #fbf6ea;
   --paper-2: #f3ebd8;
   --ink: #2b2620;
-  --ink-soft: #5b5345;
+  --ink-soft: #2b2620;   /* était gris #5b5345 — passé au noir : plus aucun texte gris (demande lisibilité) */
   --line: #cdbfa0;
   --line-strong: #8a7a5a;
   --red: #a01818;
@@ -69,9 +69,13 @@ body.force-upper .lk-val, body.force-upper .shape-val, body.force-upper .racial-
   text-transform: uppercase; letter-spacing: .3px;
 }
 /* GRAS sur TOUT le texte de la page (aide à la lecture) */
-body.force-bold, body.force-bold * { font-weight: 700 !important; }
-/* On laisse les chiffres des dés 3D tels quels (déjà très gras et stylés) */
-body.force-bold .cube-face, body.force-bold .poly-num { font-weight: 800 !important; }
+body.force-bold, body.force-bold * {
+  font-weight: 800 !important;
+  -webkit-text-stroke: 0.035em currentColor;   /* épaissit chaque glyphe même si la police n'a pas de 800 */
+  paint-order: stroke fill;                     /* garde les contours nets */
+}
+/* Chiffres des dés 3D et grands nombres : encore un cran au-dessus pour rester distincts. */
+body.force-bold .cube-face, body.force-bold .poly-num { font-weight: 900 !important; }
 /* Masque les fleches natives des champs nombre (on fournit nos propres +/-) */
 input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 input[type=number]::-webkit-outer-spin-button,
@@ -125,6 +129,9 @@ body.has-bg-image #sheet, body.has-bg-image #topbar { backdrop-filter: blur(1px)
 .tb-scale { width: 150px; accent-color: var(--gold); cursor: pointer; }
 .tb-bold { min-width: 34px; justify-content: center; font-weight: 800; }
 .tb-bold.active { background: var(--gold); color: #2b2620; border-color: var(--gold); }
+/* Fort contraste : icône agrandie (était à peine visible) + état actif doré comme « G ». */
+.tb-contrast { min-width: 42px; justify-content: center; font-size: 1.5rem; line-height: 1; padding: 1px 9px; }
+.tb-contrast.active { background: var(--gold); color: #2b2620; border-color: var(--gold); }
 
 /* Fenêtre de mot de passe (masqué) */
 .pw-modal { position: fixed; inset: 0; z-index: 250; display: flex; align-items: center;
@@ -188,7 +195,7 @@ body.has-bg-image #sheet, body.has-bg-image #topbar { backdrop-filter: blur(1px)
 .dm-card .card-head h2 { color: var(--red-deep); }
 .fatal { grid-column: span 12; padding: 30px; text-align: center; color: var(--red-deep);
   background: #fbeeee; border: 1px solid var(--red); border-radius: var(--radius); }
-.page-foot { text-align: center; color: #a99a7d; font-size: .72rem;
+.page-foot { text-align: center; color: var(--ink-soft); font-size: .72rem;
   padding: 10px; opacity: .7; }
 
 /* --- Champs génériques ----------------------------------------------------- */
@@ -196,7 +203,7 @@ body.has-bg-image #sheet, body.has-bg-image #topbar { backdrop-filter: blur(1px)
 .field-lbl, .sub-lbl { font-size: .82rem; text-transform: uppercase; letter-spacing: .5px;
   color: var(--ink-soft); font-weight: 600; }
 .sub-lbl { margin: 8px 0 4px; }
-.muted { color: var(--ink-soft); opacity: .8; }
+.muted { color: var(--ink-soft); opacity: 1; }
 /* --- Corrections d'interface ---------------------------------------------- */
 .lbl-maj { text-transform: uppercase !important; font-weight: 700 !important; }
 .skills-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
@@ -242,7 +249,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .mini-btn:hover { filter: brightness(1.08); }
 .mini-btn.applied { background: var(--green); color: #fff; }
 .combat-note { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line);
-  font-size: .9rem; line-height: 1.55; color: var(--ink-soft); }
+  font-size: 1rem; line-height: 1.55; color: var(--ink-soft); }
 .combat-note strong { color: var(--red-deep); }
 
 /* --- Champ verrouillable (cadenas) ---------------------------------------- */
@@ -332,12 +339,15 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .dice-close:hover { background: rgba(0,0,0,.65); }
 
 /* --- Caractéristiques (octogones + pentagone) ----------------------------- */
-.abilities { display: grid; grid-template-columns: repeat(6, minmax(78px, 120px));
+/* Colonnes auto-ajustées : chaque caractéristique garde >= 8em pour que son titre tienne
+   sur UNE ligne ; quand l'écran ne peut plus l'afficher, le bloc se ré-enroule sur moins
+   de colonnes — mais le titre lui-même ne se coupe JAMAIS (white-space: nowrap). */
+.abilities { display: grid; grid-template-columns: repeat(auto-fit, minmax(8em, 1fr));
   justify-content: space-evenly; gap: 18px; }
 .ability { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
 .ability-name { font-family: var(--font-display); font-weight: 800; font-size: .92rem;
   text-transform: uppercase; letter-spacing: .2px; color: var(--ink);
-  text-align: center; line-height: 1.05; word-break: break-word; max-width: 100%; }
+  text-align: center; line-height: 1.05; white-space: nowrap; }
 .octagon {
   width: 100%; max-width: 104px; aspect-ratio: 1; height: auto;
   display: flex; flex-direction: column;
@@ -367,11 +377,11 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 }
 
 /* --- Combat (formes iconiques) -------------------------------------------- */
-.combat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
+.combat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12em, 1fr)); gap: 14px;
   align-items: start; justify-items: center; }
 .stat-shape { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; }
 .stat-lbl { font-family: var(--font-display); font-weight: 800; font-size: 1.22rem;
-  text-transform: uppercase; letter-spacing: .5px; color: var(--ink); text-align: center; }
+  text-transform: uppercase; letter-spacing: .5px; color: var(--ink); text-align: center; white-space: nowrap; }
 .shape { display: flex; align-items: center; justify-content: center;
   background-repeat: no-repeat; background-position: center; background-size: contain; }
 .shape-val, .big-val { font-family: var(--font-num); font-weight: 700; font-size: 1.4rem; }
@@ -385,7 +395,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .shape.rounded { width: 96px; min-height: 72px; border: 2.5px solid var(--ink);
   border-radius: 14px; background: var(--paper); padding: 6px; }
 
-.hd-track { display: flex; align-items: center; gap: 4px; font-size: .72rem;
+.hd-track { display: flex; align-items: center; gap: 4px; font-size: 1rem;
   flex-wrap: wrap; justify-content: center; margin-top: 4px; }
 .hp-current { width: 64px; text-align: center; font-family: var(--font-num); font-size: 1.6rem;
   font-weight: 700; border: none; background: transparent; color: var(--ink); padding: 0; }
@@ -394,7 +404,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .hp-quick .step-btn { border: 1px solid var(--line); border-radius: 7px; width: 40px; }
 .hp-mini { display: flex; gap: 10px; justify-content: center; }
 .hp-mini-f { display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font-size: .6rem; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; }
+  font-size: 1rem; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; }
 .hp-mini-i { width: 54px; text-align: center; font-family: var(--font-num); padding: 5px;
   border: 1px solid var(--line); border-radius: 6px; background: var(--paper-2); }
 .armor-pick { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 200px; }
@@ -547,8 +557,8 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .card-tall { min-height: 300px; }
 
 /* --- Toggle méthode PV (au dé / par formule) ------------------------------ */
-.hp-method { display: inline-flex; align-items: center; gap: 5px; font-size: .62rem;
-  text-transform: uppercase; color: var(--ink-soft); font-weight: 700; cursor: pointer; margin-top: 3px; }
+.hp-method { display: inline-flex; align-items: center; gap: 5px; font-size: 1rem; flex-wrap: wrap;
+  justify-content: center; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; cursor: pointer; margin-top: 3px; }
 .hp-method input { width: 15px; height: 15px; accent-color: var(--red); cursor: pointer; }
 .hp-mini-i.auto { background: var(--paper); border-style: dashed; color: var(--ink-soft);
   display: inline-flex; align-items: center; justify-content: center; min-width: 54px; min-height: 30px; }
@@ -607,17 +617,21 @@ body.high-contrast .shape.hexagon, body.high-contrast .shape.shield, body.high-c
   .span-4 { grid-column: span 6; }
   .span-8 { grid-column: span 6; }
   .id-grid { grid-template-columns: repeat(2, 1fr); }
-  .combat-grid { grid-template-columns: repeat(3, 1fr); }
-  .abilities { grid-template-columns: repeat(6, minmax(56px, 92px)); gap: 10px; }
+  /* .abilities / .combat-grid : colonnes gérées par auto-fit (voir règle de base) */
+  .abilities { gap: 10px; }
 }
 @media (max-width: 620px) {
   #sheet { grid-template-columns: 1fr; gap: 12px; margin-top: 10px; }
   .span-3, .span-4, .span-6, .span-8, .span-12, .dm-card { grid-column: 1 / -1; }
-  .abilities { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .combat-grid { grid-template-columns: repeat(2, 1fr); }
   .skills-grid, .prof-grid, .id-grid, .lang-multi { grid-template-columns: 1fr; }
   .dice-tray { justify-content: center; }
   .tb-title { display: none; }
+  /* Barre du haut : reste une zone pleine largeur en haut, qui s'enroule proprement —
+     logo sur une ligne, actions centrées sur la/les ligne(s) suivante(s), sans débordement. */
+  #topbar { justify-content: center; row-gap: 8px; padding: 8px 10px; }
+  .tb-left { justify-content: center; }
+  .tb-right { width: 100%; justify-content: center; }
+  .tb-scale { width: 120px; }
 }
 
 </style>
@@ -3963,6 +3977,21 @@ function migrate(s) { OBSOLETE_KEYS.forEach(k => { if (k in s) delete s[k]; }); 
 function loadAuto() {
   try { const s = localStorage.getItem(LS_KEY); if (s) state = migrate(Object.assign(blankCharacter(), JSON.parse(s))); } catch (e) {}
 }
+// --- Préférences d'AFFICHAGE propres au NAVIGATEUR (indépendantes du personnage) ----
+// Taille du texte (A), gras (G), fort contraste et son sont mémorisés ici : ils
+// suivent l'utilisateur d'un personnage à l'autre (Nouveau / Charger ne les perdent pas).
+const UI_PREFS_KEY = "dnd-feuille-uiprefs";
+function loadUiPrefs() { try { return JSON.parse(localStorage.getItem(UI_PREFS_KEY)) || {}; } catch (e) { return {}; } }
+function setUiPref(key, val) {
+  try { const p = loadUiPrefs(); p[key] = val; localStorage.setItem(UI_PREFS_KEY, JSON.stringify(p)); } catch (e) {}
+}
+function applyUiPrefs() {
+  const p = loadUiPrefs();
+  if (p.uiScale != null) state.uiScale = p.uiScale;
+  if (p.uiBold  != null) state.uiBold  = p.uiBold;
+  if (p.highContrast != null) state.theme.highContrast = p.highContrast;
+  if (p.sounds != null) state.fx.sounds = p.sounds;
+}
 function downloadCharacter() {
   const name = (state.identity.charName || "personnage").replace(/[^\w\-]+/g,"_");
   const blob = new Blob([JSON.stringify(state, null, 2)], { type:"application/json" });
@@ -3972,14 +4001,14 @@ function downloadCharacter() {
 function uploadCharacter(file) {
   const r = new FileReader();
   r.onload = () => {
-    try { state = migrate(Object.assign(blankCharacter(), JSON.parse(r.result))); save(); render(); Audio.levelUp(); }
+    try { state = migrate(Object.assign(blankCharacter(), JSON.parse(r.result))); applyUiPrefs(); save(); applyDisplay(); buildTopbar(); render(); Audio.levelUp(); }
     catch (e) { alert("Fichier illisible."); }
   };
   r.readAsText(file);
 }
 function newCharacter() {
   if (!confirm("Nouveau personnage ? (la sauvegarde auto sera remplacée)")) return;
-  state = blankCharacter(); save(); render();
+  state = blankCharacter(); applyUiPrefs(); save(); applyDisplay(); buildTopbar(); render();
 }
 
 // =============================================================================
@@ -4011,24 +4040,23 @@ function buildTopbar() {
   const slider = el("input", { type:"range", min:"1.0", max:"1.4", step:"0.05", class:"tb-scale",
     value: String(Math.max(1.0, Math.min(1.4, curScale))), title:"Agrandir / réduire tout le texte de la page" });
   slider.addEventListener("input", () => { state.uiScale = Number(slider.value); applyDisplay(); });
-  slider.addEventListener("change", () => save());
+  slider.addEventListener("change", () => { save(); setUiPref("uiScale", state.uiScale); });
   right.append(el("div", { class:"tb-a11y", title:"Lisibilité" }, [
     el("span", { class:"tb-a11y-lbl", text:"A" }),
     slider,
     el("button", { class:"tb-btn tb-bold"+(curBold?" active":""), text:"G", title:"Tout en gras (aide à la lecture)",
       onclick:(e)=>{ const cur = state.uiBold!=null ? state.uiBold : CFG.display.bold; state.uiBold = !cur;
-        e.currentTarget.classList.toggle("active", state.uiBold); applyDisplay(); save(); } })
+        e.currentTarget.classList.toggle("active", state.uiBold); applyDisplay(); save(); setUiPref("uiBold", state.uiBold); } }),
+    // Fort contraste : dans le groupe Lisibilité, juste après « G ».
+    el("button", { class:"tb-btn tb-contrast"+(state.theme.highContrast?" active":""), title:"Fort contraste", text:"◐",
+      onclick:(e)=>{ state.theme.highContrast=!state.theme.highContrast;
+        e.currentTarget.classList.toggle("active", state.theme.highContrast);
+        save(); applyTheme(); setUiPref("highContrast", state.theme.highContrast); } })
   ]));
-
-  // Contraste : aide à la lisibilité, toujours disponible (même pour les joueurs)
-  right.append(
-    el("button", { class:"tb-btn", title:"Fort contraste", text:"◐",
-      onclick:()=>{ state.theme.highContrast=!state.theme.highContrast; save(); applyTheme(); } })
-  );
   // Son : toujours visible — chaque joueur active/coupe les sons (actifs par défaut).
   right.append(
     el("button", { id:"sound-toggle", class:"tb-btn", title:"Activer / couper les sons", text: state.fx.sounds ? "🔊" : "🔇",
-      onclick:()=>{ state.fx.sounds=!state.fx.sounds; if(state.fx.sounds)Audio.click(); save(); updateTopbar(); } })
+      onclick:()=>{ state.fx.sounds=!state.fx.sounds; if(state.fx.sounds)Audio.click(); save(); updateTopbar(); setUiPref("sounds", state.fx.sounds); } })
   );
   // Couleur + image de fond : réservés au Mode MJ débloqué
   // (ou à tous si allowThemeChange = true). Les effets persistent après fermeture du Mode MJ.
@@ -4118,6 +4146,7 @@ function init() {
     "<div class='fatal'>Données SRD non chargées. Vérifiez que data/srd-2014.js est présent.</div>"; return; }
   applyProfile();
   loadAuto();
+  applyUiPrefs();
   applyDisplay();
   buildTopbar();
   render();
