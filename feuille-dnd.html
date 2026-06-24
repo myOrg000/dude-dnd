@@ -88,6 +88,9 @@ body.has-bg-image #sheet, body.has-bg-image #topbar { backdrop-filter: blur(1px)
   color: #f2e9d5; box-shadow: var(--shadow);
 }
 .tb-left { display: flex; align-items: center; gap: 10px; }
+.tb-home { text-decoration: none; color: inherit; font-size: 1.15rem; line-height: 1;
+  padding: 3px 6px; border-radius: 6px; }
+.tb-home:hover { background: rgba(0,0,0,.12); }
 .tb-logo {
   font-family: var(--font-display); font-weight: 800; letter-spacing: .5px;
   color: #fff; background: var(--red); padding: 2px 9px; border-radius: 6px;
@@ -3993,6 +3996,13 @@ function buildTopbar() {
           onchange:(e)=>{ state.tableName = e.target.value; save(); } })
       : el("span", { id:"title-table", class:"tb-title", text: state.tableName || CFG.tableName })
   ]);
+  // Lien d'accueil du site : visible seulement quand la page est SERVIE en ligne
+  // (GitHub Pages : feuille-dnd.html → index.html = page d'accueil). Caché en local
+  // (file://) et quand la page EST déjà l'index, pour éviter un lien cassé ou en boucle.
+  const homeSeg = location.pathname.split("/").pop();
+  if (location.protocol !== "file:" && homeSeg && homeSeg !== "index.html") {
+    left.insertBefore(el("a", { class:"tb-home", href:"index.html", title:"Accueil du site (les deux outils)", text:"🏠" }), left.firstChild);
+  }
   const right = el("div", { class:"tb-right" });
 
   // --- Accessibilité (toujours visible) : taille du texte + tout en gras ---
@@ -4036,8 +4046,8 @@ function buildTopbar() {
       onclick: saveSheetDefaults }));
 
   right.append(
-    el("button", { class:"tb-btn", text:"💾 Sauver", onclick:downloadCharacter }),
     loadBtn(),
+    el("button", { class:"tb-btn", text:"💾 Sauver", onclick:downloadCharacter }),
     el("button", { class:"tb-btn", text:"✚ Nouveau", onclick:newCharacter }),
     el("button", { id:"dm-toggle", class:"tb-btn dm", text:"🔒 Mode MJ", onclick:toggleDM })
   );

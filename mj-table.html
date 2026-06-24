@@ -17,6 +17,9 @@
   .bar { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:4px 86px 4px 12px;
     background: var(--panel); border-bottom:1px solid var(--line); }
   .bar h1 { font-size:.96rem; margin:0 6px 0 0; font-weight:700; white-space:nowrap; }
+  #homeLink { text-decoration:none; font-size:1.2rem; line-height:1; padding:2px 6px;
+    border-radius:6px; color:inherit; }
+  #homeLink:hover { background:#433b33; }
   .badge { font-size:.78rem; color:#a59c8a; font-weight:700; }
   button, label.tool { background:#36302a; color:var(--ink); border:1px solid var(--line);
     border-radius:7px; padding:4px 9px; cursor:pointer; font:inherit; font-weight:600; white-space:nowrap; }
@@ -39,12 +42,22 @@
   .hidden { display:none !important; }
   #stage { display:flex; justify-content:center; padding:14px; }
   #wrap { position:relative; max-width:100%; box-shadow:0 6px 30px rgba(0,0,0,.5); border-radius:6px; line-height:0; }
-  canvas#mj { display:block; max-width:100%; height:auto; background:#0e0c0a; border-radius:6px; }
+  /* touch-action:none => le doigt DESSINE au lieu de scroller/zoomer la page (tablette/mobile). */
+  canvas#mj { display:block; max-width:100%; height:auto; background:#0e0c0a; border-radius:6px; touch-action:none; }
   #ghost { position:absolute; pointer-events:none; border:2px solid rgba(255,255,255,.85);
     background:rgba(255,255,255,.14); transform:translate(-50%,-50%); display:none; box-shadow:0 0 0 1px rgba(0,0,0,.5) inset; }
   .empty { color:#6f675b; padding:54px 16px; text-align:center; }
   .hint { color:#a59c8a; font-size:.84rem; padding:0 16px 16px; text-align:center; line-height:1.55; }
   kbd { background:#36302a; border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:.8em; }
+  /* Tablette / mobile : les barres s'enroulent déjà (flex-wrap) ; on assouplit les
+     champs à largeur fixe pour qu'ils ne débordent pas des petits écrans. */
+  @media (max-width: 640px) {
+    .bar { padding:4px 78px 4px 8px; gap:5px; }
+    #diffuse { width:64px; font-size:.95rem; }
+    input[type=range] { width:92px; }
+    #txtField { width:160px; }
+    .bar h1 { font-size:.9rem; }
+  }
   /* === Verrou de démarrage MJ === */
   #lock-overlay { position:fixed; inset:0; z-index:9999; background:#1a1410;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.1rem; }
@@ -56,6 +69,8 @@
   #lock-btn { background:var(--green); color:#fff; border:1px solid #3c6147; border-radius:8px;
     padding:9px 28px; font-size:1rem; font-weight:700; cursor:pointer; font-family:inherit; }
   #lock-btn:hover { background:#3c6147; }
+  .lock-remember { color:#a08060; font-size:.86rem; display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none; }
+  .lock-remember input { cursor:pointer; }
   #lock-error { color:#a04040; font-size:.88rem; min-height:1.1em; }
   @keyframes shake { 0%,100%{transform:translateX(0);} 20%,60%{transform:translateX(-8px);} 40%,80%{transform:translateX(8px);} }
   .lock-shake { animation:shake .38s ease; }
@@ -69,6 +84,7 @@
   <h2>Table du MJ</h2>
   <p class="lock-sub">Accès réservé au Maître de Jeu</p>
   <input id="lock-input" type="password" placeholder="Code secret…" autocomplete="off" spellcheck="false">
+  <label class="lock-remember"><input id="lock-remember" type="checkbox"> Se souvenir sur cet appareil</label>
   <button id="lock-btn" onclick="mjUnlock()">Déverrouiller ⚔️</button>
   <div id="lock-error"></div>
 </div>
@@ -77,13 +93,14 @@
 <button id="diffuse" class="primary" title="Diffuser la vue active sur l'écran joueur. 1er clic : ouvre la fenêtre TV (F11 = plein écran) ; clics suivants : mise à jour. Clignote en rouge quand des changements ne sont pas encore poussés.">🖥️ TV</button>
 <!-- Barre 1 : fichier + vues + historique + vider -->
 <div class="bar">
+  <a id="homeLink" class="hidden" href="index.html" title="Accueil du site (les deux outils)">🏠</a>
   <h1>🏰 Table du MJ</h1>
   <div class="grp">
     <span class="badge" title="Sauver ou charger toute la table — les 4 vues, avec cartes, brouillards, dessins, jetons et textes — dans un seul fichier .json.">Fichier</span>
     <button id="loadTable" title="Charger une table .json.">📂 Charger</button>
     <button id="save" title="Sauver TOUTES les vues dans un seul .json (cartes + brouillards + dessins + jetons + textes).">💾 Sauver</button>
   </div>
-  <div class="grp" title="Quatre vues indépendantes. Tu prépares chacune ; 📤 MAJ pousse la vue ACTIVE sur la TV.">
+  <div class="grp" title="Quatre vues indépendantes. Tu prépares chacune ; le bouton 🖥️ TV (coin haut-droit) pousse la vue ACTIVE sur l'écran joueur.">
     <span class="badge">Vues</span>
     <button id="tab0" class="tab active">P1</button>
     <button id="tab1" class="tab">P2</button>
@@ -165,7 +182,7 @@
 <div id="stage"><div id="wrap"><canvas id="mj"></canvas><div id="ghost"></div></div></div>
 <div id="emptyMsg" class="empty">Vue P1 — charge une carte pour cette vue.</div>
 <div class="hint">
-  Quatre vues <b>P1–P4</b> indépendantes. Prépare-les, puis <b>📤 MAJ écran joueur</b> pousse la vue active sur la TV.<br>
+  Quatre vues <b>P1–P4</b> indépendantes. Prépare-les, puis le bouton <b>🖥️ TV</b> (coin haut-droit) pousse la vue active sur l'écran joueur.<br>
   Le <b>fantôme</b> sous le curseur montre forme et taille. Tout se sauve dans un seul fichier <kbd>.json</kbd>.
 </div>
 
@@ -191,6 +208,14 @@ function dmHash(str) {
 window.dmHash = dmHash; // accessible en console pour générer votre hash
 
 var MJ_PIN_HASH = "1afe84456937d1"; // ← remplacez par dmHash("votre-code")
+var MJ_LOCK_KEY = "mj-table-unlocked"; // mémorise le déverrouillage sur CET appareil
+
+function mjReveal() {
+  var ov = document.getElementById('lock-overlay');
+  ov.style.transition = 'opacity .28s';
+  ov.style.opacity = '0';
+  setTimeout(function() { ov.style.display = 'none'; }, 300);
+}
 
 function mjUnlock() {
   var input = document.getElementById('lock-input');
@@ -198,10 +223,12 @@ function mjUnlock() {
   var code  = input.value;
   if (!code) { input.focus(); return; }
   if (!MJ_PIN_HASH || dmHash(code) === MJ_PIN_HASH) {
-    var ov = document.getElementById('lock-overlay');
-    ov.style.transition = 'opacity .28s';
-    ov.style.opacity = '0';
-    setTimeout(function() { ov.style.display = 'none'; }, 300);
+    // « Se souvenir » : on stocke le HASH (déjà présent dans le code source),
+    // jamais le code en clair. Le déverrouillage ne tient que sur cet appareil/navigateur.
+    try {
+      if (document.getElementById('lock-remember').checked) localStorage.setItem(MJ_LOCK_KEY, MJ_PIN_HASH);
+    } catch (e) {}
+    mjReveal();
   } else {
     err.textContent = 'Code incorrect.';
     input.value = '';
@@ -211,8 +238,18 @@ function mjUnlock() {
 }
 
 (function() {
-  var inp = document.getElementById('lock-input');
+  // Lien d'accueil : visible seulement si la page est SERVIE en ligne (pas en local/offline).
+  var seg = location.pathname.split('/').pop();
+  if (location.protocol !== 'file:' && seg && seg !== 'index.html') {
+    var h = document.getElementById('homeLink'); if (h) h.classList.remove('hidden');
+  }
+  // Pas de code défini => table ouverte (mode dev).
   if (!MJ_PIN_HASH) { document.getElementById('lock-overlay').style.display = 'none'; return; }
+  // Déjà déverrouillé sur cet appareil ? (case « Se souvenir » cochée auparavant)
+  var remembered = false;
+  try { remembered = localStorage.getItem(MJ_LOCK_KEY) === MJ_PIN_HASH; } catch (e) {}
+  if (remembered) { document.getElementById('lock-overlay').style.display = 'none'; return; }
+  var inp = document.getElementById('lock-input');
   inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') mjUnlock(); });
   setTimeout(function() { inp.focus(); }, 60);
 })();
