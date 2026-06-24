@@ -45,9 +45,33 @@
   .empty { color:#6f675b; padding:54px 16px; text-align:center; }
   .hint { color:#a59c8a; font-size:.84rem; padding:0 16px 16px; text-align:center; line-height:1.55; }
   kbd { background:#36302a; border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:.8em; }
+  /* === Verrou de démarrage MJ === */
+  #lock-overlay { position:fixed; inset:0; z-index:9999; background:#1a1410;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.1rem; }
+  #lock-overlay h2 { font-size:1.8rem; color:#f0d090; letter-spacing:.05em; margin:0; }
+  #lock-overlay .lock-sub { color:#7a6a50; font-size:.92rem; margin:0; }
+  #lock-input { background:#2a1f14; color:#f0e8d8; border:1px solid #5a3e28; border-radius:8px;
+    padding:10px 16px; font-size:1.1rem; font-family:inherit; text-align:center; width:220px; outline:none; }
+  #lock-input:focus { border-color:#b8902f; }
+  #lock-btn { background:var(--green); color:#fff; border:1px solid #3c6147; border-radius:8px;
+    padding:9px 28px; font-size:1rem; font-weight:700; cursor:pointer; font-family:inherit; }
+  #lock-btn:hover { background:#3c6147; }
+  #lock-error { color:#a04040; font-size:.88rem; min-height:1.1em; }
+  @keyframes shake { 0%,100%{transform:translateX(0);} 20%,60%{transform:translateX(-8px);} 40%,80%{transform:translateX(8px);} }
+  .lock-shake { animation:shake .38s ease; }
 </style>
 </head>
 <body>
+
+<!-- Verrou de démarrage — masque toute l'app jusqu'à la saisie du code MJ -->
+<div id="lock-overlay">
+  <div style="font-size:3rem">🏰</div>
+  <h2>Table du MJ</h2>
+  <p class="lock-sub">Accès réservé au Maître de Jeu</p>
+  <input id="lock-input" type="password" placeholder="Code secret…" autocomplete="off" spellcheck="false">
+  <button id="lock-btn" onclick="mjUnlock()">Déverrouiller ⚔️</button>
+  <div id="lock-error"></div>
+</div>
 
 <div class="bars">
 <button id="diffuse" class="primary" title="Diffuser la vue active sur l'écran joueur. 1er clic : ouvre la fenêtre TV (F11 = plein écran) ; clics suivants : mise à jour. Clignote en rouge quand des changements ne sont pas encore poussés.">🖥️ TV</button>
@@ -146,6 +170,54 @@
 </div>
 
 <script>
+// === VERROU MJ ================================================================
+// Même algorithme que la feuille de personnage (data/rules.js → dmPinHash).
+// Pour changer le code : ouvrez la console (F12), tapez  dmHash("votre-code")
+// puis collez le résultat dans MJ_PIN_HASH ci-dessous.
+// Si MJ_PIN_HASH est vide (""), la table s'ouvre sans code (mode dev).
+function dmHash(str) {
+  str = (str == null ? '' : str).toString();
+  var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (var i = 0; i < str.length; i++) {
+    var ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  var n = 4294967296 * (2097151 & h2) + (h1 >>> 0);
+  return n.toString(16).padStart(14, '0');
+}
+window.dmHash = dmHash; // accessible en console pour générer votre hash
+
+var MJ_PIN_HASH = "1afe84456937d1"; // ← remplacez par dmHash("votre-code")
+
+function mjUnlock() {
+  var input = document.getElementById('lock-input');
+  var err   = document.getElementById('lock-error');
+  var code  = input.value;
+  if (!code) { input.focus(); return; }
+  if (!MJ_PIN_HASH || dmHash(code) === MJ_PIN_HASH) {
+    var ov = document.getElementById('lock-overlay');
+    ov.style.transition = 'opacity .28s';
+    ov.style.opacity = '0';
+    setTimeout(function() { ov.style.display = 'none'; }, 300);
+  } else {
+    err.textContent = 'Code incorrect.';
+    input.value = '';
+    input.classList.add('lock-shake');
+    setTimeout(function() { input.classList.remove('lock-shake'); input.focus(); }, 420);
+  }
+}
+
+(function() {
+  var inp = document.getElementById('lock-input');
+  if (!MJ_PIN_HASH) { document.getElementById('lock-overlay').style.display = 'none'; return; }
+  inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') mjUnlock(); });
+  setTimeout(function() { inp.focus(); }, 60);
+})();
+// =============================================================================
+
 (function () {
   var cv = document.getElementById('mj'), ctx = cv.getContext('2d'), ghost = document.getElementById('ghost');
   // willReadFrequently => canvas en MÉMOIRE CPU. Indispensable : sur certains pilotes
