@@ -8,13 +8,23 @@
 <style>
   :root { --bg:#1d1a17; --panel:#2a2622; --ink:#f0e8d8; --line:#4a443c; --gold:#b8902f; --green:#4d7c5a; --red:#a04040; --blue:#4a6a8a; }
   * { box-sizing: border-box; }
-  body { margin:0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--ink); }
-  .bars { position:sticky; top:0; z-index:5; }
-  /* Bouton TV : ancré dans le coin haut-droit, sur TOUTE la hauteur de la barre d'outils. */
-  #diffuse { position:absolute; top:0; bottom:0; right:0; width:74px; z-index:1;
-    display:flex; align-items:center; justify-content:center; gap:4px;
-    border-radius:0; border-width:0 0 0 1px; font-size:1.05rem; font-weight:700; }
-  .bar { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:4px 86px 4px 12px;
+  html, body { height:100%; }
+  body { margin:0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--ink);
+    display:flex; flex-direction:column; height:100dvh; overflow:hidden; }
+  .bars { position:relative; z-index:5; flex:none; }
+  /* Bouton TV : pastille flottante (verre dépoli) ancrée en haut à droite, AU-DESSUS des
+     barres ; les groupes défilent dessous. Désactivée (grise) tant qu'aucune carte. */
+  #diffuse { position:absolute; top:6px; right:8px; width:52px; height:52px; z-index:7;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+    border-radius:12px; font-size:.72rem; font-weight:700; line-height:1; padding:0;
+    box-shadow:0 3px 10px rgba(0,0,0,.45); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+  #diffuse.primary { background:rgba(77,124,90,.82); }
+  #diffuse.dirty { background:var(--red); }                      /* changements non poussés (pulse) */
+  #diffuse.primary:disabled { background:rgba(54,48,42,.82); }   /* grisé : aucune carte */
+  /* Barres : les groupes s'enroulent sur plusieurs lignes (2 lignes de base pour les groupes
+     principaux ; la barre d'options ajoute ses lignes en dessous). En app-shell, la carte
+     occupe simplement la hauteur restante — l'enroulement ne « vole » plus la carte. */
+  .bar { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:5px 60px 5px 10px;
     background: var(--panel); border-bottom:1px solid var(--line); }
   .bar h1 { font-size:.96rem; margin:0 6px 0 0; font-weight:700; white-space:nowrap; }
   #homeLink { text-decoration:none; font-size:1.2rem; line-height:1; padding:2px 6px;
@@ -40,21 +50,28 @@
   input[type=text]{ background:#221e1a; color:var(--ink); border:1px solid var(--line); border-radius:7px; padding:7px 9px; font:inherit; width:150px; }
   #txtField{ width:300px; }
   .hidden { display:none !important; }
-  #stage { display:flex; justify-content:center; padding:14px; }
-  #wrap { position:relative; max-width:100%; box-shadow:0 6px 30px rgba(0,0,0,.5); border-radius:6px; line-height:0; }
-  /* touch-action:none => le doigt DESSINE au lieu de scroller/zoomer la page (tablette/mobile). */
-  canvas#mj { display:block; max-width:100%; height:auto; background:#0e0c0a; border-radius:6px; touch-action:none; }
+  /* Scène = zone d'affichage qui remplit tout l'espace restant (app-shell). */
+  #stage { flex:1; min-height:0; position:relative; overflow:hidden; }
+  /* touch-action:none => le doigt DESSINE / 2 doigts pan+zoom (pas de scroll de page). */
+  #wrap { position:absolute; inset:0; overflow:hidden; background:#0e0c0a; line-height:0; touch-action:none; }
+  /* Carte : 1:1 dans le backing store, mise à l'échelle + déplacée par transform (pan/zoom). */
+  canvas#mj { position:absolute; top:0; left:0; transform-origin:0 0; background:#0e0c0a; touch-action:none; will-change:transform; }
   #ghost { position:absolute; pointer-events:none; border:2px solid rgba(255,255,255,.85);
-    background:rgba(255,255,255,.14); transform:translate(-50%,-50%); display:none; box-shadow:0 0 0 1px rgba(0,0,0,.5) inset; }
-  .empty { color:#6f675b; padding:54px 16px; text-align:center; }
-  .hint { color:#a59c8a; font-size:.84rem; padding:0 16px 16px; text-align:center; line-height:1.55; }
+    background:rgba(255,255,255,.14); transform:translate(-50%,-50%); display:none; box-shadow:0 0 0 1px rgba(0,0,0,.5) inset; z-index:2; }
+  #emptyWrap { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
+  /* Contrôle de zoom (coin bas-droit de la carte). */
+  #zoomctl { position:absolute; right:10px; bottom:10px; display:flex; flex-direction:column; gap:6px; z-index:3; }
+  #zoomctl button { width:40px; height:40px; font-size:1.2rem; line-height:1; padding:0; border-radius:9px;
+    background:rgba(42,38,34,.86); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); box-shadow:0 2px 8px rgba(0,0,0,.4); }
+  .empty { color:#6f675b; padding:18px 16px; text-align:center; }
+  .hint { color:#a59c8a; font-size:.84rem; padding:0 20px; text-align:center; line-height:1.55; max-width:680px; }
   kbd { background:#36302a; border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:.8em; }
   /* Tablette / mobile : les barres s'enroulent déjà (flex-wrap) ; on assouplit les
      champs à largeur fixe pour qu'ils ne débordent pas des petits écrans. */
   @media (max-width: 640px) {
-    .bar { padding:4px 78px 4px 8px; gap:5px; }
-    #diffuse { width:64px; font-size:.95rem; }
-    input[type=range] { width:92px; }
+    .bar { padding:5px 54px 5px 8px; gap:5px; }
+    #diffuse { width:46px; height:46px; top:5px; right:6px; font-size:.62rem; }
+    input[type=range] { width:104px; }
     #txtField { width:160px; }
     .bar h1 { font-size:.9rem; }
   }
@@ -74,6 +91,22 @@
   #lock-error { color:#a04040; font-size:.88rem; min-height:1.1em; }
   @keyframes shake { 0%,100%{transform:translateX(0);} 20%,60%{transform:translateX(-8px);} 40%,80%{transform:translateX(8px);} }
   .lock-shake { animation:shake .38s ease; }
+  /* === Dialogues maison (confirm/alert dessinés à l'écran : fiables même avec un bloqueur,
+        contrairement aux pop-ups natives confirm()/alert() parfois supprimées). === */
+  .mj-modal { position:fixed; inset:0; z-index:9998; background:rgba(10,8,6,.62);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+    -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); }
+  .mj-box { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px 24px;
+    max-width:420px; width:100%; box-shadow:0 14px 44px rgba(0,0,0,.55); }
+  .mj-msg { color:var(--ink); font-size:1rem; line-height:1.5; white-space:pre-line; margin-bottom:18px; }
+  .mj-actions { display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+  .mj-btn { padding:9px 18px; font-size:.95rem; font-weight:700; border-radius:9px;
+    background:#36302a; color:var(--ink); border:1px solid var(--line); cursor:pointer; }
+  .mj-btn:hover { background:#433b33; }
+  .mj-btn.primary { background:var(--green); border-color:#3c6147; color:#fff; }
+  .mj-btn.primary:hover { background:#5a906c; }
+  .mj-btn.danger { background:var(--red); border-color:#7d2a2a; color:#fff; }
+  .mj-btn.danger:hover { background:#b34a4a; }
 </style>
 </head>
 <body>
@@ -90,7 +123,7 @@
 </div>
 
 <div class="bars">
-<button id="diffuse" class="primary" title="Diffuser la vue active sur l'écran joueur. 1er clic : ouvre la fenêtre TV (F11 = plein écran) ; clics suivants : mise à jour. Clignote en rouge quand des changements ne sont pas encore poussés.">🖥️ TV</button>
+<button id="diffuse" class="primary" title="Diffuser la vue active sur l'écran joueur. 1er clic : ouvre la fenêtre TV (F11 = plein écran) ; clics suivants : mise à jour. Clignote en rouge quand des changements ne sont pas encore poussés."><span style="font-size:1.3rem">🖥️</span><span>TV</span></button>
 <!-- Barre 1 : fichier + vues + historique + vider -->
 <div class="bar">
   <a id="homeLink" class="hidden" href="index.html" title="Accueil du site (les deux outils)">🏠</a>
@@ -179,11 +212,23 @@
 </div>
 </div>
 
-<div id="stage"><div id="wrap"><canvas id="mj"></canvas><div id="ghost"></div></div></div>
-<div id="emptyMsg" class="empty">Vue P1 — charge une carte pour cette vue.</div>
-<div class="hint">
-  Quatre vues <b>P1–P4</b> indépendantes. Prépare-les, puis le bouton <b>🖥️ TV</b> (coin haut-droit) pousse la vue active sur l'écran joueur.<br>
-  Le <b>fantôme</b> sous le curseur montre forme et taille. Tout se sauve dans un seul fichier <kbd>.json</kbd>.
+<div id="stage">
+  <div id="wrap" style="display:none">
+    <canvas id="mj"></canvas>
+    <div id="ghost"></div>
+    <div id="zoomctl">
+      <button id="zIn" title="Zoom avant">＋</button>
+      <button id="zOut" title="Zoom arrière">−</button>
+      <button id="zFit" title="Voir toute la carte (recentrer)">⤢</button>
+    </div>
+  </div>
+  <div id="emptyWrap">
+    <div id="emptyMsg" class="empty">Vue P1 — charge une carte pour cette vue.</div>
+    <div class="hint">
+      Quatre vues <b>P1–P4</b> indépendantes. Prépare-les, puis le bouton <b>🖥️ TV</b> (coin haut-droit) pousse la vue active sur l'écran joueur.<br>
+      <b>1 doigt</b> : dessine · <b>2 doigts</b> : déplacer + zoomer · <b>molette</b> : zoom · <b>espace+glisser</b> ou <b>clic-milieu</b> : déplacer · <b>double-clic</b> : recentrer.
+    </div>
+  </div>
 </div>
 
 <script>
@@ -264,6 +309,28 @@ function mjUnlock() {
   var obj = document.createElement('canvas'), octx = obj.getContext('2d',{willReadFrequently:true});   // calque scratch jetons+textes
   function $(id){ return document.getElementById(id); }
 
+  // ===== Dialogues maison (remplacent confirm()/alert() natifs, parfois bloqués) =====
+  function mjModal(opts){
+    var ov=document.createElement('div'); ov.className='mj-modal';
+    var box=document.createElement('div'); box.className='mj-box';
+    var msg=document.createElement('div'); msg.className='mj-msg'; msg.textContent=opts.message;
+    var row=document.createElement('div'); row.className='mj-actions';
+    function onKey(e){ if(e.key==='Escape'){ close(); if(opts.onCancel) opts.onCancel(); } }
+    function close(){ ov.remove(); document.removeEventListener('keydown', onKey, true); }
+    (opts.buttons||[]).forEach(function(b){ var btn=document.createElement('button');
+      btn.textContent=b.label; btn.className='mj-btn'+(b.primary?' primary':'')+(b.danger?' danger':'');
+      btn.onclick=function(){ close(); if(b.onClick) b.onClick(); }; row.appendChild(btn); });
+    ov.addEventListener('click', function(e){ if(e.target===ov){ close(); if(opts.onCancel) opts.onCancel(); } });
+    document.addEventListener('keydown', onKey, true);
+    box.appendChild(msg); box.appendChild(row); ov.appendChild(box); document.body.appendChild(ov);
+    // Focus par défaut : le bouton « primary » (OK des alertes) sinon le PREMIER bouton
+    // (= Annuler des confirmations) → un Entrée réflexe annule plutôt que de détruire.
+    var def=row.querySelector('.primary')||row.firstChild; if(def) setTimeout(function(){ def.focus(); }, 30);
+  }
+  function mjAlert(message, onOk){ mjModal({ message:message, buttons:[{label:'OK', primary:true, onClick:onOk}] }); }
+  function mjConfirm(message, onYes, onNo){ mjModal({ message:message, onCancel:onNo, buttons:[
+    {label:'Annuler', onClick:onNo}, {label:'Confirmer', danger:true, onClick:onYes} ]}); }
+
   // ===== Modèle : 4 scènes =====
   function newScene(){
     var fog = document.createElement('canvas'), dr = document.createElement('canvas');
@@ -272,6 +339,18 @@ function mjUnlock() {
   }
   var scenes = [newScene(), newScene(), newScene(), newScene()], ai = 0;
   function S(){ return scenes[ai]; }
+
+  // ===== Vue de la carte (pan/zoom via transform CSS sur le canvas) =====
+  var wrap = $('wrap');
+  var vz=1, vx=0, vy=0;                                  // échelle + translation (px viewport)
+  var pointers=new Map(), gesture=null, panMode=false, panLast=null, spaceDown=false;
+  function viewApply(){ cv.style.transform='translate('+vx+'px,'+vy+'px) scale('+vz+')'; }
+  function viewFit(){ var s=S(); if(!s.mapImg) return; var W=wrap.clientWidth||1, H=wrap.clientHeight||1;
+    vz=Math.min(W/s.iw, H/s.ih); vx=(W-s.iw*vz)/2; vy=(H-s.ih*vz)/2; viewApply(); }
+  function zoomAt(cx, cy, f){ var r=wrap.getBoundingClientRect(), px=cx-r.left, py=cy-r.top;
+    var ix=(px-vx)/vz, iy=(py-vy)/vz, nz=Math.max(0.05, Math.min(20, vz*f));
+    vx=px-ix*nz; vy=py-iy*nz; vz=nz; viewApply(); }
+  function zoomCenter(f){ var r=wrap.getBoundingClientRect(); zoomAt(r.left+r.width/2, r.top+r.height/2, f); }
 
   var mode='fog', fogReveal=true, penErase=false, shape='circle', size=40, penColor='#ff2f2f';
   var txtColor='#ffd23f', txtSize=48, txtRot=0;
@@ -310,18 +389,18 @@ function mjUnlock() {
   function activate(i){
     ai=i; sel=null; dragObj=null; hideTokTools(); updateTextGroup(); rebuildTabs();
     var s=S();
-    if(s.mapImg){ cv.width=s.iw; cv.height=s.ih; $('stage').style.display='flex'; $('emptyMsg').style.display='none'; draw(); }
-    else { $('stage').style.display='none'; $('emptyMsg').style.display='block'; $('emptyMsg').textContent='Vue P'+(ai+1)+' — charge une carte pour cette vue.'; }
+    if(s.mapImg){ cv.width=s.iw; cv.height=s.ih; $('wrap').style.display='block'; $('emptyWrap').style.display='none'; viewFit(); draw(); }
+    else { $('wrap').style.display='none'; $('emptyWrap').style.display='flex'; $('emptyMsg').textContent='Vue P'+(ai+1)+' — charge une carte pour cette vue.'; }
     syncHist(); refreshGroups();
   }
 
   // ===== Vider (vue active, ou tout) — avec confirmation =====
   function clearActive(){ if(!scenes[ai].mapImg) return;
-    if(!confirm("Vider la vue P"+(ai+1)+" ?\nLa carte et tout son contenu (brouillard, dessins, jetons, textes) seront effacés.")) return;
-    scenes[ai]=newScene(); activate(ai); markDirty(); }
+    mjConfirm("Vider la vue P"+(ai+1)+" ?\nLa carte et tout son contenu (brouillard, dessins, jetons, textes) seront effacés.",
+      function(){ scenes[ai]=newScene(); activate(ai); markDirty(); }); }
   function clearAll(){ if(!scenes.some(function(s){return s.mapImg;})) return;
-    if(!confirm("Vider TOUTES les vues (P1 à P4) ?\nToutes les cartes et leur contenu seront effacés. Action irréversible.")) return;
-    scenes=[newScene(),newScene(),newScene(),newScene()]; sel=null; dragObj=null; hideTokTools(); updateTextGroup(); activate(ai); markDirty(); }
+    mjConfirm("Vider TOUTES les vues (P1 à P4) ?\nToutes les cartes et leur contenu seront effacés. Action irréversible.",
+      function(){ scenes=[newScene(),newScene(),newScene(),newScene()]; sel=null; dragObj=null; hideTokTools(); updateTextGroup(); activate(ai); markDirty(); }); }
   $('clearAll').onclick=clearAll; $('clearActive').onclick=clearActive;
 
   // ===== Carte =====
@@ -331,7 +410,7 @@ function mjUnlock() {
       s.map=u; s.mapImg=im; s.iw=w; s.ih=h;
       s.fog.width=s.iw; s.fog.height=s.ih; s.draw.width=s.iw; s.draw.height=s.ih;
       fillFog(s,true); s.dctx.clearRect(0,0,s.iw,s.ih); s.tokens=[]; s.texts=[]; s.history=[]; s.redo=[]; sel=null;
-      cv.width=s.iw; cv.height=s.ih; $('stage').style.display='flex'; $('emptyMsg').style.display='none';
+      cv.width=s.iw; cv.height=s.ih; $('wrap').style.display='block'; $('emptyWrap').style.display='none'; viewFit();
       rebuildTabs(); draw(); markDirty(); }); }
   function fillFog(s,hide){ s.fctx.globalCompositeOperation='source-over';
     if(hide){ s.fctx.fillStyle='#000'; s.fctx.fillRect(0,0,s.iw,s.ih); } else { s.fctx.clearRect(0,0,s.iw,s.ih); } }
@@ -367,8 +446,8 @@ function mjUnlock() {
   // ===== Coordonnées & fantôme =====
   function toImg(ev){ var r=cv.getBoundingClientRect(), sc=S().iw/r.width; return { x:(ev.clientX-r.left)*sc, y:(ev.clientY-r.top)*sc, s:sc }; }
   function updateGhost(ev){
-    if(!S().mapImg || mode==='tok' || mode==='txt' || mode==='sel'){ ghost.style.display='none'; return; }
-    var r=cv.getBoundingClientRect();
+    if(!S().mapImg || mode==='tok' || mode==='txt' || mode==='sel' || pointers.size>=2){ ghost.style.display='none'; return; }
+    var r=wrap.getBoundingClientRect();
     ghost.style.width=size+'px'; ghost.style.height=size+'px'; ghost.style.borderRadius=(shape==='square')?'4px':'50%';
     ghost.style.left=(ev.clientX-r.left)+'px'; ghost.style.top=(ev.clientY-r.top)+'px';
     ghost.style.borderColor=(mode==='fog' && !fogReveal) ? 'rgba(20,20,20,.9)' : (mode==='pen') ? penColor : 'rgba(255,255,255,.9)';
@@ -398,8 +477,10 @@ function mjUnlock() {
     var dx=p.x-t.x, dy=p.y-t.y, a=-(t.rot||0)*Math.PI/180, lx=dx*Math.cos(a)-dy*Math.sin(a), ly=dx*Math.sin(a)+dy*Math.cos(a);
     if(Math.abs(lx)<=w/2+8 && Math.abs(ly)<=h/2+8) return t; } return null; }
 
-  // ===== Souris =====
-  cv.addEventListener('pointerdown', function(e){ var s=S(); if(!s.mapImg) return; cv.setPointerCapture(e.pointerId); var p=toImg(e);
+  // ===== Pointeurs : 1 doigt = outil actif · 2 doigts = déplacer + zoomer ·
+  //        souris : molette = zoom, espace+glisser ou clic-milieu = déplacer. =====
+  function endStroke(){ painting=false; dragObj=null; last=null; }
+  function doTool(e){ var s=S(); var p=toImg(e);
     if(mode==='sel'){ var tk=tokenAt(s,p);
       if(tk){ sel={type:'token',obj:tk}; dragObj=tk; dragOff={x:p.x-tk.x,y:p.y-tk.y}; showTokTools(); updateTextGroup(); draw(); return; }
       var tx=textAt(s,p);
@@ -408,22 +489,53 @@ function mjUnlock() {
     if(mode==='tok'){ var t=tokenAt(s,p); sel=t?{type:'token',obj:t}:null; if(t){ dragObj=t; dragOff={x:p.x-t.x,y:p.y-t.y}; showTokTools(); } else hideTokTools(); draw(); return; }
     if(mode==='txt'){ var x=textAt(s,p); sel=x?{type:'text',obj:x}:null; if(x){ dragObj=x; dragOff={x:p.x-x.x,y:p.y-x.y}; } updateTextGroup(); draw(); return; }
     snapshot(); painting=true; last=null; if(mode==='fog') paintFog(p); else paintPen(p); last=p; draw(); markDirty();
+  }
+  function gestureSync(){ var a=[]; pointers.forEach(function(v){ a.push(v); });
+    return { cx:(a[0].x+a[1].x)/2, cy:(a[0].y+a[1].y)/2, dist:Math.hypot(a[0].x-a[1].x, a[0].y-a[1].y) }; }
+  var lastTap=0;
+  cv.addEventListener('pointerdown', function(e){ var s=S(); if(!s.mapImg) return;
+    cv.setPointerCapture(e.pointerId); pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(pointers.size===2){ if(painting){ painting=false; last=null; } dragObj=null; ghost.style.display='none'; gesture=gestureSync(); return; }
+    if(pointers.size>2) return;
+    if(e.pointerType==='mouse' && (e.button===1 || spaceDown)){ panMode=true; panLast={x:e.clientX,y:e.clientY}; cv.style.cursor='grabbing'; e.preventDefault(); return; }
+    doTool(e);
   });
-  cv.addEventListener('pointermove', function(e){ updateGhost(e); var s=S(); if(!s.mapImg) return; var p=toImg(e);
+  cv.addEventListener('pointermove', function(e){
+    if(pointers.has(e.pointerId)) pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(pointers.size>=2 && gesture){ var g=gestureSync(); vx+=g.cx-gesture.cx; vy+=g.cy-gesture.cy;
+      if(gesture.dist>0) zoomAt(g.cx, g.cy, g.dist/gesture.dist); else viewApply(); gesture=g; return; }
+    if(panMode){ vx+=e.clientX-panLast.x; vy+=e.clientY-panLast.y; panLast={x:e.clientX,y:e.clientY}; viewApply(); return; }
+    updateGhost(e); var s=S(); if(!s.mapImg) return; var p=toImg(e);
     if(dragObj){ dragObj.x=p.x-dragOff.x; dragObj.y=p.y-dragOff.y; draw(); markDirty(); return; }
     if(mode==='sel'){ cv.style.cursor=(tokenAt(s,p)||textAt(s,p))?'move':'default'; return; }
     if(!painting) return; if(mode==='fog') paintFog(p); else paintPen(p); last=p; draw();
   });
-  function endStroke(){ painting=false; dragObj=null; last=null; }
-  cv.addEventListener('pointerup', endStroke);
-  cv.addEventListener('pointercancel', endStroke);
+  function ptrEnd(e){ pointers.delete(e.pointerId); if(pointers.size<2) gesture=null;
+    if(panMode){ panMode=false; cv.style.cursor=''; }
+    if(e.pointerType!=='mouse' && pointers.size===0){
+      if(!painting){ var now=e.timeStamp||0; if(now-lastTap<300) viewFit(); lastTap=now; }   // double-tap = recentrer
+      ghost.style.display='none';
+    }
+    endStroke();
+  }
+  cv.addEventListener('pointerup', ptrEnd);
+  cv.addEventListener('pointercancel', ptrEnd);
   cv.addEventListener('pointerleave', function(){ ghost.style.display='none'; });
   cv.addEventListener('pointerenter', updateGhost);
+  wrap.addEventListener('wheel', function(e){ if(!S().mapImg) return; e.preventDefault();
+    zoomAt(e.clientX, e.clientY, e.deltaY<0?1.12:0.893); updateGhost(e); }, {passive:false});
+  cv.addEventListener('dblclick', function(){ viewFit(); });
+  $('zIn').onclick=function(){ zoomCenter(1.25); };
+  $('zOut').onclick=function(){ zoomCenter(0.8); };
+  $('zFit').onclick=function(){ viewFit(); };
+  addEventListener('resize', function(){ if(S().mapImg) viewFit(); });
+  addEventListener('keydown', function(e){ if(e.code==='Space' && (e.target===document.body || e.target===cv)){ spaceDown=true; e.preventDefault(); } });
+  addEventListener('keyup', function(e){ if(e.code==='Space') spaceDown=false; });
 
   // ===== Jetons =====
   $('addTok').onclick=function(){ var i=document.createElement('input'); i.type='file'; i.accept='image/*';
     i.onchange=function(e){ var f=e.target.files[0]; if(!f) return; var r=new FileReader(); r.onload=function(){ addToken(r.result); }; r.readAsDataURL(f); }; i.click(); };
-  function addToken(src){ var s=S(); if(!s.mapImg){ alert("Charge d'abord une carte dans cette vue."); return; }
+  function addToken(src){ var s=S(); if(!s.mapImg){ mjAlert("Charge d'abord une carte dans cette vue."); return; }
     var im=new Image(); im.onload=function(){ var target=Math.min(s.iw,s.ih)*0.14, sc=Math.min(6,Math.max(0.05,target/im.naturalWidth));
       var t={src:src,img:im,x:s.iw/2,y:s.ih/2,scale:sc,rot:0}; s.tokens.push(t); sel={type:'token',obj:t}; setMode('sel');
       s.history.push({type:'tokenAdd', obj:t}); cap(s); s.redo=[]; showTokTools(); draw(); markDirty(); }; im.src=src; }
@@ -450,7 +562,7 @@ function mjUnlock() {
   $('txtColor').oninput=function(e){ txtColor=e.target.value; if(sel&&sel.type==='text'){ sel.obj.color=e.target.value; draw(); markDirty(); } };
   $('txtSize').oninput=function(e){ txtSize=Math.round(logVal(+e.target.value,TXT_LO,TXT_HI)); if(sel&&sel.type==='text'){ sel.obj.size=txtSize; draw(); markDirty(); } };
   $('txtRot').oninput=function(e){ var v=+e.target.value; if(Math.abs(v)<=8){ v=0; e.target.value=0; } txtRot=v; if(sel&&sel.type==='text'){ sel.obj.rot=v; draw(); markDirty(); } };
-  $('txtAdd').onclick=function(){ var s=S(); if(!s.mapImg){ alert("Charge une carte dans cette vue."); return; }
+  $('txtAdd').onclick=function(){ var s=S(); if(!s.mapImg){ mjAlert("Charge une carte dans cette vue."); return; }
     var t={str:($('txtField').value||'Texte'), x:s.iw/2, y:s.ih/2, color:txtColor, size:txtSize, rot:txtRot}; s.texts.push(t); sel={type:'text',obj:t};
     s.history.push({type:'textAdd', obj:t}); cap(s); s.redo=[]; setMode('sel'); markDirty(); };
   $('txtClone').onclick=function(){ if(!sel||sel.type!=='text') return; var s=S(), o=sel.obj;
@@ -557,7 +669,7 @@ function mjUnlock() {
 
   // ===== Écran joueur (pousse la vue active) =====
   function markDirty(){ $('diffuse').classList.add('dirty'); }
-  function publish(){ if(!playerWin||playerWin.closed) return; var s=S(); if(!s.mapImg){ alert("La vue P"+(ai+1)+" n'a pas de carte."); return; }
+  function publish(){ if(!playerWin||playerWin.closed) return; var s=S(); if(!s.mapImg){ mjAlert("La vue P"+(ai+1)+" n'a pas de carte."); return; }
     renderObjects(s, false);
     playerWin.postMessage({ t:'sync', map:s.map, fog:encodeCv(s.fog), draw:encodeCv(s.draw), obj:encodeCv(obj) }, '*');
     renderObjects(s, true); draw(); $('diffuse').classList.remove('dirty'); }
@@ -565,14 +677,14 @@ function mjUnlock() {
   // puis chaque clic suivant met à jour la vue active.
   function diffuse(){ if(!playerWin||playerWin.closed){
       playerWin=window.open('', 'joueurVTT', 'width=1000,height=620');
-      if(!playerWin){ alert("La fenêtre joueur a été bloquée.\nAutorise les pop-ups pour ce fichier, puis réessaie."); return; }
+      if(!playerWin){ mjAlert("La fenêtre joueur a été bloquée.\nAutorise les pop-ups pour ce fichier, puis réessaie."); return; }
       playerWin.document.open(); playerWin.document.write(PLAYER_HTML); playerWin.document.close();
     } else publish(); }
   $('diffuse').onclick=diffuse;
   window.addEventListener('message', function(e){ if(e.data&&e.data.t==='ready') publish(); });
 
   // ===== Sauver / Charger (un seul JSON, toutes les vues) =====
-  $('save').onclick=function(){ if(!scenes.some(function(s){return s.mapImg;})){ alert("Rien à sauver."); return; }
+  $('save').onclick=function(){ if(!scenes.some(function(s){return s.mapImg;})){ mjAlert("Rien à sauver."); return; }
     var images={}, srcToId={}, nextId=0;
     function idFor(src){ if(srcToId[src]!=null) return srcToId[src]; var id='i'+(nextId++); srcToId[src]=id; images[id]=src; return id; }
     var sceneData=scenes.map(function(s){ return s.mapImg ? {
@@ -585,7 +697,7 @@ function mjUnlock() {
     a.href=URL.createObjectURL(blob); a.download='table-mj.json'; a.click(); setTimeout(function(){URL.revokeObjectURL(a.href);},1000); };
   $('loadTable').onclick=function(){ $('fileTable').click(); };
   $('fileTable').onchange=function(e){ var f=e.target.files[0]; if(!f) return; var r=new FileReader();
-    r.onload=function(){ try{ restoreAll(JSON.parse(r.result)); }catch(err){ alert("Fichier illisible."); } }; r.readAsText(f); };
+    r.onload=function(){ try{ restoreAll(JSON.parse(r.result)); }catch(err){ mjAlert("Fichier illisible."); } }; r.readAsText(f); };
   function restoreAll(d){
     scenes=[newScene(),newScene(),newScene(),newScene()]; var pending=0, finished=false;
     var images=d.images||{}, imgCache={};                       // v6 : table d'images uniques ; v4/v5 : src inline

@@ -123,7 +123,7 @@ body.has-bg-image #sheet, body.has-bg-image #topbar { backdrop-filter: blur(1px)
 .tb-btn.dm-save { background: rgba(184,144,47,.32); border-color: rgba(255,220,140,.35); }
 
 /* Accessibilité dans la barre : taille du texte + gras */
-.tb-a11y { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px;
+.tb-a11y, .tb-group { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px;
   background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 8px; }
 .tb-a11y-lbl { color: #f2e9d5; font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
 .tb-scale { width: 150px; accent-color: var(--gold); cursor: pointer; }
@@ -4034,6 +4034,9 @@ function buildTopbar() {
   }
   const right = el("div", { class:"tb-right" });
 
+  // ✚ Nouveau : tout au début de la zone d'actions, AVANT le groupe Lisibilité.
+  right.append(el("button", { class:"tb-btn", text:"✚ Nouveau", onclick:newCharacter }));
+
   // --- Accessibilité (toujours visible) : taille du texte + tout en gras ---
   const curScale = state.uiScale != null ? state.uiScale : CFG.display.textScale;
   const curBold  = state.uiBold  != null ? state.uiBold  : CFG.display.bold;
@@ -4047,17 +4050,15 @@ function buildTopbar() {
     el("button", { class:"tb-btn tb-bold"+(curBold?" active":""), text:"G", title:"Tout en gras (aide à la lecture)",
       onclick:(e)=>{ const cur = state.uiBold!=null ? state.uiBold : CFG.display.bold; state.uiBold = !cur;
         e.currentTarget.classList.toggle("active", state.uiBold); applyDisplay(); save(); setUiPref("uiBold", state.uiBold); } }),
-    // Fort contraste : dans le groupe Lisibilité, juste après « G ».
+    // Son : dans le groupe Lisibilité, juste à droite de « G ».
+    el("button", { id:"sound-toggle", class:"tb-btn", title:"Activer / couper les sons", text: state.fx.sounds ? "🔊" : "🔇",
+      onclick:()=>{ state.fx.sounds=!state.fx.sounds; if(state.fx.sounds)Audio.click(); save(); updateTopbar(); setUiPref("sounds", state.fx.sounds); } }),
+    // Fort contraste : dans le groupe Lisibilité, après le Son.
     el("button", { class:"tb-btn tb-contrast"+(state.theme.highContrast?" active":""), title:"Fort contraste", text:"◐",
       onclick:(e)=>{ state.theme.highContrast=!state.theme.highContrast;
         e.currentTarget.classList.toggle("active", state.theme.highContrast);
         save(); applyTheme(); setUiPref("highContrast", state.theme.highContrast); } })
   ]));
-  // Son : toujours visible — chaque joueur active/coupe les sons (actifs par défaut).
-  right.append(
-    el("button", { id:"sound-toggle", class:"tb-btn", title:"Activer / couper les sons", text: state.fx.sounds ? "🔊" : "🔇",
-      onclick:()=>{ state.fx.sounds=!state.fx.sounds; if(state.fx.sounds)Audio.click(); save(); updateTopbar(); setUiPref("sounds", state.fx.sounds); } })
-  );
   // Couleur + image de fond : réservés au Mode MJ débloqué
   // (ou à tous si allowThemeChange = true). Les effets persistent après fermeture du Mode MJ.
   if (dmMode || CFG.fx.allowThemeChange) right.append(
@@ -4074,9 +4075,11 @@ function buildTopbar() {
       onclick: saveSheetDefaults }));
 
   right.append(
-    loadBtn(),
-    el("button", { class:"tb-btn", text:"💾 Sauver", onclick:downloadCharacter }),
-    el("button", { class:"tb-btn", text:"✚ Nouveau", onclick:newCharacter }),
+    // Charger + Sauver réunis dans un même groupe.
+    el("div", { class:"tb-group" }, [
+      loadBtn(),
+      el("button", { class:"tb-btn", text:"💾 Sauver", onclick:downloadCharacter })
+    ]),
     el("button", { id:"dm-toggle", class:"tb-btn dm", text:"🔒 Mode MJ", onclick:toggleDM })
   );
   bar.append(left, right);
