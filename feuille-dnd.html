@@ -75,7 +75,7 @@ body.force-bold, body.force-bold * {
   paint-order: stroke fill;                     /* garde les contours nets */
 }
 /* Chiffres des dés 3D et grands nombres : encore un cran au-dessus pour rester distincts. */
-body.force-bold .cube-face, body.force-bold .poly-num { font-weight: 900 !important; }
+body.force-bold .cube-face, body.force-bold .poly-num, body.force-bold .solid-num { font-weight: 900 !important; }
 /* Masque les fleches natives des champs nombre (on fournit nos propres +/-) */
 input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 input[type=number]::-webkit-outer-spin-button,
@@ -290,19 +290,19 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .die-stage { position: absolute; top: 0; left: 0; perspective: 1000px; will-change: transform; }
 
 /* Cube d6 réel (6 faces) */
-.cube { position: relative; width: 96px; height: 96px; transform-style: preserve-3d; }
-.cube-face { position: absolute; width: 96px; height: 96px; box-sizing: border-box;
+.cube { position: relative; width: 72px; height: 72px; transform-style: preserve-3d; }
+.cube-face { position: absolute; width: 72px; height: 72px; box-sizing: border-box;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-num); font-weight: 800; font-size: 2.8rem; color: #ffd500;
+  font-family: var(--font-num); font-weight: 800; font-size: 2.1rem; color: #ffd500;
   border: 2px solid rgba(0,0,0,.32); border-radius: 10px; backface-visibility: hidden;
   text-shadow: 0 2px 5px rgba(0,0,0,.5);
   box-shadow: inset 0 0 24px rgba(255,255,255,.14), inset 0 -20px 30px rgba(0,0,0,.22); }
-.cf-front  { transform: rotateY(0deg)   translateZ(48px); }
-.cf-back   { transform: rotateY(180deg) translateZ(48px); }
-.cf-right  { transform: rotateY(90deg)  translateZ(48px); }
-.cf-left   { transform: rotateY(-90deg) translateZ(48px); }
-.cf-top    { transform: rotateX(90deg)  translateZ(48px); }
-.cf-bottom { transform: rotateX(-90deg) translateZ(48px); }
+.cf-front  { transform: rotateY(0deg)   translateZ(36px); }
+.cf-back   { transform: rotateY(180deg) translateZ(36px); }
+.cf-right  { transform: rotateY(90deg)  translateZ(36px); }
+.cf-left   { transform: rotateY(-90deg) translateZ(36px); }
+.cf-top    { transform: rotateX(90deg)  translateZ(36px); }
+.cf-bottom { transform: rotateX(-90deg) translateZ(36px); }
 
 /* Dé non-cubique (culbute en 3D) */
 .poly-die { position: relative; width: 116px; height: 116px; transform-style: preserve-3d; }
@@ -312,9 +312,28 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   text-shadow: 0 2px 6px rgba(0,0,0,.6); }
 .poly-num.fail { color: #ffd5d0; text-shadow: 0 0 14px #c0392b; }
 
+/* Vrais polyèdres 3D (d4 d8 d10 d12 d20) — faces matrix3d, voir module solid-dice */
+.solid-die { position: absolute; top: 0; left: 0; width: 116px; height: 116px; transform-style: preserve-3d; }
+.solid-face {
+  position: absolute; top: 50%; left: 50%; margin-left: -66px; margin-top: -66px; /* = FACE_PX/2 */
+  transform-style: preserve-3d; backface-visibility: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 32%, rgba(255,255,255,.22), rgba(255,255,255,0) 55%), var(--die-color, #b03a2e);
+  border: 2px solid rgba(0,0,0,.34);
+  box-shadow: inset 0 0 26px rgba(255,255,255,.15), inset 0 -20px 32px rgba(0,0,0,.28);
+}
+.solid-num {
+  font-family: var(--font-num); font-weight: 800; font-size: 1.5rem; color: #ffd500;
+  text-shadow: 0 2px 6px rgba(0,0,0,.6); user-select: none; -webkit-user-select: none; pointer-events: none;
+}
+/* Chiffres plus petits sur d10 et d20 (petites facettes) */
+.solid-die[data-sides="10"] .solid-num,
+.solid-die[data-sides="20"] .solid-num { font-size: 0.75rem; }
+.solid-num.fail { color: #ffd5d0; text-shadow: 0 0 14px #c0392b; }
+
 /* Arrêt + réussite / échec (d20 uniquement) */
 .die-stage.settled.crit { animation: critPulse 1s ease-out infinite; }
-.die-stage.settled.crit .cube-face, .die-stage.settled.crit .poly-num {
+.die-stage.settled.crit .cube-face, .die-stage.settled.crit .poly-num, .die-stage.settled.crit .solid-num {
   color: #ffe27a; text-shadow: 0 0 16px #ffd23f, 0 0 32px #ffb300; }
 .die-stage.settled.fail { animation: diceShake .55s; }
 @keyframes critPulse { 0%,100% { filter: drop-shadow(0 0 8px rgba(255,210,63,.4)); } 50% { filter: drop-shadow(0 0 24px rgba(255,210,63,.9)); } }
@@ -2830,6 +2849,112 @@ function diceTray() {
   return el("div", { class:"dice-tray"+(!state.showDice ? " dice-tray-off" : "") }, children);
 }
 
+/* ============================================================================
+   solid-dice — Vrais polyedres CSS pour les des non-cubiques (d4 d8 d10 d12 d20).
+   Le d6 garde build3DCube (cube ombre, regle des opposes=7). Zero dependance :
+   faces generees depuis une TABLE DE GEOMETRIE (sommets canoniques + diedres
+   exacts), une matrix3d par face.
+     d4=70.5288  d8=109.4712  d12=116.5651  d20=138.1897 (diedres exacts) ;
+     d10 = trapezoedre pentagonal EQUITABLE (10 cerfs-volants congruents).
+   Normale de face = Newell (plan reel). nrm(centroide) serait fausse d'environ
+   39deg sur les kites du d10 -> placement, clip-path ET atterrissage fausses.
+     FLAG 1 (TEXT_MIRROR) : si les CHIFFRES s'affichent en miroir -> true.
+     FLAG 2 : si le de atterrit sur la mauvaise face -> inverser le signe de
+              l'angle dans solidFinalRotation (commentaire FLAG 2).
+   ============================================================================ */
+const DICE_GEOM = {
+  4: { v:[[1.732051,1.732051,1.732051],[1.732051,-1.732051,-1.732051],[-1.732051,1.732051,-1.732051],[-1.732051,-1.732051,1.732051]], f:[[1,2,0],[3,0,2],[3,2,1],[3,1,0]] },
+  6: { v:[[-1.0,-1.0,-1.0],[-1.0,-1.0,1.0],[-1.0,1.0,-1.0],[-1.0,1.0,1.0],[1.0,-1.0,-1.0],[1.0,-1.0,1.0],[1.0,1.0,-1.0],[1.0,1.0,1.0]], f:[[4,0,2,6],[1,0,4,5],[5,4,6,7],[2,0,1,3],[6,2,3,7],[3,1,5,7]] },
+  8: { v:[[1.732051,0.0,0.0],[-1.732051,0.0,0.0],[0.0,1.732051,0.0],[0.0,-1.732051,0.0],[0.0,0.0,1.732051],[0.0,0.0,-1.732051]], f:[[5,3,1],[5,0,3],[4,1,3],[4,3,0],[2,0,5],[2,5,1],[2,4,0],[2,1,4]] },
+  10: { v:[[0.0,0.0,1.466554],[0.0,0.0,-1.466554],[1.396718,0.0,0.154828],[1.129968,0.820970,-0.154828],[0.431610,1.328357,0.154828],[-0.431610,1.328357,-0.154828],[-1.129968,0.820970,0.154828],[-1.396718,0.0,-0.154828],[-1.129968,-0.820970,0.154828],[-0.431610,-1.328357,-0.154828],[0.431610,-1.328357,0.154828],[1.129968,-0.820970,-0.154828]], f:[[0,2,3,4],[0,4,5,6],[0,6,7,8],[0,8,9,10],[0,10,11,2],[1,3,4,5],[1,5,6,7],[1,7,8,9],[1,9,10,11],[1,11,2,3]] },
+  12: { v:[[-1.175571,0.0,-0.449028],[-1.175571,0.0,0.449028],[-0.726543,-0.726543,-0.726543],[-0.726543,-0.726543,0.726543],[-0.726543,0.726543,-0.726543],[-0.726543,0.726543,0.726543],[-0.449028,-1.175571,0.0],[-0.449028,1.175571,0.0],[0.0,-0.449028,-1.175571],[0.0,-0.449028,1.175571],[0.0,0.449028,-1.175571],[0.0,0.449028,1.175571],[0.449028,-1.175571,0.0],[0.449028,1.175571,0.0],[0.726543,-0.726543,-0.726543],[0.726543,-0.726543,0.726543],[0.726543,0.726543,-0.726543],[0.726543,0.726543,0.726543],[1.175571,0.0,-0.449028],[1.175571,0.0,0.449028]], f:[[12,6,2,8,14],[15,9,3,6,12],[8,2,0,4,10],[13,7,5,11,17],[3,1,0,2,6],[7,4,0,1,5],[11,5,1,3,9],[19,15,12,14,18],[17,11,9,15,19],[18,14,8,10,16],[16,10,4,7,13],[18,16,13,17,19]] },
+  20: { v:[[-1.070466,0.0,-0.661585],[-1.070466,0.0,0.661585],[-0.661585,-1.070466,0.0],[-0.661585,1.070466,0.0],[0.0,-0.661585,-1.070466],[0.0,-0.661585,1.070466],[0.0,0.661585,-1.070466],[0.0,0.661585,1.070466],[0.661585,-1.070466,0.0],[0.661585,1.070466,0.0],[1.070466,0.0,-0.661585],[1.070466,0.0,0.661585]], f:[[4,2,0],[6,0,3],[6,10,4],[6,4,0],[8,5,2],[8,4,10],[8,2,4],[1,3,0],[1,0,2],[1,2,5],[1,5,7],[1,7,3],[9,3,7],[9,6,3],[9,10,6],[11,8,10],[11,7,5],[11,5,8],[11,9,7],[11,10,9]] },
+};
+const FACE_PX = 132;                 // taille du div de chaque face (px)
+const DIE_SCALE = { 4:17.333, 6:30.022, 8:30.022, 10:35.457, 12:41.322, 20:41.322 }; // px par unite-monde
+const TEXT_MIRROR = true;            // FLAG 1 : chiffres a l'endroit (convention y-bas confirmee a l'ecran)
+const _sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const _cross=(a,b)=>[a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const _dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const _mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const _nrm=a=>{const L=Math.hypot(a[0],a[1],a[2])||1;return [a[0]/L,a[1]/L,a[2]/L];};
+const _mean=ps=>{const c=[0,0,0];ps.forEach(p=>{c[0]+=p[0];c[1]+=p[1];c[2]+=p[2];});return _mul(c,1/ps.length);};
+// Repere orthonorme d'une face : centre c, normale exterieure n (Newell), tangentes u,w
+function _faceFrame(verts, face){
+  const ps=face.map(i=>verts[i]);
+  const c=_mean(ps);
+  // Normale du PLAN de la face (Newell), orientee vers l'exterieur. nrm(centroide)
+  // ne vaut QUE pour des faces regulieres ; les kites du d10 inclinent le centroide
+  // d'environ 39deg -> placement, clip-path ET atterrissage fausses.
+  let n=[0,0,0];
+  for(let i=0;i<ps.length;i++){ const a=ps[i], b=ps[(i+1)%ps.length];
+    n[0]+=(a[1]-b[1])*(a[2]+b[2]); n[1]+=(a[2]-b[2])*(a[0]+b[0]); n[2]+=(a[0]-b[0])*(a[1]+b[1]); }
+  n=_nrm(n);
+  if(_dot(n,c)<0) n=_mul(n,-1);
+  const u=_nrm(_sub(ps[0],c));
+  const w=_cross(n,u);             // (u,w,n) orthonorme direct
+  return {c,n,u,w,ps};
+}
+// matrix3d CSS placant un div FACE_PX dans le plan de la face (column-major)
+function _faceMatrix(fr, scale){
+  const {c,n,u,w}=fr;
+  const wy = TEXT_MIRROR ? w : _mul(w,-1);   // colonne Y (ecran y-bas) ; -w = fidele, flag corrige le miroir
+  const T  = _mul(c, scale);
+  return `matrix3d(${u[0]},${u[1]},${u[2]},0, ${wy[0]},${wy[1]},${wy[2]},0, ${n[0]},${n[1]},${n[2]},0, ${T[0]},${T[1]},${T[2]},1)`;
+}
+// clip-path polygon : sommets projetes sur (u,w), en % du div
+function _faceClip(fr, scale){
+  const {c,u,w,ps}=fr;
+  const pct = scale/FACE_PX*100;
+  const pts = ps.map(p=>{
+    const a=_dot(_sub(p,c),u), b=_dot(_sub(p,c),w);
+    return `${(50+a*pct).toFixed(3)}% ${(50-b*pct).toFixed(3)}%`;  // -b : w "haut" -> haut visuel
+  });
+  return `polygon(${pts.join(', ')})`;
+}
+// Rotation MONDE amenant la face faceIdx face camera (+Z)
+function solidFinalRotation(sides, faceIdx){
+  const G=DICE_GEOM[sides];
+  const fr=_faceFrame(G.v, G.f[faceIdx]);
+  const n=fr.n, z=[0,0,1];
+  const dp=Math.max(-1,Math.min(1,_dot(n,z)));
+  let ang=Math.acos(dp)*180/Math.PI;          // FLAG 2 : si mauvais atterrissage -> ang = -ang
+  if (ang<1e-3)     return 'rotate3d(1,0,0,0deg)';
+  if (ang>179.999)  return 'rotate3d(1,0,0,180deg)';
+  const ax=_nrm(_cross(n,z));
+  return `rotate3d(${ax[0].toFixed(6)},${ax[1].toFixed(6)},${ax[2].toFixed(6)},${ang.toFixed(4)}deg)`;
+}
+// util DOM minimal (independant du el() du projet)
+function _el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
+// Construit le de : un .solid-die contenant N faces .solid-face ; le resultat est
+// sur la face 0 (celle qui arrivera DEVANT a l'arret via dataset.finalRot).
+function buildSolidDie(sides, result, color, isFail){
+  const G=DICE_GEOM[sides];
+  const scale=DIE_SCALE[sides]||50;
+  const die=_el('div','solid-die');
+  die.dataset.sides = sides;
+  die.style.setProperty('--die-color', color||'#b03a2e');
+  const others=[];
+  for(let k=1;k<=sides;k++) if(k!==result) others.push(k);
+  for(let i=others.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[others[i],others[j]]=[others[j],others[i]];}
+  const nums=[];
+  G.f.forEach((face,idx)=>{
+    const fr=_faceFrame(G.v,face);
+    const f=_el('div','solid-face');
+    f.style.width=f.style.height=FACE_PX+'px';
+    f.style.transform=_faceMatrix(fr,scale);
+    f.style.clipPath=_faceClip(fr,scale);
+    f.style.webkitClipPath=f.style.clipPath;
+    const val = idx===0 ? result : others[(idx-1)%others.length];
+    const span=_el('span','solid-num'+(isFail&&idx===0?' fail':''), val);
+    f.appendChild(span); nums.push(span);
+    die.appendChild(f);
+  });
+  die._nums = nums;                                     // spans par face : pose le résultat sur la face arrêtée
+  die.dataset.finalRot = solidFinalRotation(sides, 0);  // repli (mouvement réduit / sans rAF) : face 0 = résultat
+  return die;
+}
+
 // Cube d6 réel (6 faces numérotées, ombrées selon l'orientation)
 function build3DCube(result, color) {
   const cube = el("div", { class:"cube" });
@@ -2862,37 +2987,110 @@ function buildPolyDie(sides, result, color, isFail) {
 // Fait rebondir le dé DANS la fenêtre (host) puis l'arrête sur le résultat
 function bounceInside(stage, dieEl, sides, result, host, done) {
   const rect = host.getBoundingClientRect();
-  const dieSize = sides===6 ? 96 : 116;
+  const dieSize = sides===6 ? 72 : 116;
   const W = Math.max(dieSize+24, rect.width), H = Math.max(dieSize+24, rect.height);
   const maxX = Math.max(8, W - dieSize - 10), maxY = Math.max(8, H - dieSize - 10);
   const cx = (W - dieSize)/2, cy = (H - dieSize)/2;
-  const rnd = (a,b)=> a + Math.random()*(b-a);
-  const path = [
-    { x:cx,              y:-dieSize*0.8 },
-    { x:rnd(8,maxX),     y:rnd(8, maxY*0.55) },
-    { x:rnd(8,maxX),     y:rnd(maxY*0.45, maxY) },
-    { x:rnd(8,maxX),     y:rnd(8, maxY*0.5) },
-    { x:cx,              y:cy }
-  ];
-  const transFrames = path.map((p,i)=>({
-    transform: "translate("+Math.round(p.x)+"px,"+Math.round(p.y)+"px)",
-    offset: i/(path.length-1),
-    easing: i < path.length-1 ? "cubic-bezier(.35,0,.5,1)" : "cubic-bezier(.2,1.5,.45,1)"
-  }));
-  if (stage.animate) stage.animate(transFrames, { duration: 1250, fill:"forwards" });
-  else stage.style.transform = "translate("+Math.round(cx)+"px,"+Math.round(cy)+"px)";
+  const finalRot = sides===6 ? cubeFinalRotation(result) : (dieEl.dataset.finalRot || "rotateX(0deg) rotateY(0deg) rotateZ(0deg)");
 
-  const finalRot = sides===6 ? cubeFinalRotation(result) : "rotateX(0deg) rotateY(0deg) rotateZ(0deg)";
-  const rotFrames = [
-    { transform:"rotateX(0deg) rotateY(0deg) rotateZ(0deg)", offset:0 },
-    { transform:"rotateX(560deg) rotateY(380deg) rotateZ(160deg)", offset:.5 },
-    { transform:"rotateX(900deg) rotateY(720deg) rotateZ(300deg)", offset:.82 },
-    { transform:finalRot, offset:1 }
-  ];
-  if (dieEl.animate) {
-    const a = dieEl.animate(rotFrames, { duration:1250, easing:"cubic-bezier(.25,.6,.2,1)", fill:"forwards" });
-    a.onfinish = done;
-  } else { dieEl.style.transform = finalRot; done(); }
+  // Accessibilité : aucun rebond si l'utilisateur préfère le mouvement réduit (ou sans WAAPI) — le résultat s'affiche direct.
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce || !dieEl.animate || !window.requestAnimationFrame) {
+    stage.style.transform = "translate("+Math.round(cx)+"px,"+Math.round(cy)+"px)";
+    dieEl.style.transform = finalRot;
+    done();
+    return;
+  }
+
+  const rnd = (a,b)=> a + Math.random()*(b-a);
+
+  // === Petite physique de roulement (vue de dessus : la fenêtre = la table). ===
+  // Réglages cosmétiques, ajustables à l'écran :
+  const ROLL_SIGN = 1;          // si le dé tourne à l'envers de son déplacement -> mettre -1
+  const R = dieSize * 0.40;     // rayon de roulement (px) : 1 rad de culbute par R px parcourus
+  const FRICTION = 1.25;        // amortissement (s^-1) ; plus grand = s'arrête plus tôt
+  const REST = 0.7;             // restitution aux murs (perte d'énergie au rebond)
+  const FORCE = rnd(2.0, 3.8);  // « force du lancer » (range doublé) — LÈVE PRINCIPAL si trop lourd : baisser
+
+  // Quaternions (orientation accumulée du dé) :
+  const qmul=(a,b)=>[a[3]*b[0]+a[0]*b[3]+a[1]*b[2]-a[2]*b[1],
+                     a[3]*b[1]-a[0]*b[2]+a[1]*b[3]+a[2]*b[0],
+                     a[3]*b[2]+a[0]*b[1]-a[1]*b[0]+a[2]*b[3],
+                     a[3]*b[3]-a[0]*b[0]-a[1]*b[1]-a[2]*b[2]];
+  const qaxis=(x,y,z,ang)=>{const h=ang/2,s=Math.sin(h);return [x*s,y*s,z*s,Math.cos(h)];};
+  const qnorm=q=>{const L=Math.hypot(q[0],q[1],q[2],q[3])||1;return [q[0]/L,q[1]/L,q[2]/L,q[3]/L];};
+  const qmat=q=>{const x=q[0],y=q[1],z=q[2],w=q[3];
+    return "matrix3d("+(1-2*(y*y+z*z))+","+(2*(x*y+z*w))+","+(2*(x*z-y*w))+",0,"
+      +(2*(x*y-z*w))+","+(1-2*(x*x+z*z))+","+(2*(y*z+x*w))+",0,"
+      +(2*(x*z+y*w))+","+(2*(y*z-x*w))+","+(1-2*(x*x+y*y))+",0,0,0,0,1)";};
+
+  // Lancer : entrée hors-champ par un bord, vitesse vers l'intérieur (~une direction).
+  const edge=(Math.random()*3)|0;
+  let px,py,dx,dy;
+  if (edge===0){ px=rnd(8,maxX); py=-dieSize; dx=rnd(-0.35,0.35); dy=1; }
+  else if (edge===1){ px=-dieSize; py=rnd(8,maxY*0.7); dx=1; dy=rnd(-0.35,0.35); }
+  else { px=W; py=rnd(8,maxY*0.7); dx=-1; dy=rnd(-0.35,0.35); }
+  const speed=rnd(560,820)*FORCE, dl=Math.hypot(dx,dy)||1;
+  let vx=dx/dl*speed, vy=dy/dl*speed;
+  let q=[0,0,0,1], last=0, elapsed=0;
+  const MAXT=5.5, VMIN=45;
+
+  function step(t){
+    if (!document.contains(dieEl)) return;                 // overlay fermé -> on arrête
+    if (!last){ last=t; requestAnimationFrame(step); return; }
+    let dt=(t-last)/1000; last=t; if (dt>0.034) dt=0.034;   // clamp si une frame traîne
+    elapsed+=dt;
+    const sp0=Math.hypot(vx,vy);
+    px+=vx*dt; py+=vy*dt;
+    // Rebonds aux murs : redirige + perte d'énergie + déviation (le coin qui frappe le rebord).
+    if (px<0){ px=0; vx=-vx*REST; vy+=rnd(-0.3,0.3)*sp0; }
+    else if (px>maxX){ px=maxX; vx=-vx*REST; vy+=rnd(-0.3,0.3)*sp0; }
+    if (py<0){ py=0; vy=-vy*REST; vx+=rnd(-0.3,0.3)*sp0; }
+    else if (py>maxY){ py=maxY; vy=-vy*REST; vx+=rnd(-0.3,0.3)*sp0; }
+    // Culbute COUPLÉE au déplacement : axe = normale(+z) × vitesse, angle = distance/R.
+    const sp=Math.hypot(vx,vy);
+    if (sp>1){
+      const ang=ROLL_SIGN*sp*dt/R, ax=-vy/sp, ay=vx/sp;
+      q=qnorm(qmul(qaxis(ax,ay,0,ang), q));
+    }
+    const damp=Math.exp(-FRICTION*dt); vx*=damp; vy*=damp;
+    stage.style.transform="translate("+Math.round(px)+"px,"+Math.round(py)+"px)";
+    dieEl.style.transform=qmat(q);
+    if (sp>VMIN && elapsed<MAXT){ requestAnimationFrame(step); return; }
+    // Le dé s'est arrêté : on le pose à PLAT sur la face naturellement la plus en face
+    // (vrai arrêt à plat) et on y met le résultat — pas de saut vers une face imposée.
+    const startT=qmat(q);
+    let target=finalRot;
+    const Gd=DICE_GEOM[sides];
+    if (sides!==6 && dieEl._nums && Gd){
+      const x=q[0],y=q[1],z=q[2],w=q[3];
+      const r0=[1-2*(y*y+z*z), 2*(x*y-z*w),   2*(x*z+y*w)];
+      const r1=[2*(x*y+z*w),   1-2*(x*x+z*z), 2*(y*z-x*w)];
+      const r2=[2*(x*z-y*w),   2*(y*z+x*w),   1-2*(x*x+y*y)];   // 3e ligne R = composante vers la caméra
+      let best=0,bestd=-2,bn=null;
+      for (let i=0;i<Gd.f.length;i++){
+        const n=_faceFrame(Gd.v,Gd.f[i]).n;
+        const d=r2[0]*n[0]+r2[1]*n[1]+r2[2]*n[2];
+        if (d>bestd){ bestd=d; best=i; bn=n; }
+      }
+      if (best!==0){                                           // résultat -> face réellement présentée
+        const A=dieEl._nums[0], B=dieEl._nums[best];
+        const tx=A.textContent; A.textContent=B.textContent; B.textContent=tx;
+        if (A.classList.contains("fail")){ A.classList.remove("fail"); B.classList.add("fail"); }
+      }
+      if (bn){
+        const nix=r0[0]*bn[0]+r0[1]*bn[1]+r0[2]*bn[2];
+        const niy=r1[0]*bn[0]+r1[1]*bn[1]+r1[2]*bn[2];
+        const ang=Math.acos(Math.max(-1,Math.min(1,bestd)));   // petit basculement -> face à plat (normale +z)
+        if (ang>1e-3){ const al=Math.hypot(nix,niy)||1; q=qnorm(qmul(qaxis(niy/al,-nix/al,0,ang), q)); }
+        target=qmat(q);
+      }
+    }
+    const a=dieEl.animate([{transform:startT},{transform:target}],
+                          {duration:300, easing:"cubic-bezier(.2,.7,.3,1)", fill:"forwards"});
+    a.onfinish=done;
+  }
+  requestAnimationFrame(step);
 }
 
 function rollDie(sides, ev) {
@@ -2906,22 +3104,21 @@ function rollDie(sides, ev) {
   const old = host.querySelector(".dice-overlay"); if (old) old.remove();
   const overlay = el("div", { class:"dice-overlay" });
 
-  const dieEl = sides===6 ? build3DCube(result, color) : buildPolyDie(sides, result, color, isFail);
+  const dieEl = sides===6 ? build3DCube(result, color) : buildSolidDie(sides, result, color, isFail);
   const stage = el("div", { class:"die-stage"+(isFail?" fail":"")+(isCrit?" crit":"") }, [dieEl]);
 
-  const label = el("div", { class:"dice-label"+(isCrit?" crit":"")+(isFail?" fail":""),
-    text: "d"+sides + " → " + result + (isCrit ? "   ★ RÉUSSITE !" : (isFail ? "   ✖ ÉCHEC !" : "")) });
   const closeBtn = el("button", { class:"dice-close", title:"Fermer", text:"✕",
     onclick:(e)=>{ e.stopPropagation(); overlay.remove(); } });
 
-  overlay.append(stage, label, closeBtn);
+  overlay.append(stage, closeBtn);
   overlay.addEventListener("click", () => overlay.remove());
   host.appendChild(overlay);
 
-  if (isCrit) Audio.diceWin(); else if (isFail) Audio.diceFail(); else Audio.diceRoll();
+  Audio.diceRoll();   // son de roulement au lancer
   bounceInside(stage, dieEl, sides, result, host, () => {
     stage.classList.add("settled");
-    if (isCrit) spawnConfetti(overlay);
+    if (isCrit) { spawnConfetti(overlay); Audio.diceWin(); }   // succès/échec : son APRÈS l'arrêt complet
+    else if (isFail) Audio.diceFail();
   });
 }
 function spawnConfetti(container) {
