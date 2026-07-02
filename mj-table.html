@@ -154,7 +154,7 @@
   </div>
   <div class="grp">
     <span class="badge" title="Outil actif. Sélection (V) = cliquer/déplacer un objet ; les autres créent. Les options apparaissent en 2e barre selon l'outil et la sélection.">Outil</span>
-    <button id="mSel" class="tool active" title="Sélection (V) : cliquer un jeton ou un texte pour le modifier/déplacer ; Suppr l'efface ; cliquer le vide désélectionne.">⬚ Sélection</button>
+    <button id="mSel" class="tool active" title="Sélection (V) : cliquer un jeton ou un texte pour le modifier/déplacer ; Suppr l'efface ; cliquer le vide désélectionne ; glisser le vide déplace la carte (main).">⬚ Sélection</button>
     <button id="mFog" class="tool" title="Brouillard (F) : révéler / cacher.">☁️ Brouillard</button>
     <button id="mPen" class="tool" title="Crayon (P) : dessiner / annoter.">✏️ Crayon</button>
     <button id="mTok" class="tool" title="Jeton (J) : coller / déplacer des images. Préférez de petites images (chaque jeton est intégré au fichier de sauvegarde).">📌 Jeton</button>
@@ -485,7 +485,9 @@ function mjUnlock() {
       if(tk){ sel={type:'token',obj:tk}; dragObj=tk; dragOff={x:p.x-tk.x,y:p.y-tk.y}; showTokTools(); updateTextGroup(); draw(); return; }
       var tx=textAt(s,p);
       if(tx){ sel={type:'text',obj:tx}; dragObj=tx; dragOff={x:p.x-tx.x,y:p.y-tx.y}; hideTokTools(); updateTextGroup(); draw(); return; }
-      sel=null; hideTokTools(); updateTextGroup(); draw(); return; }
+      sel=null; hideTokTools(); updateTextGroup(); draw();
+      // Main : glisser le vide déplace la carte (comme l'écran joueur). Un simple clic désélectionne sans bouger.
+      panMode=true; panLast={x:e.clientX,y:e.clientY}; cv.style.cursor='grabbing'; return; }
     if(mode==='tok'){ var t=tokenAt(s,p); sel=t?{type:'token',obj:t}:null; if(t){ dragObj=t; dragOff={x:p.x-t.x,y:p.y-t.y}; showTokTools(); } else hideTokTools(); draw(); return; }
     if(mode==='txt'){ var x=textAt(s,p); sel=x?{type:'text',obj:x}:null; if(x){ dragObj=x; dragOff={x:p.x-x.x,y:p.y-x.y}; } updateTextGroup(); draw(); return; }
     snapshot(); painting=true; last=null; if(mode==='fog') paintFog(p); else paintPen(p); last=p; draw(); markDirty();
@@ -495,7 +497,7 @@ function mjUnlock() {
   var lastTap=0;
   cv.addEventListener('pointerdown', function(e){ var s=S(); if(!s.mapImg) return;
     cv.setPointerCapture(e.pointerId); pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    if(pointers.size===2){ if(painting){ painting=false; last=null; } dragObj=null; ghost.style.display='none'; gesture=gestureSync(); return; }
+    if(pointers.size===2){ if(painting){ painting=false; last=null; } dragObj=null; panMode=false; ghost.style.display='none'; gesture=gestureSync(); return; }
     if(pointers.size>2) return;
     if(e.pointerType==='mouse' && (e.button===1 || spaceDown)){ panMode=true; panLast={x:e.clientX,y:e.clientY}; cv.style.cursor='grabbing'; e.preventDefault(); return; }
     doTool(e);
@@ -507,7 +509,7 @@ function mjUnlock() {
     if(panMode){ vx+=e.clientX-panLast.x; vy+=e.clientY-panLast.y; panLast={x:e.clientX,y:e.clientY}; viewApply(); return; }
     updateGhost(e); var s=S(); if(!s.mapImg) return; var p=toImg(e);
     if(dragObj){ dragObj.x=p.x-dragOff.x; dragObj.y=p.y-dragOff.y; draw(); markDirty(); return; }
-    if(mode==='sel'){ cv.style.cursor=(tokenAt(s,p)||textAt(s,p))?'move':'default'; return; }
+    if(mode==='sel'){ cv.style.cursor=(tokenAt(s,p)||textAt(s,p))?'move':'grab'; return; }
     if(!painting) return; if(mode==='fog') paintFog(p); else paintPen(p); last=p; draw();
   });
   function ptrEnd(e){ pointers.delete(e.pointerId); if(pointers.size<2) gesture=null;
