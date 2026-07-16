@@ -283,7 +283,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .dice-color-pick input[type=color] { width: 28px; height: 28px; border: 1px solid var(--line);
   border-radius: 6px; padding: 0; cursor: pointer; background: none; }
 
-/* Lancer contenu DANS la fenêtre Identité (le dé rebondit dedans) */
+/* Lancer contenu DANS la carte parente (le dé rebondit dedans — carte Attaques par défaut) */
 .dice-overlay { position: absolute; inset: 0; z-index: 60; overflow: hidden; cursor: pointer;
   border-radius: inherit; background: radial-gradient(circle at 50% 38%, rgba(20,15,8,.30), rgba(20,15,8,.66));
   animation: diceFadeIn .16s ease-out; }
@@ -398,6 +398,14 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 /* --- Combat (formes iconiques) -------------------------------------------- */
 .combat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12em, 1fr)); gap: 14px;
   align-items: start; justify-items: center; }
+/* Combat à demi-largeur : 3 colonnes fixes (CA · PV · Initiative/Vitesse empilées) */
+.combat-grid.combat-half { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat-col { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+.combat-half .shape.hexagon { width: 92px; height: 69px; }
+.combat-half .shape.shield { width: 80px; height: 88px; }
+.combat-half .shape.heart { width: 90px; height: 84px; }
+.combat-half .stat-lbl { font-size: 1.04rem; }
+.combat-half .shape-val, .combat-half .big-val { font-size: 1.25rem; }
 .stat-shape { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; }
 .stat-lbl { font-family: var(--font-display); font-weight: 800; font-size: 1.22rem;
   text-transform: uppercase; letter-spacing: .5px; color: var(--ink); text-align: center; white-space: nowrap; }
@@ -414,8 +422,6 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .shape.rounded { width: 96px; min-height: 72px; border: 2.5px solid var(--ink);
   border-radius: 14px; background: var(--paper); padding: 6px; }
 
-.hd-track { display: flex; align-items: center; gap: 4px; font-size: 1rem;
-  flex-wrap: wrap; justify-content: center; margin-top: 4px; }
 .hp-current { width: 64px; text-align: center; font-family: var(--font-num); font-size: 1.6rem;
   font-weight: 700; border: none; background: transparent; color: var(--ink); padding: 0; }
 .hp-extra { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 2px; }
@@ -452,7 +458,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 
 /* --- Attaques (ARME | ATT | DÉGÂTS | ✕ dedans) ----------------------------- */
 .attack-head, .attack-row { display: grid;
-  grid-template-columns: 1fr 66px 1.3fr 34px; gap: 8px; align-items: center; }
+  grid-template-columns: minmax(0,1fr) 48px minmax(0,1.05fr) 28px; gap: 6px; align-items: center; }
 .attack-head { font-size: .66rem; text-transform: uppercase; color: var(--ink-soft);
   font-weight: 700; padding: 0 2px 4px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
 .attack-row { padding: 3px 0; min-width: 0; }
@@ -490,6 +496,16 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .feat-body.open { display: block; }
 .feat-body p { margin: 7px 0; white-space: pre-line; }
 .feat-notes { margin-top: 10px; }
+/* Choix d'aptitude (ex. Style de combat) : gros boutons de sélection */
+.feat-options { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.feat-opt-lbl { font-size: .74rem; text-transform: uppercase; letter-spacing: .4px;
+  color: var(--red-deep); font-weight: 700; margin-bottom: 6px; }
+.opt-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.opt-btn { font: inherit; font-weight: 700; background: var(--paper); color: var(--ink);
+  border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 12px; cursor: pointer; min-height: 38px; }
+.opt-btn:hover { background: var(--paper-2); }
+.opt-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+.opt-desc { margin-top: 8px; font-size: 1rem; line-height: 1.5; white-space: pre-line; }
 
 /* --- Sorts ----------------------------------------------------------------- */
 .spell-head { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
@@ -501,6 +517,8 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .slot-group { display: flex; align-items: center; gap: 4px; font-size: .76rem;
   background: var(--paper-2); border: 1px solid var(--line); border-radius: 7px; padding: 4px 6px; }
 .slot-tot { color: var(--ink-soft); }
+.slot-lbl { font-weight: 700; }
+.slots-help { font-size: .84rem; line-height: 1.4; margin: 2px 0 8px; }
 .spell-picker { margin: 10px 0; }
 .spell-guide { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 10px; }
 .sg-pill { font-size: .82rem; font-weight: 700; color: var(--ink); background: rgba(63,143,79,.12);
@@ -594,7 +612,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .lang-opt.granted { color: var(--red-deep); }
 
 /* --- Apparence ------------------------------------------------------------- */
-.appearance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5em, 1fr)); gap: 12px; }
+/* .appearance-grid retiré : champs fusionnés dans la grille Identité (.id-grid) */
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; width: 100%; box-sizing: border-box; }
 .seg-btn { flex: 1; border: none; background: var(--paper-2); color: var(--ink-soft); font: inherit;
   font-weight: 700; padding: 7px 6px; cursor: pointer; }
@@ -644,6 +662,8 @@ body.high-contrast .shape.hexagon, body.high-contrast .shape.shield, body.high-c
   .span-3, .span-4, .span-6, .span-8, .span-12, .dm-card { grid-column: 1 / -1; }
   .skills-grid, .prof-grid, .id-grid, .lang-multi { grid-template-columns: 1fr; }
   .dice-tray { justify-content: center; }
+  /* .abilities / .combat-grid : colonnes gérées par auto-fit (voir règle de base) */
+  .abilities { gap: 10px; }
   .tb-title { display: none; }
   /* Barre du haut : reste une zone pleine largeur en haut, qui s'enroule proprement —
      logo sur une ligne, actions centrées sur la/les ligne(s) suivante(s), sans débordement. */
@@ -1053,6 +1073,7 @@ function blankCharacter() {
     languagesNote: "",
     profNote: "",
     featuresNote: "",
+    featureChoices: {},
     notes: "",
     food: { rations:0 },
     appearance: { age:"", height:"", weight:"", hair:"", skin:"", eyes:"" },
@@ -1289,1413 +1310,1413 @@ function card(title, bodyNode, opts) {
 // --- Identite ---
 // === Archétypes (sous-classes) D&D 5e 2014 — résumés de mécaniques (reformulés) ===
 const ARCHETYPES = {
- "barbarian": {
-  "level": 3,
-  "label": "Voie primitive",
-  "list": [
-   {
-    "key": "berserker",
-    "name": "Voie du Berserker",
-    "blurb": "Une fureur destructrice qui transforme le combat en frénésie sauvage.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Frénésie",
-      "desc": "En entrant en rage, attaque supplémentaire en action bonus chaque tour, mais un niveau d'épuisement à la fin de la rage."
-     },
-     {
-      "level": 6,
-      "name": "Rage inébranlable",
-      "desc": "Pendant la rage, immunité contre les états charmé et effrayé ; un effet en cours s'interrompt le temps de la rage."
-     },
-     {
-      "level": 10,
-      "name": "Présence intimidante",
-      "desc": "Action pour effrayer une créature à 9 m (jet de SAG contre votre DD). Effet maintenu chaque tour à portée."
-     },
-     {
-      "level": 14,
-      "name": "Représailles",
-      "desc": "Quand une créature adjacente vous blesse, réaction pour riposter d'une attaque de mêlée contre elle."
-     }
+  "barbarian": {
+    "level": 3,
+    "label": "Voie primitive",
+    "list": [
+      {
+        "key": "berserker",
+        "name": "Voie du Berserker",
+        "blurb": "Le barbare libère une rage frénétique qui multiplie ses coups, au prix d'un corps qui s'épuise.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Frénésie",
+            "desc": "Quand vous entrez en rage, vous pouvez vous plonger dans la frénésie. Tant que la rage dure, vous gagnez une attaque de mêlée supplémentaire en action bonus à chacun de vos tours. En revanche, dès que la rage se termine, vous subissez un niveau d'épuisement (fatigue), ce qui rend cette capacité coûteuse à répétition."
+          },
+          {
+            "level": 6,
+            "name": "Rage inébranlable",
+            "desc": "Pendant que vous êtes en rage, vous ne pouvez pas être charmé ni effrayé. Si vous étiez déjà charmé ou effrayé au moment d'entrer en rage, cet effet est suspendu le temps de la rage, puis reprend ensuite s'il n'a pas expiré. C'est un avantage passif, sans action à dépenser."
+          },
+          {
+            "level": 10,
+            "name": "Présence intimidante",
+            "desc": "Par une action, vous fixez une créature située à 9 mètres ou moins de vous et cherchez à la terrifier. Elle doit réussir un jet de sauvegarde de Sagesse contre votre DD (8 + votre bonus de maîtrise + votre modificateur de Charisme), sinon elle est effrayée par vous jusqu'à la fin de votre prochain tour. À chacun de vos tours suivants, vous pouvez prolonger l'effet en action, tant que la cible reste à portée et visible ; elle refait alors le jet."
+          },
+          {
+            "level": 14,
+            "name": "Représailles",
+            "desc": "Quand une créature que vous voyez, à 1,50 mètre de vous, vous inflige des dégâts, vous pouvez utiliser votre réaction pour riposter aussitôt d'une seule attaque de mêlée contre elle."
+          }
+        ]
+      },
+      {
+        "key": "totem-warrior",
+        "name": "Voie du Totem (guerrier totémique)",
+        "blurb": "Le barbare adopte l'esprit d'un animal totem qui lui accorde ses forces et sa protection.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Chercheur d'esprits",
+            "desc": "Vous apprenez les sorts Communication avec les bêtes et Sens de l'animal. Vous ne pouvez les lancer qu'en tant que rituels, c'est-à-dire en prenant 10 minutes de plus, sans dépenser d'emplacement de sort. Ils ne comptent pas comme des sorts de barbare."
+          },
+          {
+            "level": 3,
+            "name": "Esprit totem",
+            "desc": "Vous choisissez un animal totem qui vous accorde son don. Ours : pendant votre rage, vous résistez à tous les types de dégâts sauf psychiques (vous en subissez la moitié), ce qui vous rend extrêmement résistant. Aigle : hors armure lourde, les créatures ont un désavantage à leurs attaques d'opportunité contre vous, et vous pouvez foncer (action Se précipiter) en action bonus pendant la rage. Loup : pendant votre rage, vos alliés attaquent avec avantage tout ennemi situé à 1,50 mètre de vous."
+          },
+          {
+            "level": 6,
+            "name": "Aspect de la bête",
+            "desc": "Vous gagnez un don permanent lié à un animal totem (pas forcément le même qu'avant). Ours : votre capacité de charge et de port est doublée, et vous avez l'avantage aux jets de Force pour pousser, tirer, soulever ou briser. Aigle : vous voyez avec précision jusqu'à 1,5 km en plein jour, et la faible luminosité ne vous désavantage pas en Perception (Sagesse). Loup : en pleine nature, vous pistez plus vite et vos compagnons se déplacent discrètement à vos côtés."
+          },
+          {
+            "level": 10,
+            "name": "Marcheur spirituel",
+            "desc": "Vous pouvez lancer le sort Communion avec la nature, mais uniquement en rituel. Un esprit animal vous transmet des informations sur le terrain sur 5 km alentour : nature du sol, plans d'eau, créatures puissantes, habitants, bâtiments importants."
+          },
+          {
+            "level": 14,
+            "name": "Harmonie totémique",
+            "desc": "Vous gagnez un pouvoir puissant lié à un animal totem. Ours : pendant votre rage, tout ennemi à 1,50 mètre de vous subit un désavantage sur ses jets d'attaque contre vos alliés (attaquer quelqu'un d'autre que vous devient risqué pour lui). Aigle : pendant votre rage, vous pouvez voler à votre vitesse au sol pendant votre tour, mais vous tombez à la fin du tour si vous êtes encore en l'air. Loup : pendant votre rage, quand vous abattez une créature en mêlée, vous pouvez utiliser une action bonus pour faire tomber à terre une créature de taille G ou moins située à 1,50 mètre de vous."
+          }
+        ]
+      }
     ]
-   },
-   {
-    "key": "totem-warrior",
-    "name": "Voie du Totem (guerrier totémique)",
-    "blurb": "Un lien spirituel avec des animaux totems qui confèrent leurs dons.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Chercheur d'esprits",
-      "desc": "Apprend les sorts rituels Communication avec les bêtes et Sens animal, lançables en rituel."
-     },
-     {
-      "level": 3,
-      "name": "Esprit totem",
-      "desc": "Choix d'un totem : Ours (résistance à tous dégâts sauf psychiques en rage), Aigle ou Loup, chacun avec son bénéfice."
-     },
-     {
-      "level": 6,
-      "name": "Aspect de la bête",
-      "desc": "Don permanent selon le totem choisi : Ours (port double), Aigle (vue lointaine), Loup (pister, discrétion accrue)."
-     },
-     {
-      "level": 10,
-      "name": "Marcheur spirituel",
-      "desc": "Lance en rituel Communion avec la nature pour invoquer un esprit qui révèle les environs."
-     },
-     {
-      "level": 14,
-      "name": "Harmonie totémique",
-      "desc": "Pouvoir final selon le totem : Ours (ennemis proches désavantagés contre les autres), Aigle (riposte aérienne), Loup (allié abat un ennemi à terre)."
-     }
+  },
+  "bard": {
+    "level": 3,
+    "label": "Collège bardique",
+    "list": [
+      {
+        "key": "lore",
+        "name": "Collège du Savoir",
+        "blurb": "Érudit qui puise dans tous les savoirs et détourne la magie des autres classes pour surpasser et déstabiliser.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Maîtrises supplémentaires",
+            "desc": "Dès le niveau 3, choisissez trois compétences parmi toutes celles du jeu : vous en gagnez la maîtrise, ce qui ajoute votre bonus de maîtrise à ces jets. C'est un avantage passif qui élargit fortement votre polyvalence. Vous devenez ainsi utile dans presque toutes les situations hors combat."
+          },
+          {
+            "level": 3,
+            "name": "Mots cuisants",
+            "desc": "À partir du niveau 3, en réaction, quand une créature située à 18 mètres ou moins de vous que vous pouvez entendre réussit un jet d'attaque, un test de caractéristique ou un jet de dégâts, vous pouvez dépenser une utilisation d'Inspiration bardique. Lancez le dé d'Inspiration et soustrayez le résultat du jet de la créature. Cela peut transformer une réussite en échec ou réduire ses dégâts. La créature doit être en mesure de vous entendre pour être affectée."
+          },
+          {
+            "level": 6,
+            "name": "Secrets magiques supplémentaires",
+            "desc": "Au niveau 6, vous apprenez deux sorts au choix pris dans la liste de n'importe quelle classe (magicien, clerc, druide, etc.). Ces sorts comptent comme des sorts de barde pour vous et sont toujours préparés, sans compter dans votre nombre habituel de sorts connus. Cela vous donne accès à des effets normalement hors de portée d'un barde."
+          },
+          {
+            "level": 14,
+            "name": "Polyvalence sans pareille",
+            "desc": "Au niveau 14, quand vous faites un test de caractéristique, vous pouvez dépenser une utilisation d'Inspiration bardique : lancez le dé d'Inspiration et ajoutez le résultat à votre test. Vous pouvez décider de le faire après avoir lancé le dé du test, mais avant que le MJ ne dise si c'est réussi ou raté. Cela vous aide à décrocher les tests importants."
+          }
+        ]
+      },
+      {
+        "key": "valor",
+        "name": "Collège de la Vaillance",
+        "blurb": "Barde combattant qui se bat en première ligne et galvanise ses alliés au cœur de la mêlée.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Maîtrises martiales",
+            "desc": "Dès le niveau 3, vous gagnez la maîtrise des armures intermédiaires, des boucliers et des armes de guerre. Cela vous permet de mieux vous protéger et de manier des armes plus puissantes. C'est un avantage passif qui fait de vous un combattant crédible en première ligne."
+          },
+          {
+            "level": 3,
+            "name": "Inspiration au combat",
+            "desc": "À partir du niveau 3, une créature qui possède un dé d'Inspiration bardique que vous lui avez donné peut, en plus des usages habituels, l'utiliser de deux nouvelles façons. Lorsqu'elle touche avec une attaque d'arme, elle ajoute le dé à ses dégâts. Ou bien, quand elle est la cible d'une attaque, elle peut en réaction ajouter le dé à sa classe d'armure contre cette attaque, ce qui peut la faire manquer."
+          },
+          {
+            "level": 6,
+            "name": "Attaque supplémentaire",
+            "desc": "Au niveau 6, quand vous entreprenez l'action Attaquer à votre tour, vous portez deux attaques au lieu d'une seule. Cet avantage passif double votre potentiel de dégâts au corps à corps ou à distance. Il ne s'applique qu'à l'action Attaquer, pas aux sorts."
+          },
+          {
+            "level": 14,
+            "name": "Magie de bataille",
+            "desc": "Au niveau 14, quand vous lancez un sort avec votre action à votre tour, vous pouvez porter une attaque d'arme en action bonus dans le même tour. Cela vous permet de combiner magie et combat au corps à corps lors d'un même round. Vous exploitez ainsi pleinement votre double nature de mage et de guerrier."
+          }
+        ]
+      }
     ]
-   }
-  ]
- },
- "bard": {
-  "level": 3,
-  "label": "Collège bardique",
-  "list": [
-   {
-    "key": "lore",
-    "name": "Collège du Savoir",
-    "blurb": "Érudit polyvalent qui transforme le savoir et les mots en armes subtiles.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Maîtrises supplémentaires",
-      "desc": "Gagne la maîtrise de trois compétences de ton choix."
-     },
-     {
-      "level": 3,
-      "name": "Mots cuisants",
-      "desc": "Avec une réaction, dépense une Inspiration bardique pour retirer ce d6 au jet d'attaque, de caractéristique ou de dégâts d'une créature."
-     },
-     {
-      "level": 6,
-      "name": "Secrets magiques supplémentaires",
-      "desc": "Apprends deux sorts de n'importe quelle classe, comptés comme sorts de barde."
-     },
-     {
-      "level": 14,
-      "name": "Polyvalence sans pareille",
-      "desc": "Ajoute la moitié de ton bonus de maîtrise aux jets de caractéristique sans maîtrise applicable."
-     }
+  },
+  "cleric": {
+    "level": 1,
+    "label": "Domaine divin",
+    "list": [
+      {
+        "key": "knowledge",
+        "name": "Domaine de la Connaissance",
+        "blurb": "Le clerc érudit qui fait du savoir, des langues et de la mémoire du monde ses armes divines.",
+        "features": [
+          {
+            "level": 1,
+            "name": "Sorts de domaine",
+            "desc": "Passif. À certains niveaux (1, 3, 5, 7 et 9), vous recevez deux sorts liés à votre domaine. Ils sont toujours considérés comme préparés : ils ne comptent pas dans votre limite de sorts préparés et vous pouvez les lancer sans les choisir chaque jour."
+          },
+          {
+            "level": 1,
+            "name": "Bénédictions du savoir",
+            "desc": "Passif. Vous apprenez à parler, lire et écrire deux langues de votre choix. De plus, vous choisissez deux compétences parmi Arcanes, Histoire, Nature et Religion : vous en gagnez la maîtrise et vous doublez votre bonus de maîtrise pour tout test effectué avec ces deux compétences."
+          },
+          {
+            "level": 2,
+            "name": "Conduit divin : savoir des âges",
+            "desc": "Action, Conduit divin (Savoir des âges). Vous choisissez une compétence ou un outil. Pendant 10 minutes, vous en avez la maîtrise. Utilisable un nombre de fois lié à votre Conduit divin (1 fois au départ, plus au fil des niveaux), récupéré au repos court ou long."
+          },
+          {
+            "level": 6,
+            "name": "Lire les pensées",
+            "desc": "Action, Conduit divin (Lire les pensées). Choisissez une créature visible à 18 mètres. Elle fait un jet de sauvegarde de Sagesse ; si elle échoue, vous lisez ses pensées superficielles tant qu'elle reste à 18 mètres, pendant 1 minute. Durant ce temps, vous pouvez utiliser une action pour lancer gratuitement le sort suggestion sur elle (sans jet), et vous mettez fin à l'effet si vous le faites."
+          },
+          {
+            "level": 8,
+            "name": "Pouvoir divin",
+            "desc": "Passif. Vous ajoutez votre modificateur de Sagesse aux dégâts de n'importe lequel de vos cantrips (sortilèges mineurs) de clerc. C'est un effet permanent, sans limite d'utilisation."
+          },
+          {
+            "level": 17,
+            "name": "Vision du passé",
+            "desc": "Action. Vous touchez un objet ou vous concentrez sur les lieux autour de vous et lisez leur histoire récente. En vous concentrant pendant environ 1 minute, vous percevez des visions des événements et des personnes liés à l'objet ou à l'endroit au cours des derniers temps. Utilisable une fois, puis récupéré sur un repos court ou long."
+          }
+        ]
+      },
+      {
+        "key": "life",
+        "name": "Domaine de la Vie",
+        "blurb": "Le clerc guérisseur par excellence, qui préserve et restaure la force vitale mieux que quiconque.",
+        "features": [
+          {
+            "level": 1,
+            "name": "Sorts de domaine",
+            "desc": "Passif. À certains niveaux (1, 3, 5, 7 et 9), vous recevez deux sorts liés à votre domaine. Ils sont toujours considérés comme préparés : ils ne comptent pas dans votre limite de sorts préparés et vous pouvez les lancer sans les choisir chaque jour."
+          },
+          {
+            "level": 1,
+            "name": "Maîtrise des armures lourdes",
+            "desc": "Passif. Vous gagnez la maîtrise des armures lourdes, qui s'ajoute aux armures que le clerc sait déjà porter."
+          },
+          {
+            "level": 1,
+            "name": "Disciple de la vie",
+            "desc": "Passif. Chaque fois que vous rendez des points de vie à une créature avec un sort de niveau 1 ou plus, celle-ci récupère en plus 2 points de vie, auxquels s'ajoute le niveau du sort utilisé."
+          },
+          {
+            "level": 2,
+            "name": "Conduit divin : préservation de la vie",
+            "desc": "Action, Conduit divin (Préservation de la vie). Vous libérez un total de points de vie égal à cinq fois votre niveau de clerc. Répartissez-les librement entre les créatures de votre choix visibles à 9 mètres ; chacune ne peut ainsi remonter qu'au maximum à la moitié de ses points de vie totaux. Cela ne fonctionne pas sur les morts-vivants ni les créatures artificielles."
+          },
+          {
+            "level": 6,
+            "name": "Soigneur béni",
+            "desc": "Passif. Une fois par tour, quand vous touchez une créature avec une attaque d'arme, vous ajoutez 1d8 de dégâts radiants. Il n'y a pas de limite d'utilisation. À partir du niveau 14, ces dégâts supplémentaires passent à 2d8."
+          },
+          {
+            "level": 8,
+            "name": "Pouvoir divin",
+            "desc": "Passif. Une fois par tour, quand vous touchez une créature avec une attaque d'arme, vous pouvez y ajouter 1d8 de dégâts radiants. Utilisable un nombre de fois égal à votre modificateur de Sagesse (au moins 1), récupéré sur un repos long."
+          },
+          {
+            "level": 17,
+            "name": "Soins suprêmes",
+            "desc": "Passif. Quand vous rendez des points de vie avec un sort qui utilise des dés (par exemple soin des blessures), vous n'avez plus besoin de lancer ces dés : considérez chacun comme donnant son résultat maximal."
+          }
+        ]
+      },
+      {
+        "key": "light",
+        "name": "Domaine de la Lumière",
+        "blurb": "Le clerc qui manie la lumière révélatrice et le feu radiant pour repousser les ténèbres.",
+        "features": [
+          {
+            "level": 1,
+            "name": "Sorts de domaine",
+            "desc": "Passif. À certains niveaux (1, 3, 5, 7 et 9), vous recevez deux sorts liés à votre domaine. Ils sont toujours considérés comme préparés : ils ne comptent pas dans votre limite de sorts préparés et vous pouvez les lancer sans les choisir chaque jour."
+          },
+          {
+            "level": 1,
+            "name": "Cantrip bonus",
+            "desc": "Passif. Vous connaissez le cantrip (sortilège mineur) Lumière sacrée. Il ne compte pas dans le nombre de cantrips que vous connaissez."
+          },
+          {
+            "level": 1,
+            "name": "Halo protecteur",
+            "desc": "Réaction, quand vous êtes vous-même ciblé par une attaque d'une créature visible située à 9 mètres ou moins. L'attaquant subit un désavantage à ce jet d'attaque. Utilisable un nombre de fois égal à votre modificateur de Sagesse (au moins 1), récupéré sur un repos long."
+          },
+          {
+            "level": 2,
+            "name": "Conduit divin : flamboiement de lumière",
+            "desc": "Action, Conduit divin (Flamboiement de lumière). Une lumière jaillit de vous et dissipe l'obscurité magique dans un rayon de 9 mètres. Chaque créature hostile dans ce rayon fait un jet de sauvegarde de Constitution : sur un échec elle subit 2d10 dégâts radiants plus votre niveau de clerc, sur une réussite la moitié."
+          },
+          {
+            "level": 6,
+            "name": "Lumière inspirante",
+            "desc": "Passif. Quand vous lancez un sort de niveau 1 ou plus qui inflige des dégâts de feu ou radiants, vous pouvez donner des points de vie temporaires à un nombre de créatures égal à votre modificateur de Sagesse (au moins 1), visibles à 9 mètres. Chacune reçoit un nombre de points temporaires égal au niveau du sort."
+          },
+          {
+            "level": 8,
+            "name": "Pouvoir divin",
+            "desc": "Passif. Vous ajoutez votre modificateur de Sagesse aux dégâts de n'importe lequel de vos cantrips (sortilèges mineurs) de clerc. C'est un effet permanent, sans limite d'utilisation."
+          },
+          {
+            "level": 17,
+            "name": "Couronne de lumière",
+            "desc": "Action. Pendant 1 minute, une lumière rayonne autour de vous. Quand vous ou une créature à 9 mètres de vous êtes ciblés par une attaque, vous pouvez utiliser votre réaction pour infliger un désavantage à ce jet. De plus, tant que la lumière dure, vous et vos alliés à 9 mètres avez un avantage aux jets de sauvegarde contre les sorts et effets qui infligent des dégâts de feu ou radiants. Utilisable une fois, récupéré sur un repos long."
+          }
+        ]
+      },
+      {
+        "key": "nature",
+        "name": "Domaine de la Nature",
+        "blurb": "Le clerc qui canalise la puissance du monde sauvage, entre druide et prêtre.",
+        "features": [
+          {
+            "level": 1,
+            "name": "Sorts de domaine",
+            "desc": "Passif. À certains niveaux (1, 3, 5, 7 et 9), vous recevez deux sorts liés à votre domaine. Ils sont toujours considérés comme préparés : ils ne comptent pas dans votre limite de sorts préparés et vous pouvez les lancer sans les choisir chaque jour."
+          },
+          {
+            "level": 1,
+            "name": "Acolyte de la nature",
+            "desc": "Passif. Vous apprenez un cantrip (sortilège mineur) de druide de votre choix. De plus, vous gagnez la maîtrise d'une compétence parmi Dressage, Nature et Survie."
+          },
+          {
+            "level": 1,
+            "name": "Maîtrise des armures lourdes",
+            "desc": "Passif. Vous gagnez la maîtrise des armures lourdes, qui s'ajoute aux armures que le clerc sait déjà porter."
+          },
+          {
+            "level": 2,
+            "name": "Conduit divin : charmer animaux et plantes",
+            "desc": "Action, Conduit divin (Charmer les animaux et les plantes). Chaque bête et chaque plante de votre choix visible à 9 mètres fait un jet de sauvegarde de Sagesse ; sur un échec, la créature est charmée par vous pendant 1 minute ou jusqu'à ce qu'elle subisse des dégâts. Tant qu'elle est charmée, elle vous considère comme un allié amical."
+          },
+          {
+            "level": 6,
+            "name": "Intervention de Dame Nature",
+            "desc": "Réaction, quand vous ou une créature visible à 9 mètres subit des dégâts d'acide, de froid, de feu, de foudre ou de tonnerre. Vous accordez à cette créature une résistance à cette instance de dégâts. Utilisable un nombre de fois égal à votre modificateur de Sagesse (au moins 1), récupéré sur un repos long."
+          },
+          {
+            "level": 8,
+            "name": "Frappe divine",
+            "desc": "Passif. Une fois par tour, quand vous touchez une créature avec une attaque d'arme, vous pouvez y ajouter 1d8 de dégâts au choix : froid, feu ou foudre. Ces dégâts supplémentaires passent à 2d8 à partir du niveau 14."
+          },
+          {
+            "level": 17,
+            "name": "Maître de la nature",
+            "desc": "Passif. Les bêtes et plantes charmées par votre Conduit divin (Charmer les animaux et les plantes) vous obéissent. Vous pouvez utiliser une action bonus pour leur donner oralement des ordres qu'elles exécutent à leur tour."
+          }
+        ]
+      },
+      {
+        "key": "tempest",
+        "name": "Domaine de la Tempête",
+        "blurb": "Le clerc qui déchaîne le tonnerre et la foudre, et frappe fort ceux qui l'approchent.",
+        "features": [
+          {
+            "level": 1,
+            "name": "Sorts de domaine",
+            "desc": "Passif. À certains niveaux (1, 3, 5, 7 et 9), vous recevez deux sorts liés à votre domaine. Ils sont toujours considérés comme préparés : ils ne comptent pas dans votre limite de sorts préparés et vous pouvez les lancer sans les choisir chaque jour."
+          },
+          {
+            "level": 1,
+            "name": "Maîtrises de la tempête",
+            "desc": "Passif. Vous gagnez la maîtrise des armures lourdes et des armes de guerre, qui s'ajoutent à ce que le clerc sait déjà utiliser."
+          },
+          {
+            "level": 1,
+            "name": "Vengeance de la tempête",
+            "desc": "Réaction, quand une créature à 1,50 mètre de vous vous touche avec une attaque. L'attaquant fait un jet de sauvegarde de Dextérité : sur un échec il subit 2d8 dégâts de tonnerre ou de foudre (au choix), sur une réussite la moitié. Utilisable un nombre de fois égal à votre modificateur de Sagesse (au moins 1), récupéré sur un repos long."
+          },
+          {
+            "level": 2,
+            "name": "Conduit divin : foudre destructrice",
+            "desc": "Aucune action requise, Conduit divin (Foudre destructrice). Quand vous lancez un sort qui inflige des dégâts de tonnerre ou de foudre, vous pouvez maximiser ces dégâts au lieu de lancer les dés : chaque dé de tonnerre ou de foudre donne son résultat maximal."
+          },
+          {
+            "level": 6,
+            "name": "Frappe du tonnerre",
+            "desc": "Passif. Quand vous infligez des dégâts de foudre à une créature de taille Grande ou moindre, vous pouvez la repousser jusqu'à 3 mètres loin de vous."
+          },
+          {
+            "level": 8,
+            "name": "Frappe divine",
+            "desc": "Passif. Une fois par tour, quand vous touchez une créature avec une attaque d'arme, vous pouvez y ajouter 1d8 de dégâts de tonnerre. Ces dégâts supplémentaires passent à 2d8 à partir du niveau 14."
+          },
+          {
+            "level": 17,
+            "name": "Naissance de la tempête",
+            "desc": "Passif. Vous gagnez une vitesse de vol égale à votre vitesse de déplacement au sol. Cette capacité fonctionne tant que vous n'êtes pas sous terre ou à l'intérieur d'un bâtiment."
+          }
+        ]
+      },
+      {
+        "key": "trickery",
+        "name": "Domaine de la Duperie",
+        "blurb": "Le clerc de la ruse, des illusions et du subterfuge au service des dieux farceurs.",
+        "features": [
+          {
+            "level": 1,
+            "name": "Sorts de domaine",
+            "desc": "Passif. À certains niveaux (1, 3, 5, 7 et 9), vous recevez deux sorts liés à votre domaine. Ils sont toujours considérés comme préparés : ils ne comptent pas dans votre limite de sorts préparés et vous pouvez les lancer sans les choisir chaque jour."
+          },
+          {
+            "level": 1,
+            "name": "Bénédiction du filou",
+            "desc": "Action. Vous touchez une créature consentante. Pendant 1 heure, elle bénéficie d'un avantage à tous ses tests de Dextérité (Discrétion). Vous ne pouvez maintenir qu'une seule cible à la fois avec cette bénédiction."
+          },
+          {
+            "level": 2,
+            "name": "Conduit divin : invocation de la duperie",
+            "desc": "Action, Conduit divin (Invocation de la duperie). Vous créez une copie illusoire parfaite de vous-même, qui dure 1 minute. Elle apparaît dans un espace visible à 9 mètres, ne peut ni bouger ni agir, mais vous pouvez la déplacer par une action bonus (jusqu'à 9 mètres, sans jamais dépasser 36 mètres de vous). Pendant la durée, vous pouvez lancer vos sorts comme si vous vous trouviez à la position du double, en utilisant vos propres sens."
+          },
+          {
+            "level": 6,
+            "name": "Bénédiction des ombres",
+            "desc": "Action. Vous devenez invisible jusqu'à la fin de votre prochain tour. L'invisibilité prend fin plus tôt si vous attaquez ou lancez un sort. Utilisable une fois, récupéré sur un repos court ou long."
+          },
+          {
+            "level": 8,
+            "name": "Frappe divine",
+            "desc": "Passif. Une fois par tour, quand vous touchez une créature avec une attaque d'arme, vous pouvez y ajouter 1d8 de dégâts de poison. Ces dégâts supplémentaires passent à 2d8 à partir du niveau 14."
+          },
+          {
+            "level": 17,
+            "name": "Doubles améliorés",
+            "desc": "Passif. Quand vous utilisez votre Conduit divin (Invocation de la duperie), vous créez jusqu'à quatre copies illusoires de vous-même au lieu d'une seule. Vous pouvez déplacer chacune d'elles par la même action bonus, et lancer vos sorts depuis la position de n'importe laquelle."
+          }
+        ]
+      },
+      {
+        "key": "war",
+        "name": "Domaine de la Guerre",
+        "blurb": "Le clerc guerrier en première ligne, béni pour frapper souvent et frapper juste.",
+        "features": [
+          {
+            "level": 1,
+            "name": "Sorts de domaine",
+            "desc": "Passif. À certains niveaux (1, 3, 5, 7 et 9), vous recevez deux sorts liés à votre domaine. Ils sont toujours considérés comme préparés : ils ne comptent pas dans votre limite de sorts préparés et vous pouvez les lancer sans les choisir chaque jour."
+          },
+          {
+            "level": 1,
+            "name": "Maîtrises du guerrier",
+            "desc": "Passif. Vous gagnez la maîtrise des armures lourdes et des armes de guerre, qui s'ajoutent à ce que le clerc sait déjà utiliser."
+          },
+          {
+            "level": 1,
+            "name": "Prêtre guerrier",
+            "desc": "Action bonus. Vous effectuez une attaque d'arme supplémentaire. Utilisable un nombre de fois égal à votre modificateur de Sagesse (au moins 1), récupéré sur un repos court ou long."
+          },
+          {
+            "level": 2,
+            "name": "Conduit divin : faveur martiale",
+            "desc": "Aucune action requise, Conduit divin (Faveur martiale). Quand vous faites un jet d'attaque, vous pouvez accorder un bonus de +10 à ce jet. Vous décidez après avoir vu le résultat du dé, mais avant que le MJ n'annonce si l'attaque touche. Utilisable un nombre de fois lié à votre Conduit divin, récupéré sur un repos court ou long."
+          },
+          {
+            "level": 6,
+            "name": "Bénédiction du dieu de la guerre",
+            "desc": "Réaction, quand une créature visible à 9 mètres (vous compris) fait un jet d'attaque. Vous accordez un bonus de +10 à ce jet, ce qui peut le transformer en réussite. C'est une option de Conduit divin : récupéré sur un repos court ou long."
+          },
+          {
+            "level": 8,
+            "name": "Frappe divine",
+            "desc": "Passif. Une fois par tour, quand vous touchez une créature avec une attaque d'arme, vous pouvez y ajouter 1d8 de dégâts du même type que ceux de l'arme. Ces dégâts supplémentaires passent à 2d8 à partir du niveau 14."
+          },
+          {
+            "level": 17,
+            "name": "Avatar de la bataille",
+            "desc": "Passif. Vous obtenez en permanence une résistance aux dégâts contondants, perforants et tranchants des armes non magiques. Cet effet est toujours actif, sans limite d'utilisation."
+          }
+        ]
+      }
     ]
-   },
-   {
-    "key": "valor",
-    "name": "Collège de la Vaillance",
-    "blurb": "Barde guerrier qui inspire ses alliés au combat par des récits héroïques.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Maîtrises martiales",
-      "desc": "Gagne la maîtrise des armures intermédiaires, des boucliers et des armes de guerre."
-     },
-     {
-      "level": 3,
-      "name": "Inspiration au combat",
-      "desc": "Une créature ayant ton Inspiration bardique peut ajouter ce dé à un jet de dégâts d'arme ou à sa CA contre une attaque."
-     },
-     {
-      "level": 6,
-      "name": "Attaque supplémentaire",
-      "desc": "Effectue deux attaques au lieu d'une lorsque tu attaques avec l'action Attaquer."
-     },
-     {
-      "level": 14,
-      "name": "Magie de bataille",
-      "desc": "Après avoir lancé un sort avec ton action, effectue une attaque d'arme en action bonus."
-     }
+  },
+  "druid": {
+    "level": 2,
+    "label": "Cercle druidique",
+    "list": [
+      {
+        "key": "land",
+        "name": "Cercle de la Terre",
+        "blurb": "Druide savant lié à un type de paysage, qui y puise des sorts et une magie de protection.",
+        "features": [
+          {
+            "level": 2,
+            "name": "Tour de magie supplémentaire",
+            "desc": "Vous apprenez un tour de magie de druide supplémentaire de votre choix. C'est un bonus permanent : il s'ajoute au nombre de tours que vous connaissez déjà, sans occuper de place."
+          },
+          {
+            "level": 2,
+            "name": "Récupération naturelle",
+            "desc": "Pendant un repos court, vous pouvez récupérer une partie de vos emplacements de sort dépensés. Le total des niveaux d'emplacements récupérés est au plus égal à la moitié de votre niveau de druide (arrondi au supérieur), et vous ne pouvez pas récupérer d'emplacement de niveau 6 ou plus. Utilisable une seule fois entre deux repos longs."
+          },
+          {
+            "level": 3,
+            "name": "Sorts de cercle",
+            "desc": "Vous choisissez un type de terrain (arctique, côte, désert, forêt, marais, montagne, prairie ou Souterrain). À certains niveaux (3, 5, 7 et 9), ce choix vous donne des sorts qui sont toujours préparés en plus de vos autres sorts, sans compter dans votre limite de sorts préparés. Le terrain est fixé une fois pour toutes."
+          },
+          {
+            "level": 6,
+            "name": "Foulée terrestre",
+            "desc": "Le terrain difficile d'origine naturelle et non magique ne vous ralentit plus : vous vous y déplacez normalement. De plus, vous pouvez traverser les plantes non magiques sans être gêné ni blessé par leurs épines et leurs ronces. Enfin, vous avez l'avantage aux jets de sauvegarde contre les plantes créées ou manipulées par magie pour entraver un déplacement (comme le sort Enchevêtrement)."
+          },
+          {
+            "level": 10,
+            "name": "Communion nature",
+            "desc": "Vous ne pouvez plus être empoisonné ni tomber malade : vous êtes immunisé contre le poison et les maladies. De plus, vous êtes immunisé contre les effets de charme et d'effroi provoqués par des créatures élémentaires ou féeriques."
+          },
+          {
+            "level": 14,
+            "name": "Sanctuaire naturel",
+            "desc": "Les bêtes et les plantes ont du mal à vous attaquer. Quand une telle créature vous prend pour cible d'une attaque, elle doit d'abord réussir un jet de sauvegarde de Sagesse (DD égal à votre DD de sauvegarde des sorts de druide). En cas d'échec, elle doit choisir une autre cible, sinon son attaque a le désavantage contre vous. Si elle réussit, elle est immunisée contre cet effet pendant 24 heures. La créature sait qu'elle subit cet effet avant de choisir de vous attaquer."
+          }
+        ]
+      },
+      {
+        "key": "moon",
+        "name": "Cercle de la Lune",
+        "blurb": "Druide guerrier qui se change en bêtes puissantes et redoutables pour combattre au corps à corps.",
+        "features": [
+          {
+            "level": 2,
+            "name": "Forme sauvage de combat",
+            "desc": "Vous pouvez utiliser votre Forme sauvage avec une action bonus au lieu d'une action, ce qui rend la transformation bien plus rapide en combat. De plus, vous pouvez adopter la forme de bêtes ayant un facteur de puissance (FP) allant jusqu'à 1, au lieu de la limite normale, ce qui donne accès à des animaux plus solides et plus efficaces au combat."
+          },
+          {
+            "level": 2,
+            "name": "Soins en forme sauvage",
+            "desc": "Tant que vous êtes transformé en bête, vous pouvez utiliser une action bonus pour dépenser un emplacement de sort et vous soigner. Vous récupérez 1d8 points de vie par niveau de l'emplacement dépensé. Cela vous permet de vous soigner sans reprendre votre forme normale."
+          },
+          {
+            "level": 6,
+            "name": "Frappes primitives",
+            "desc": "Les attaques que vous portez sous votre forme de bête sont considérées comme magiques. Cela vous permet d'infliger des dégâts normalement aux créatures qui résistent ou sont immunisées aux dégâts d'armes non magiques."
+          },
+          {
+            "level": 10,
+            "name": "Forme élémentaire",
+            "desc": "Vous pouvez dépenser deux utilisations de votre Forme sauvage en même temps pour vous transformer en élémentaire : élémentaire de l'air, de la terre, du feu ou de l'eau. Cela offre des formes de combat très puissantes en échange de deux usages au lieu d'un."
+          },
+          {
+            "level": 14,
+            "name": "Mille formes",
+            "desc": "Vous pouvez lancer le sort Modification de soi (Alter Self) à volonté, sans dépenser d'emplacement de sort. Ce sort ne vise que vous-même, et vous pouvez l'utiliser autant de fois que vous le voulez pour changer subtilement votre apparence ou votre corps."
+          }
+        ]
+      }
     ]
-   }
-  ]
- },
- "cleric": {
-  "level": 1,
-  "label": "Domaine divin",
-  "list": [
-   {
-    "key": "knowledge",
-    "name": "Domaine de la Connaissance",
-    "blurb": "Le savoir et la maîtrise des langues comme armes du divin.",
-    "features": [
-     {
-      "level": 1,
-      "name": "Sorts de domaine",
-      "desc": "Sorts de domaine ajoutés gratuitement aux sorts préparés, par paliers de niveau."
-     },
-     {
-      "level": 1,
-      "name": "Bénédictions du savoir",
-      "desc": "Deux langues au choix, plus maîtrise et double bonus dans deux compétences parmi Arcanes, Histoire, Nature et Religion."
-     },
-     {
-      "level": 2,
-      "name": "Conduit divin : savoir des âges",
-      "desc": "Canalisation d'énergie : maîtrise temporaire d'un outil ou d'une compétence pendant 10 minutes."
-     },
-     {
-      "level": 6,
-      "name": "Lire les pensées",
-      "desc": "Conduit divin pour lire les pensées d'une créature, puis l'influencer ou la sonder via télépathie."
-     },
-     {
-      "level": 8,
-      "name": "Pouvoir divin",
-      "desc": "Une fois par tour, un sort cantrip de clerc ajoute 1d8 de dégâts à une attaque d'arme."
-     },
-     {
-      "level": 17,
-      "name": "Vision du passé",
-      "desc": "Lecture de l'histoire récente d'un objet ou des environs par concentration de quelques minutes."
-     }
+  },
+  "fighter": {
+    "level": 3,
+    "label": "Archétype martial",
+    "list": [
+      {
+        "key": "champion",
+        "name": "Champion",
+        "blurb": "Le guerrier direct et robuste qui frappe plus souvent en critique et excelle dans les exploits physiques.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Critique amélioré",
+            "desc": "Aptitude passive. Vos attaques d'arme infligent un coup critique (dégâts doublés) sur un jet d'attaque de 19 ou 20, au lieu du seul 20. Vous avez donc deux fois plus de chances de faire un critique."
+          },
+          {
+            "level": 7,
+            "name": "Athlète remarquable",
+            "desc": "Aptitude passive. Pour tout test de caractéristique de Force, de Dextérité ou de Constitution où vous n'êtes pas déjà maîtrisé, ajoutez la moitié de votre bonus de maîtrise (arrondi à l'entier supérieur). De plus, quand vous faites un saut en longueur ou en hauteur avec élan, la distance franchie augmente de votre modificateur de Force (au minimum 30 cm)."
+          },
+          {
+            "level": 10,
+            "name": "Style de combat supplémentaire",
+            "desc": "Aptitude passive. Vous choisissez un deuxième style de combat dans la liste du guerrier (par exemple Défense, Duel ou Archerie), qui s'ajoute au premier. Vous ne pouvez pas prendre deux fois le même style."
+          },
+          {
+            "level": 15,
+            "name": "Critique supérieur",
+            "desc": "Aptitude passive. Vos attaques d'arme deviennent des coups critiques sur un jet d'attaque de 18, 19 ou 20. Cette aptitude remplace le seuil de 19-20 de Critique amélioré."
+          },
+          {
+            "level": 18,
+            "name": "Survivant",
+            "desc": "Aptitude passive. Au début de chacun de vos tours, si vous avez la moitié ou moins de vos points de vie maximum sans être à 0, vous récupérez 5 points de vie plus votre modificateur de Constitution."
+          }
+        ]
+      },
+      {
+        "key": "battlemaster",
+        "name": "Maître de guerre",
+        "blurb": "Le combattant-tacticien qui dépense des dés de supériorité pour déclencher des manœuvres qui contrôlent et punissent l'adversaire.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Manœuvres",
+            "desc": "Vous apprenez 3 manœuvres à choisir dans la liste du Maître de guerre (par exemple Attaque désarmante, Manœuvre de riposte, Attaque de diversion). Chaque manœuvre ajoute un effet tactique à vos attaques et n'est utilisable qu'en dépensant un dé de supériorité. Certaines manœuvres imposent à la cible un jet de sauvegarde dont le degré de difficulté vaut 8 + votre bonus de maîtrise + votre modificateur de Force ou de Dextérité."
+          },
+          {
+            "level": 3,
+            "name": "Dés de supériorité",
+            "desc": "Vous disposez de 4 dés de supériorité, qui sont des d8. Vous dépensez un dé pour activer une manœuvre : le résultat s'ajoute le plus souvent aux dégâts ou alimente l'effet de la manœuvre. Vous récupérez tous vos dés dépensés après un repos court ou un repos long."
+          },
+          {
+            "level": 3,
+            "name": "Maîtrise d'outils",
+            "desc": "Aptitude passive. Vous gagnez la maîtrise d'un type d'outils d'artisan de votre choix (par exemple outils de forgeron ou de menuisier), ce qui ajoute votre bonus de maîtrise aux tests faits avec ces outils."
+          },
+          {
+            "level": 7,
+            "name": "Sachez votre ennemi",
+            "desc": "Après avoir observé une créature ou interagi avec elle pendant au moins 1 minute, vous apprenez si elle vous est supérieure, inférieure ou égale sur deux points de votre choix parmi : score de Force, score de Dextérité, score de Constitution, classe d'armure, points de vie actuels, nombre total de niveaux de classe et nombre de niveaux de guerrier."
+          },
+          {
+            "level": 7,
+            "name": "Dés supplémentaires",
+            "desc": "Aptitude passive. Vous disposez désormais de 5 dés de supériorité au lieu de 4, et leur taille passe du d8 au d10."
+          },
+          {
+            "level": 10,
+            "name": "Manœuvres supplémentaires",
+            "desc": "Vous apprenez 2 manœuvres supplémentaires de votre choix dans la liste du Maître de guerre, en plus de celles que vous connaissez déjà."
+          },
+          {
+            "level": 15,
+            "name": "Dés améliorés (d12)",
+            "desc": "Aptitude passive. La taille de vos dés de supériorité passe au d12, et vous en disposez de 6 au lieu de 5."
+          },
+          {
+            "level": 15,
+            "name": "Manœuvres (niv. 15)",
+            "desc": "Vous apprenez 2 manœuvres supplémentaires de votre choix dans la liste du Maître de guerre."
+          },
+          {
+            "level": 18,
+            "name": "Implacable",
+            "desc": "Aptitude passive. Quand vous lancez l'initiative au début d'un combat sans aucun dé de supériorité disponible, vous en récupérez un automatiquement."
+          }
+        ]
+      },
+      {
+        "key": "eldritch-knight",
+        "name": "Chevalier occulte",
+        "blurb": "Le guerrier qui mêle le maniement des armes à une poignée de sorts de magicien, surtout défensifs et offensifs.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Incantation",
+            "desc": "Vous savez lancer des sorts de la liste du magicien, principalement de l'école d'abjuration et d'évocation. Votre caractéristique d'incantation est l'Intelligence : le degré de difficulté des jets de sauvegarde contre vos sorts vaut 8 + votre bonus de maîtrise + votre modificateur d'Intelligence. Vous apprenez aussi quelques tours de magie et préparez un nombre limité de sorts, récupérables après un repos long."
+          },
+          {
+            "level": 3,
+            "name": "Lien d'arme",
+            "desc": "Par un rituel d'une heure lors d'un repos court, vous liez une arme à vous (deux armes à partir d'un niveau supérieur). Tant qu'une arme liée est sur le même plan que vous, vous pouvez la rappeler dans votre main par une action bonus, et vous ne pouvez pas en être désarmé sauf si vous êtes neutralisé."
+          },
+          {
+            "level": 7,
+            "name": "Frappe martiale",
+            "desc": "Aptitude passive. Lorsque vous utilisez votre action pour lancer un tour de magie (cantrip), vous pouvez faire une attaque d'arme en action bonus dans le même tour."
+          },
+          {
+            "level": 10,
+            "name": "Charge occulte",
+            "desc": "Quand vous utilisez votre Fougue (Action Surge), vous pouvez vous téléporter jusqu'à 9 mètres vers un espace inoccupé que vous voyez. Vous pouvez vous téléporter avant ou après l'action supplémentaire de la Fougue."
+          },
+          {
+            "level": 15,
+            "name": "Frappe occulte",
+            "desc": "Aptitude passive. Quand vous touchez une créature avec une attaque d'arme, elle subit un désavantage au prochain jet de sauvegarde qu'elle effectue contre un de vos sorts, jusqu'à la fin de votre prochain tour."
+          },
+          {
+            "level": 18,
+            "name": "Charge occulte améliorée",
+            "desc": "Aptitude passive. Désormais, quand vous utilisez votre action pour lancer un sort (et plus seulement un tour de magie), vous pouvez faire une attaque d'arme en action bonus dans le même tour."
+          }
+        ]
+      }
     ]
-   },
-   {
-    "key": "life",
-    "name": "Domaine de la Vie",
-    "blurb": "Le soin et la préservation de la force vitale au service du divin.",
-    "features": [
-     {
-      "level": 1,
-      "name": "Sorts de domaine",
-      "desc": "Sorts de domaine ajoutés gratuitement aux sorts préparés, par paliers de niveau."
-     },
-     {
-      "level": 1,
-      "name": "Maîtrise des armures lourdes",
-      "desc": "Maîtrise supplémentaire des armures lourdes."
-     },
-     {
-      "level": 1,
-      "name": "Disciple de la vie",
-      "desc": "Tout sort de soin de niveau 1+ rend en plus 2 points de vie, plus le niveau du sort."
-     },
-     {
-      "level": 2,
-      "name": "Conduit divin : préservation de la vie",
-      "desc": "Canalisation d'énergie répartissant des soins égaux à cinq fois le niveau de clerc entre créatures proches."
-     },
-     {
-      "level": 6,
-      "name": "Soigneur béni",
-      "desc": "Lancer un sort de soin sur autrui rend aussi au clerc 2 points de vie plus le niveau du sort."
-     },
-     {
-      "level": 8,
-      "name": "Pouvoir divin",
-      "desc": "Une fois par tour, un sort cantrip de clerc ajoute 1d8 de dégâts à une attaque d'arme."
-     },
-     {
-      "level": 17,
-      "name": "Soins suprêmes",
-      "desc": "Lors d'un soin avec dés, considérer chaque dé comme donnant son résultat maximal."
-     }
+  },
+  "monk": {
+    "level": 3,
+    "label": "Tradition monastique",
+    "list": [
+      {
+        "key": "open-hand",
+        "name": "Voie de la Main ouverte",
+        "blurb": "Le maître du combat à mains nues qui exploite chaque coup pour déséquilibrer, projeter ou paralyser son adversaire.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Technique de la Main ouverte",
+            "desc": "Quand vous touchez une créature avec l'un des coups de votre Déferlante de coups, vous pouvez lui imposer l'un de ces effets au choix : elle doit réussir un jet de sauvegarde de Dextérité ou tomber à terre ; elle doit réussir un jet de sauvegarde de Force ou être repoussée de 4,50 mètres ; ou elle ne peut plus utiliser de réaction jusqu'à la fin de votre prochain tour. Le DD est celui de votre ki. C'est un choix libre à chaque coup qui touche, sans coût en ki supplémentaire."
+          },
+          {
+            "level": 6,
+            "name": "Quiétude totale",
+            "desc": "Par une action, vous dépensez 1 point de ki pour vous soigner. Vous récupérez un nombre de points de vie égal à trois fois votre niveau de moine (par exemple 18 PV au niveau 6). Vous ne pouvez le faire qu'une seule fois entre deux repos longs."
+          },
+          {
+            "level": 11,
+            "name": "Tranquillité",
+            "desc": "Au terme d'un repos long, vous baignez dans un calme profond qui reproduit l'effet du sort apaisement des émotions, sans coût. Toute créature qui veut vous attaquer doit d'abord réussir un jet de sauvegarde de Sagesse (DD de votre ki) ; en cas d'échec, elle doit choisir une autre cible ou son attaque échoue. Cet état prend fin si vous attaquez, lancez un sort qui inflige des dégâts, ou blessez une créature."
+          },
+          {
+            "level": 17,
+            "name": "Paume tremblante",
+            "desc": "En touchant une créature avec une attaque à mains nues, vous dépensez 3 points de ki pour poser en elle des vibrations mortelles qui durent un certain nombre de jours (égal à votre niveau de moine). Ensuite, à tout moment, vous pouvez déclencher ces vibrations par une action, sans coût. La créature subit alors 10d10 dégâts nécrotiques, ou la moitié si elle réussit un jet de sauvegarde de Constitution (DD de votre ki). Vous ne pouvez avoir ces vibrations posées que sur une seule créature à la fois."
+          }
+        ]
+      },
+      {
+        "key": "shadow",
+        "name": "Voie de l'Ombre",
+        "blurb": "Le moine espion qui manie l'ombre et le silence pour se dissimuler, se téléporter et frapper sans être vu.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Arts de l'ombre",
+            "desc": "Par une action, vous dépensez 2 points de ki pour lancer l'un de ces sorts sans en avoir besoin des composantes : ténèbres, vision dans le noir, passage sans trace ou silence. De plus, vous voyez déjà comme un être doté de vision dans le noir : gratuitement, sans dépenser de ki, votre sens perçoit dans l'obscurité comme si c'était de la pénombre."
+          },
+          {
+            "level": 6,
+            "name": "Pas de l'ombre",
+            "desc": "Quand vous vous trouvez dans une zone de pénombre ou d'obscurité, vous pouvez par une action bonus vous téléporter jusqu'à 18 mètres vers un autre emplacement plongé lui aussi dans la pénombre ou l'obscurité que vous voyez. Après cette téléportation, vous avez l'avantage à votre première attaque de mêlée effectuée avant la fin de ce tour."
+          },
+          {
+            "level": 11,
+            "name": "Cape d'ombre",
+            "desc": "Tant que vous êtes dans une zone de pénombre ou d'obscurité, vous pouvez par une action devenir invisible. Vous restez invisible jusqu'à ce que vous fassiez une attaque, lanciez un sort, ou vous retrouviez dans une zone de lumière vive."
+          },
+          {
+            "level": 17,
+            "name": "Frappe de l'ombre",
+            "desc": "Quand une créature située à 1,50 mètre de vous est touchée par une attaque venant d'une autre personne que vous, vous pouvez utiliser votre réaction pour faire une attaque à mains nues contre cette créature."
+          }
+        ]
+      },
+      {
+        "key": "four-elements",
+        "name": "Voie des Quatre Éléments",
+        "blurb": "Le moine qui transforme son ki en magie élémentaire de feu, d'eau, d'air et de terre.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Disciple des éléments",
+            "desc": "Vous canalisez les éléments à travers votre ki. Vous connaissez la discipline Harmonie élémentaire et un certain nombre de disciplines élémentaires de votre choix (deux au niveau 3). Beaucoup reproduisent des sorts élémentaires que vous lancez en dépensant des points de ki, sans composantes matérielles. Vous pouvez dépenser des points de ki supplémentaires pour lancer certaines disciplines à un niveau de sort plus élevé, dans la limite de votre ki disponible."
+          },
+          {
+            "level": 6,
+            "name": "Discipline supplémentaire",
+            "desc": "Vous apprenez une discipline élémentaire supplémentaire de votre choix. À chaque fois que vous gagnez un niveau de moine, vous pouvez aussi remplacer une discipline connue par une autre."
+          },
+          {
+            "level": 11,
+            "name": "Discipline supplémentaire",
+            "desc": "Vous apprenez encore une discipline élémentaire de votre choix. Le nombre maximal de points de ki que vous pouvez consacrer à une même discipline augmente avec votre niveau, ce qui renforce vos effets élémentaires."
+          },
+          {
+            "level": 17,
+            "name": "Discipline supplémentaire",
+            "desc": "Vous apprenez une dernière discipline élémentaire de votre choix, élargissant votre maîtrise du feu, de l'eau, de l'air et de la terre."
+          }
+        ]
+      }
     ]
-   },
-   {
-    "key": "light",
-    "name": "Domaine de la Lumière",
-    "blurb": "La lumière révélatrice et le feu purificateur contre les ténèbres.",
-    "features": [
-     {
-      "level": 1,
-      "name": "Sorts de domaine",
-      "desc": "Sorts de domaine ajoutés gratuitement aux sorts préparés, par paliers de niveau."
-     },
-     {
-      "level": 1,
-      "name": "Cantrip bonus",
-      "desc": "Le clerc connaît le cantrip Lumière sacrée."
-     },
-     {
-      "level": 1,
-      "name": "Halo protecteur",
-      "desc": "Réaction quand une créature visible à 9 m est touchée : impose un désavantage à l'attaque."
-     },
-     {
-      "level": 2,
-      "name": "Conduit divin : flamboiement de lumière",
-      "desc": "Canalisation : explosion lumineuse infligeant 2d10 dégâts radiants (jet pour moitié) aux créatures proches; augmente avec le niveau."
-     },
-     {
-      "level": 6,
-      "name": "Lumière inspirante",
-      "desc": "Au lancement d'un sort de lumière niveau 1+, octroi de points de vie temporaires à plusieurs alliés proches."
-     },
-     {
-      "level": 8,
-      "name": "Pouvoir divin",
-      "desc": "Une fois par tour, un sort cantrip de clerc ajoute 1d8 de dégâts à une attaque d'arme."
-     },
-     {
-      "level": 17,
-      "name": "Couronne de lumière",
-      "desc": "Action : aura lumineuse imposant un désavantage contre les sorts de feu ou radiants visant les ennemis proches."
-     }
+  },
+  "paladin": {
+    "level": 3,
+    "label": "Serment sacré",
+    "list": [
+      {
+        "key": "devotion",
+        "name": "Serment de Dévotion",
+        "blurb": "Le paladin idéal, fidèle à l'honneur et à la justice, qui protège les siens contre la ruse et la corruption.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Sorts de serment",
+            "desc": "À certains niveaux, ce serment ajoute des sorts qui sont toujours préparés pour vous : ils ne comptent pas dans votre limite de sorts préparés. Aux niveaux 3, 5, 9, 13 et 17, vous recevez des sorts liés à la protection et à la vérité, comme protection contre le mal et le bien puis zone de vérité. Vous pouvez les lancer normalement en dépensant vos emplacements de sorts."
+          },
+          {
+            "level": 3,
+            "name": "Conduit divin : arme sacrée",
+            "desc": "Par une action, vous canalisez votre énergie divine dans une arme que vous tenez. Pendant 1 minute, elle émet une lumière vive sur 6 mètres et une lumière faible sur 6 mètres de plus, et vous ajoutez votre bonus de Charisme (minimum +1) à vos jets d'attaque avec cette arme. Cela consomme votre Conduit divin, dont vous avez un nombre limité d'usages par repos."
+          },
+          {
+            "level": 3,
+            "name": "Conduit divin : repousser l'impie",
+            "desc": "Par une action, vous brandissez votre symbole sacré pour repousser les créatures maléfiques. Chaque mort-vivant et fiélon situé à 9 mètres ou moins qui peut vous voir doit réussir un jet de sauvegarde de Sagesse, sinon il est terrorisé pendant 1 minute. Une créature terrorisée doit s'éloigner de vous et ne peut pas s'en approcher volontairement ; elle refait le jet si elle subit des dégâts, mettant fin à l'effet en cas de réussite. Cela consomme un usage de votre Conduit divin."
+          },
+          {
+            "level": 7,
+            "name": "Aura de dévotion",
+            "desc": "Tant que vous n'êtes pas incapable d'agir, vous et les créatures alliées situées à 3 mètres ou moins de vous ne pouvez pas être charmés. C'est un effet passif et continu. Si vous êtes déjà charmé au moment d'entrer dans l'aura, l'effet est suspendu tant que vous y restez. Au niveau 18, la portée de l'aura passe à 9 mètres."
+          },
+          {
+            "level": 15,
+            "name": "Pureté de l'esprit",
+            "desc": "Effet passif et permanent : vous avez l'avantage à tous vos jets de sauvegarde pour résister au fait d'être charmé et pour résister à la métamorphose (transformation forcée de votre forme)."
+          },
+          {
+            "level": 20,
+            "name": "Avatar sacré",
+            "desc": "Par une action, vous émettez une aura de lumière solaire pendant 1 minute : lumière vive sur 9 mètres et lumière faible sur 9 mètres de plus. Tout ennemi qui commence son tour dans la lumière vive subit 10 points de dégâts radiants. De plus, vous avez l'avantage à vos jets de sauvegarde contre les sorts lancés par des fiélons ou des morts-vivants. Utilisable une fois, puis il faut finir un repos long."
+          }
+        ]
+      },
+      {
+        "key": "ancients",
+        "name": "Serment des Anciens",
+        "blurb": "Le champion de la lumière et de la vie, protecteur féerique qui repousse les ténèbres et abrite ses alliés.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Sorts de serment",
+            "desc": "Passif. À certains niveaux de paladin (3, 5, 9, 13 et 17), vous recevez des sorts de serment tournés vers la nature et la protection. Ils sont toujours considérés comme préparés et ne comptent pas dans votre nombre de sorts préparés."
+          },
+          {
+            "level": 3,
+            "name": "Conduit divin : courroux de la nature",
+            "desc": "Par une action (Conduit divin), des lianes spectrales jaillissent vers une créature de votre choix, à 3 mètres ou moins, que vous voyez. Elle doit réussir un jet de sauvegarde de Force ou de Dextérité (au choix de la créature) ou être entravée pendant 1 minute. Une créature entravée peut retenter le jet à la fin de chacun de ses tours pour se libérer."
+          },
+          {
+            "level": 3,
+            "name": "Conduit divin : réprimande des indomptés",
+            "desc": "Par une action (Conduit divin), vous brandissez votre symbole sacré. Chaque fée et chaque fiélon à 9 mètres ou moins doit réussir un jet de sauvegarde de Sagesse, sinon la créature est neutralisée et cherche à fuir pendant 1 minute. Une créature déguisée par magie révèle en plus sa vraie forme si elle échoue."
+          },
+          {
+            "level": 7,
+            "name": "Aura de garde",
+            "desc": "Passif. Vous et les créatures alliées à 3 mètres ou moins de vous avez une résistance aux dégâts infligés par les sorts (moitié des dégâts). À partir du niveau 18, cette aura s'étend à 9 mètres."
+          },
+          {
+            "level": 15,
+            "name": "Âme intemporelle",
+            "desc": "Passif. Vous ne vieillissez plus et ne pouvez pas être vieilli par magie. De plus, quand vous devriez tomber à 0 point de vie sans être tué sur le coup, vous pouvez choisir de tomber à 1 point de vie à la place. Utilisable une fois, puis il faut finir un repos long."
+          },
+          {
+            "level": 20,
+            "name": "Champion des anciens",
+            "desc": "Par une action, vous prenez une apparence radieuse pendant 1 minute. Pendant ce temps : vous récupérez 10 points de vie au début de chacun de vos tours ; les sorts de paladin qui vous coûtent une action peuvent être lancés en action bonus ; et les ennemis à 3 mètres ou moins ont un désavantage à leurs jets de sauvegarde contre vos sorts et votre Conduit divin. Utilisable une fois par repos long."
+          }
+        ]
+      },
+      {
+        "key": "vengeance",
+        "name": "Serment de Vengeance",
+        "blurb": "Le traqueur implacable qui poursuit sans relâche les coupables jusqu'à les frapper pour de bon.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Sorts de serment",
+            "desc": "Passif. À certains niveaux (3, 5, 9, 13 et 17), vous recevez des sorts de serment orientés vers la traque et le châtiment. Ils sont toujours préparés et ne comptent pas dans votre limite de sorts préparés."
+          },
+          {
+            "level": 3,
+            "name": "Conduit divin : serment d'inimitié",
+            "desc": "Par une action bonus (Conduit divin), vous désignez une créature à 3 mètres ou moins comme votre ennemi juré. Pendant 1 minute, vous avez l'avantage à vos jets d'attaque contre elle. L'effet prend fin plus tôt si la cible tombe à 0 point de vie ou inconsciente."
+          },
+          {
+            "level": 3,
+            "name": "Conduit divin : repousser l'impie",
+            "desc": "Par une action (Conduit divin), vous désignez une créature à 18 mètres ou moins que vous voyez. Elle doit réussir un jet de sauvegarde de Sagesse, sinon elle est effrayée et sa vitesse tombe à 0 pendant 1 minute. L'effet cesse si elle subit des dégâts. Les fiélons et les morts-vivants passent ce jet avec un désavantage."
+          },
+          {
+            "level": 7,
+            "name": "Implacable poursuivant",
+            "desc": "Quand vous touchez une créature avec une attaque d'opportunité, vous pouvez aussitôt vous déplacer jusqu'à la moitié de votre vitesse sans provoquer d'attaque d'opportunité. Cela vous permet de coller à un ennemi qui tente de fuir."
+          },
+          {
+            "level": 15,
+            "name": "Âme de vengeance",
+            "desc": "Quand une créature sous l'effet de votre Serment d'inimitié porte une attaque, vous pouvez utiliser votre réaction pour lui porter une attaque de mêlée, si elle est à portée."
+          },
+          {
+            "level": 20,
+            "name": "Ange vengeur",
+            "desc": "Par une action, il vous pousse des ailes spectrales et vous prenez une forme ailée pendant 1 heure : vous gagnez une vitesse de vol de 18 mètres. De plus, au moment de la transformation, les ennemis à 9 mètres ou moins qui vous voient doivent réussir un jet de sauvegarde de Sagesse ou être effrayés pendant 1 minute. Utilisable une fois par repos long."
+          }
+        ]
+      }
     ]
-   },
-   {
-    "key": "nature",
-    "name": "Domaine de la Nature",
-    "blurb": "La puissance brute du monde sauvage canalisée par la foi.",
-    "features": [
-     {
-      "level": 1,
-      "name": "Sorts de domaine",
-      "desc": "Sorts de domaine ajoutés gratuitement aux sorts préparés, par paliers de niveau."
-     },
-     {
-      "level": 1,
-      "name": "Acolyte de la nature",
-      "desc": "Un cantrip de druide, plus maîtrise d'une compétence parmi Dressage, Nature et Survie."
-     },
-     {
-      "level": 1,
-      "name": "Maîtrise des armures lourdes",
-      "desc": "Maîtrise supplémentaire des armures lourdes."
-     },
-     {
-      "level": 2,
-      "name": "Conduit divin : charmer animaux et plantes",
-      "desc": "Canalisation charmant les bêtes et plantes proches échouant à un jet de Sagesse, pendant une minute."
-     },
-     {
-      "level": 6,
-      "name": "Intervention de Dame Nature",
-      "desc": "Réaction pour conférer à un allié proche un avantage à un jet de sauvegarde."
-     },
-     {
-      "level": 8,
-      "name": "Frappe divine",
-      "desc": "Une fois par tour, une attaque d'arme inflige 1d8 dégâts supplémentaires (froid, feu ou foudre), 2d8 au niveau 14."
-     },
-     {
-      "level": 17,
-      "name": "Maître de la nature",
-      "desc": "Permet de commander oralement, par action bonus, les bêtes et plantes charmées par le conduit divin."
-     }
+  },
+  "ranger": {
+    "level": 3,
+    "label": "Archétype de rôdeur",
+    "list": [
+      {
+        "key": "hunter",
+        "name": "Chasseur",
+        "blurb": "Un rôdeur qui apprend des techniques de combat souples pour terrasser aussi bien un géant isolé qu'une nuée de gobelins.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Proie du chasseur",
+            "desc": "Aptitude passive obtenue au niveau 3. Vous choisissez une fois pour toutes une option de combat qui reste active en permanence. « Tueur de colosses » : une fois par tour, quand vous touchez une créature qui a déjà perdu des points de vie, votre attaque inflige 1d8 dégâts supplémentaires. « Briseur de horde » : une fois par tour, quand vous attaquez une cible avec une arme, vous pouvez porter une deuxième attaque avec la même arme contre une autre créature située à moins de 1,50 m de la première et à portée. « Tueur de géants » : quand une créature de taille Grande ou plus située à moins de 1,50 m de vous vous attaque (qu'elle réussisse ou non), vous pouvez utiliser votre réaction pour l'attaquer aussitôt après son attaque, à condition de la voir. Vous ne choisissez qu'une seule de ces options."
+          },
+          {
+            "level": 7,
+            "name": "Tactiques défensives",
+            "desc": "Aptitude passive obtenue au niveau 7. Vous choisissez une option défensive permanente. « Échapper à la horde » : les attaques d'opportunité contre vous sont faites avec désavantage. « Défense multiple » : quand une créature vous touche, vous gagnez +4 à votre classe d'armure contre les autres attaques de cette même créature jusqu'à la fin de votre prochain tour. « Volonté d'acier » : vous avez l'avantage aux jets de sauvegarde contre l'état terrorisé (effrayé). Vous ne choisissez qu'une seule de ces options."
+          },
+          {
+            "level": 11,
+            "name": "Attaques multiples",
+            "desc": "Aptitude obtenue au niveau 11 qui améliore votre attaque. Vous choisissez une option permanente. « Salve » : par une action, vous dépensez une munition pour toucher toutes les créatures de votre choix dans une zone de 3 m de rayon à portée de votre arme à distance ; chacune fait un jet de sauvegarde de Dextérité (DD basé sur votre Sagesse) et subit les dégâts de l'arme en cas d'échec. « Tourbillon d'acier » : par une action, vous frappez toutes les créatures situées à moins de 1,50 m de vous avec une arme de corps à corps ; chacune fait un jet de sauvegarde de Dextérité (même DD) et subit les dégâts de l'arme en cas d'échec. Vous ne choisissez qu'une seule de ces options."
+          },
+          {
+            "level": 15,
+            "name": "Défense supérieure",
+            "desc": "Aptitude obtenue au niveau 15. Vous choisissez une dernière option défensive permanente. « Esquive extraordinaire » : par une réaction, quand une créature que vous voyez vous attaque et vous touche, vous divisez par deux les dégâts de cette attaque. « Tenir bon » : quand une créature hostile rate une attaque de corps à corps contre vous, vous pouvez utiliser votre réaction pour l'obliger à répéter cette même attaque contre une autre créature de votre choix (autre qu'elle-même). Vous ne choisissez qu'une seule de ces options."
+          }
+        ]
+      },
+      {
+        "key": "beastmaster",
+        "name": "Maître des bêtes",
+        "blurb": "Un rôdeur uni à une bête fidèle qui se bat, protège et chasse en équipe avec lui.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Compagnon animal",
+            "desc": "Aptitude obtenue au niveau 3. Vous gagnez un compagnon animal : une bête de taille Moyenne au plus et de puissance (facteur de puissance) 1/4 ou moins. La bête vous obéit du mieux qu'elle peut et agit au moment de votre choix pendant votre tour (elle renonce alors à ses propres actions, sauf pour se défendre). Si la bête meurt, vous pouvez en lier une nouvelle en passant 8 heures avec elle."
+          },
+          {
+            "level": 3,
+            "name": "Compagnon aguerri",
+            "desc": "Aptitude passive obtenue au niveau 3 qui renforce votre compagnon. La bête utilise votre bonus de maîtrise à la place du sien : il s'ajoute à sa classe d'armure, à ses jets d'attaque, à ses jets de dégâts et à ses jets de sauvegarde, et elle maîtrise toutes les compétences et sauvegardes qu'elle avait déjà. Son maximum de points de vie devient le plus élevé entre sa valeur normale et 4 fois votre niveau de rôdeur. Quand vous lui appliquez un sort de soin, elle récupère un nombre minimal de points de vie égal à 2 fois votre niveau de rôdeur."
+          },
+          {
+            "level": 7,
+            "name": "Camaraderie exceptionnelle",
+            "desc": "Aptitude obtenue au niveau 7. Lors de vos tours où votre compagnon n'attaque pas, vous pouvez utiliser une action bonus pour lui commander d'entreprendre l'action Foncer (Se précipiter), Se désengager, Esquiver (Se défendre) ou Aider à son tour."
+          },
+          {
+            "level": 11,
+            "name": "Furie bestiale",
+            "desc": "Aptitude obtenue au niveau 11. Quand vous commandez à votre compagnon d'entreprendre l'action Attaquer, la bête peut porter deux attaques au lieu d'une (ou utiliser son action Multiattaque si elle en possède une)."
+          },
+          {
+            "level": 15,
+            "name": "Défense partagée",
+            "desc": "Aptitude obtenue au niveau 15. Quand vous lancez un sort qui vous cible vous-même, vous pouvez aussi en faire bénéficier votre compagnon animal, à condition qu'il se trouve à moins de 9 m de vous."
+          }
+        ]
+      }
     ]
-   },
-   {
-    "key": "tempest",
-    "name": "Domaine de la Tempête",
-    "blurb": "La fureur du tonnerre et de la foudre déchaînée sur les ennemis.",
-    "features": [
-     {
-      "level": 1,
-      "name": "Sorts de domaine",
-      "desc": "Sorts de domaine ajoutés gratuitement aux sorts préparés, par paliers de niveau."
-     },
-     {
-      "level": 1,
-      "name": "Maîtrises de la tempête",
-      "desc": "Maîtrise des armures lourdes et des armes de guerre."
-     },
-     {
-      "level": 1,
-      "name": "Vengeance de la tempête",
-      "desc": "Réaction quand le clerc est touché en mêlée : repousse l'attaquant et lui inflige 2d8 dégâts de tonnerre."
-     },
-     {
-      "level": 2,
-      "name": "Conduit divin : foudre destructrice",
-      "desc": "Canalisation maximisant les dégâts de tonnerre ou de foudre d'un sort lancé."
-     },
-     {
-      "level": 6,
-      "name": "Frappe du tonnerre",
-      "desc": "Lors de dégâts de foudre, possibilité de repousser de 3 m une créature de taille Grande ou moindre."
-     },
-     {
-      "level": 8,
-      "name": "Frappe divine",
-      "desc": "Une fois par tour, une attaque d'arme inflige 1d8 dégâts de tonnerre supplémentaires, 2d8 au niveau 14."
-     },
-     {
-      "level": 17,
-      "name": "Naissance de la tempête",
-      "desc": "Capacité de vol égale à la vitesse de déplacement tant que le clerc n'est pas sous terre."
-     }
+  },
+  "rogue": {
+    "level": 3,
+    "label": "Archétype de roublard",
+    "list": [
+      {
+        "key": "thief",
+        "name": "Voleur",
+        "blurb": "Un roublard rapide et débrouillard, expert de l'escalade, du vol et du maniement d'objets à la volée.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Mains agiles",
+            "desc": "Aptitude passive. Dès le niveau 3, vous pouvez utiliser votre action bonus pour faire une action Utiliser un objet, pour manier des outils de voleur (par exemple crocheter une serrure ou désamorcer un piège) ou pour faire un tour d'Escamotage (subtiliser un objet, tour de passe-passe). Vous gagnez donc une action de plus par tour pour ces gestes précis, en plus de votre action normale."
+          },
+          {
+            "level": 3,
+            "name": "Travail en hauteur",
+            "desc": "Aptitude passive. Grimper ne vous coûte plus de déplacement supplémentaire : vous escaladez à votre vitesse normale au lieu de la vitesse réduite habituelle. De plus, quand vous faites un saut en longueur avec élan, vous ajoutez quelques dizaines de centimètres à la distance franchie (l'équivalent de votre modificateur de Dextérité en pieds)."
+          },
+          {
+            "level": 9,
+            "name": "Cambrioleur émérite",
+            "desc": "Aptitude passive, à partir du niveau 9. Quand, pendant votre tour, vous vous déplacez d'au plus la moitié de votre vitesse, vous avez l'avantage sur les tests de Dextérité (Discrétion) faits ce tour-là. Vous restez ainsi bien plus difficile à repérer quand vous avancez prudemment."
+          },
+          {
+            "level": 13,
+            "name": "Usage d'objets magiques",
+            "desc": "Aptitude passive, à partir du niveau 13. Vous savez utiliser n'importe quel objet magique, même ceux normalement réservés à une autre classe, une autre race ou un niveau plus élevé. Vous ignorez toutes ces conditions et pouvez activer l'objet comme si vous y aviez droit."
+          },
+          {
+            "level": 17,
+            "name": "Réflexes du voleur",
+            "desc": "Aptitude passive, à partir du niveau 17. Au tout premier round d'un combat, vous jouez deux tours au lieu d'un. Vous agissez une première fois à votre initiative normale, puis une seconde fois à cette même initiative moins 10. Cela ne s'applique qu'au premier round et seulement si vous n'êtes pas surpris."
+          }
+        ]
+      },
+      {
+        "key": "assassin",
+        "name": "Assassin",
+        "blurb": "Un tueur discret qui transforme la surprise et le poison en coups mortels dès le premier instant du combat.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Maîtrises supplémentaires",
+            "desc": "Aptitude passive. Dès le niveau 3, vous gagnez la maîtrise de deux kits : le kit de déguisement (pour changer d'apparence) et le kit d'empoisonnement (pour préparer et appliquer des poisons). Vous ajoutez votre bonus de maîtrise aux tests utilisant ces outils."
+          },
+          {
+            "level": 3,
+            "name": "Assassinat",
+            "desc": "Aptitude passive, à partir du niveau 3. Vous avez l'avantage sur vos jets d'attaque contre toute créature qui n'a pas encore joué son tour dans le combat. De plus, tout coup que vous portez à une créature surprise est automatiquement un coup critique (vous doublez les dés de dégâts)."
+          },
+          {
+            "level": 9,
+            "name": "Imposteur",
+            "desc": "Aptitude passive, à partir du niveau 9. Après avoir observé et étudié une personne assez longtemps, vous pouvez prendre son identité de façon très convaincante : sa voix, sa démarche, ses manières et son apparence. Vous avez l'avantage sur les tests pour convaincre les autres que vous êtes bien cette personne."
+          },
+          {
+            "level": 13,
+            "name": "Frappe mortelle",
+            "desc": "Aptitude passive, à partir du niveau 13. Quand vous touchez une créature prise par surprise avec une attaque, elle doit réussir un jet de sauvegarde de Constitution (DD = 8 + votre modificateur de Dextérité + votre bonus de maîtrise). En cas d'échec, tous les dégâts de cette attaque contre la cible sont doublés (pas seulement ceux de l'Attaque sournoise)."
+          },
+          {
+            "level": 17,
+            "name": "Mort apparente",
+            "desc": "Aptitude passive, à partir du niveau 17. Quand une créature vous touche avec une attaque, vous pouvez utiliser votre réaction pour lancer un dé et feindre la mort : vous tombez à terre et faites le mort de façon convaincante. Vous restez ainsi jusqu'à la fin de votre prochain tour, et vos attaques restent des critiques contre toute cible surprise, ce qui vous laisse le temps de préparer un coup mortel."
+          }
+        ]
+      },
+      {
+        "key": "arcane-trickster",
+        "name": "Filou arcanique",
+        "blurb": "Un roublard qui apprend un peu de magie de magicien (illusion et enchantement) pour tromper et manipuler.",
+        "features": [
+          {
+            "level": 3,
+            "name": "Sorts (magicien)",
+            "desc": "Aptitude passive, à partir du niveau 3. Vous apprenez à lancer quelques sorts de la liste du magicien, surtout des sorts d'illusion et d'enchantement. Votre caractéristique d'incantation est l'Intelligence : elle sert à calculer le DD de vos sorts et vos jets d'attaque de sort. Vous gagnez de nouveaux sorts au fil des niveaux."
+          },
+          {
+            "level": 3,
+            "name": "Main de mage améliorée",
+            "desc": "Aptitude passive, à partir du niveau 3. Quand vous lancez le sort mineur main de mage, la main spectrale devient invisible et vous pouvez faire à distance des gestes fins : crocheter une serrure, désamorcer un piège, glisser ou reprendre un objet dans un contenant, ou faire les poches d'une créature. Vous pouvez commander la main par une action bonus."
+          },
+          {
+            "level": 9,
+            "name": "Sortilège furtif",
+            "desc": "Aptitude passive, à partir du niveau 9. Si vous êtes caché d'une créature au moment où vous lancez un sort sur elle, cette créature subit un désavantage sur tous les jets de sauvegarde qu'elle fait contre ce sort pendant ce tour. Se cacher juste avant de lancer rend donc vos sorts bien plus difficiles à éviter."
+          },
+          {
+            "level": 13,
+            "name": "Tour de passe-passe magique",
+            "desc": "Aptitude passive, à partir du niveau 13. Par une action bonus, vous pouvez commander votre main de mage pour distraire une créature située à moins de 1,50 mètre de la main. Jusqu'à la fin de ce tour, vous avez alors l'avantage sur vos jets d'attaque contre cette créature."
+          },
+          {
+            "level": 17,
+            "name": "Voleur de sorts",
+            "desc": "Réaction, à partir du niveau 17. Quand une créature lance un sort qui vous vise (vous seul) ou dont l'effet vous inclut, vous pouvez utiliser votre réaction pour forcer le lanceur à faire un jet de sauvegarde contre le DD de vos sorts. En cas d'échec, le sort n'a aucun effet sur vous et vous « volez » sa connaissance : vous pouvez le lancer une fois pendant les 8 heures suivantes, avec vos propres emplacements de sort. Vous ne pouvez avoir qu'un sort volé à la fois."
+          }
+        ]
+      }
     ]
-   },
-   {
-    "key": "trickery",
-    "name": "Domaine de la Duperie",
-    "blurb": "L'illusion, la ruse et le subterfuge au service des dieux farceurs.",
-    "features": [
-     {
-      "level": 1,
-      "name": "Sorts de domaine",
-      "desc": "Sorts de domaine ajoutés gratuitement aux sorts préparés, par paliers de niveau."
-     },
-     {
-      "level": 1,
-      "name": "Bénédiction du filou",
-      "desc": "Action pour conférer à une créature touchée un avantage à ses tests de Discrétion durant une heure."
-     },
-     {
-      "level": 2,
-      "name": "Conduit divin : invocation de la duperie",
-      "desc": "Canalisation créant un double illusoire et immobile de soi, durable une minute et utilisable pour viser à distance."
-     },
-     {
-      "level": 6,
-      "name": "Bénédiction des ombres",
-      "desc": "Action pour devenir invisible un tour; l'invisibilité cesse en cas d'attaque ou de sort lancé."
-     },
-     {
-      "level": 8,
-      "name": "Frappe divine",
-      "desc": "Une fois par tour, une attaque d'arme inflige 1d8 dégâts de poison supplémentaires, 2d8 au niveau 14."
-     },
-     {
-      "level": 17,
-      "name": "Doubles améliorés",
-      "desc": "Le pouvoir d'invocation de la duperie crée jusqu'à quatre doubles illusoires au lieu d'un seul."
-     }
+  },
+  "sorcerer": {
+    "level": 1,
+    "label": "Origine magique",
+    "list": [
+      {
+        "key": "draconic-bloodline",
+        "name": "Lignée draconique",
+        "blurb": "Un ancêtre dragon imprègne votre magie : vous résistez mieux, frappez plus fort avec un élément, et gagnez avec le temps des dons dignes d'un dragon.",
+        "features": [
+          {
+            "level": 1,
+            "name": "Ancetre dragon",
+            "desc": "Passif. Vous choisissez un type de dragon parmi une liste ; ce choix fixe votre élément de dégâts (feu, froid, foudre, acide ou poison). Vous savez parler, lire et écrire le draconique. Quand vous faites un jet de Charisme lié à un dragon, vous doublez votre bonus de maîtrise s'il s'applique normalement."
+          },
+          {
+            "level": 1,
+            "name": "Resistance draconique",
+            "desc": "Passif. Vos points de vie maximaux augmentent de 1, et de 1 de plus à chaque niveau d'ensorceleur que vous gagnez ensuite. De plus, tant que vous ne portez pas d'armure, votre classe d'armure de base est de 13 + votre modificateur de Dextérité."
+          },
+          {
+            "level": 6,
+            "name": "Affinite elementaire",
+            "desc": "À partir du niveau 6. Passif : quand vous lancez un sort qui inflige des dégâts du type lié à votre dragon, vous ajoutez votre modificateur de Charisme à ces dégâts. En plus, par une action, vous pouvez dépenser 1 point de sorcellerie pour obtenir une résistance à ce type de dégâts pendant 1 heure."
+          },
+          {
+            "level": 14,
+            "name": "Ailes de dragon",
+            "desc": "À partir du niveau 14. Par une action bonus, vous faites apparaître des ailes de dragon dans votre dos. Tant que vous ne portez pas d'armure, vous gagnez une vitesse de vol égale à votre vitesse de déplacement au sol. Les ailes restent jusqu'à ce que vous les fassiez disparaître, ce qui coûte aussi une action bonus."
+          },
+          {
+            "level": 18,
+            "name": "Presence draconique",
+            "desc": "À partir du niveau 18. Par une action, vous dépensez 5 points de sorcellerie pour dégager pendant 1 minute une aura terrifiante ou fascinante sur 18 mètres autour de vous. Chaque créature qui commence son tour dans l'aura, ou y entre pour la première fois, doit réussir un jet de sauvegarde de Sagesse (DD basé sur votre Charisme) ou être charmée (si vous avez choisi la fascination) ou effrayée (si vous avez choisi la terreur) par vous jusqu'à la fin de l'effet. Une créature qui réussit son jet est immunisée contre votre aura pendant 24 heures."
+          }
+        ]
+      },
+      {
+        "key": "wild-magic",
+        "name": "Magie sauvage",
+        "blurb": "Votre magie est instable et imprévisible : elle peut se retourner en effets aléatoires, mais vous apprenez peu à peu à plier le hasard en votre faveur.",
+        "features": [
+          {
+            "level": 1,
+            "name": "Sursaut de magie sauvage",
+            "desc": "Passif. Votre magie est instable. Chaque fois que vous lancez un sort d'ensorceleur de niveau 1 ou plus, le MJ peut vous demander de lancer un d20. Sur un 1, vous lancez sur la table des effets de magie sauvage et l'effet obtenu se produit aussitôt."
+          },
+          {
+            "level": 1,
+            "name": "Maree du chaos",
+            "desc": "Une fois par repos long, vous pouvez, sans dépenser d'action, plier le hasard pour obtenir l'avantage sur un jet d'attaque, de caractéristique ou de sauvegarde que vous faites vous-même. Après cela, il faut un repos long pour recommencer, à moins que le MJ ne vous laisse retrouver cette aptitude en déclenchant un sursaut de magie sauvage."
+          },
+          {
+            "level": 6,
+            "name": "Flexion du hasard",
+            "desc": "À partir du niveau 6. Quand une créature que vous voyez à 18 mètres fait un jet d'attaque, de caractéristique ou de sauvegarde, vous pouvez utiliser votre réaction et dépenser 2 points de sorcellerie pour lancer 1d4 : vous ajoutez ou retirez le résultat à son jet. Vous pouvez décider après avoir vu le dé, mais avant de connaître l'effet."
+          },
+          {
+            "level": 14,
+            "name": "Chance controlee",
+            "desc": "À partir du niveau 14. Vous maîtrisez un peu vos débordements de magie sauvage. Chaque fois que vous devez lancer sur la table des effets de magie sauvage, vous lancez deux fois et vous choisissez lequel des deux résultats s'applique."
+          },
+          {
+            "level": 18,
+            "name": "Chaos maitrise",
+            "desc": "À partir du niveau 18. Quand vous lancez les dés de dégâts d'un sort et qu'un dé donne son résultat maximal, vous pouvez relancer ce dé et ajouter le nouveau résultat aux dégâts. Vous ne pouvez le faire qu'une seule fois par tour."
+          }
+        ]
+      }
     ]
-   },
-   {
-    "key": "war",
-    "name": "Domaine de la Guerre",
-    "blurb": "Le maître de bataille divin, béni pour combattre en première ligne.",
-    "features": [
-     {
-      "level": 1,
-      "name": "Sorts de domaine",
-      "desc": "Sorts de domaine ajoutés gratuitement aux sorts préparés, par paliers de niveau."
-     },
-     {
-      "level": 1,
-      "name": "Maîtrises du guerrier",
-      "desc": "Maîtrise des armures lourdes et des armes de guerre."
-     },
-     {
-      "level": 1,
-      "name": "Prêtre guerrier",
-      "desc": "Action bonus pour effectuer une attaque d'arme supplémentaire; usages égaux au modificateur de Sagesse, récupérés au repos."
-     },
-     {
-      "level": 2,
-      "name": "Conduit divin : faveur martiale",
-      "desc": "Action bonus canalisant l'énergie pour ajouter un bonus de +10 à un jet d'attaque."
-     },
-     {
-      "level": 6,
-      "name": "Bénédiction du dieu de la guerre",
-      "desc": "Réaction pour octroyer un bonus de +10 à un jet d'attaque raté du clerc ou d'un allié proche."
-     },
-     {
-      "level": 8,
-      "name": "Frappe divine",
-      "desc": "Une fois par tour, une attaque d'arme inflige 1d8 dégâts supplémentaires du type de l'arme, 2d8 au niveau 14."
-     },
-     {
-      "level": 17,
-      "name": "Avatar de la bataille",
-      "desc": "Résistance aux dégâts contondants, perforants et tranchants des armes non magiques."
-     }
+  },
+  "warlock": {
+    "level": 1,
+    "label": "Protecteur d'outre-monde",
+    "list": [
+      {
+        "key": "fiend",
+        "name": "Le Fiélon",
+        "blurb": "Vous avez scellé un pacte avec un puissant démon ou diable des Plans inférieurs, qui vous rend résistant et destructeur.",
+        "features": [
+          {
+            "level": 1,
+            "name": "Bénédiction du Sombre Patron",
+            "desc": "À chaque fois que vous réduisez une créature hostile à 0 point de vie, vous gagnez des points de vie temporaires. Le montant est égal à votre modificateur de Charisme + votre niveau d'occultiste (au minimum 1). Ces points temporaires disparaissent au bout d'un certain temps s'ils ne sont pas utilisés. Il n'y a pas de limite au nombre d'utilisations par jour."
+          },
+          {
+            "level": 6,
+            "name": "Résistance fielleuse",
+            "desc": "Au terme d'un repos court ou long, choisissez un type de dégâts parmi contondant, perforant ou tranchant. Jusqu'à votre prochain repos, vous avez la résistance à ce type de dégâts (vous n'en subissez que la moitié). La résistance ne s'applique pas si les dégâts proviennent d'une arme magique."
+          },
+          {
+            "level": 10,
+            "name": "Marchandage d'âmes",
+            "desc": "Quand vous devriez tomber à 0 point de vie à cause de dégâts, vous pouvez à la place tomber à 1 point de vie et rester debout. Cela ne fonctionne pas si les dégâts vous tueraient sur le coup (dommages massifs suffisants pour vous réduire bien en dessous de 0). Utilisable une fois, puis vous devez terminer un repos long pour vous en resservir."
+          },
+          {
+            "level": 14,
+            "name": "Précipitation infernale",
+            "desc": "Quand vous touchez une créature avec une attaque, vous pouvez utiliser cette aptitude pour la précipiter instantanément à travers les Plans inférieurs. Il n'y a pas de jet de sauvegarde : la cible disparaît et endure un voyage cauchemardesque, puis réapparaît à l'endroit qu'elle occupait (ou l'emplacement libre le plus proche) à la fin de votre prochain tour, en subissant 10d10 dégâts psychiques. Utilisable une fois, puis vous devez terminer un repos long pour vous en resservir."
+          }
+        ]
+      },
+      {
+        "key": "archfey",
+        "name": "L'Archifée",
+        "blurb": "Votre patron est un seigneur ou une dame du Pays des Fées, maître des illusions, du charme et des fuites déroutantes.",
+        "features": [
+          {
+            "level": 1,
+            "name": "Présence féerique",
+            "desc": "Par une action, vous forcez chaque créature dans un rayon de 3 mètres autour de vous à faire un jet de sauvegarde de Sagesse. Choisissez au préalable si l'effet charme ou effraie. Sur un échec, la créature est charmée ou effrayée par vous jusqu'à la fin de votre prochain tour. Utilisable une fois, puis récupérée après un repos court ou long."
+          },
+          {
+            "level": 6,
+            "name": "Retraite brumeuse",
+            "desc": "Par une réaction, déclenchée quand vous subissez des dégâts (de n'importe quelle source), vous devenez invisible et vous vous téléportez jusqu'à 18 mètres vers un endroit libre que vous voyez. L'invisibilité dure jusqu'à la fin de votre prochain tour ou jusqu'à ce que vous attaquiez ou lanciez un sort. Utilisable une fois par repos court ou long."
+          },
+          {
+            "level": 10,
+            "name": "Défense séduisante",
+            "desc": "Vous ne pouvez plus être charmé, et vous en êtes libéré si vous l'étiez déjà. De plus, quand une créature tente de vous charmer, vous pouvez utiliser votre réaction pour retourner le charme contre elle : elle doit réussir un jet de sauvegarde de Sagesse, sinon elle est effrayée par vous pendant 1 minute."
+          },
+          {
+            "level": 14,
+            "name": "Cercle des fées",
+            "desc": "Par une action, désignez une créature que vous voyez à moins de 18 mètres. Elle doit réussir un jet de sauvegarde de Sagesse, sinon, au choix, elle est charmée ou effrayée par vous pendant 1 minute (ou jusqu'à ce que votre concentration cesse). Tant que l'effet dure, elle est neutralisée et perçoit un monde illusoire à la place de la réalité. Utilisable une fois, puis récupérée après un repos court ou long."
+          }
+        ]
+      },
+      {
+        "key": "great-old-one",
+        "name": "Le Grand Ancien",
+        "blurb": "Vous êtes lié à une entité cosmique lointaine et incompréhensible, qui vous ouvre aux secrets de l'esprit et à la domination mentale.",
+        "features": [
+          {
+            "level": 1,
+            "name": "Esprit indicible",
+            "desc": "Vous pouvez communiquer par télépathie avec n'importe quelle créature située à moins de 9 mètres que vous voyez. Il faut que vous partagiez au moins une langue, ou qu'elle comprenne déjà au moins une langue. La créature n'a pas besoin de vous répondre par télépathie, mais si elle le fait, vous percevez sa réponse. Ce lien est passif et ne coûte aucune action."
+          },
+          {
+            "level": 6,
+            "name": "Bouclier de la pensée",
+            "desc": "Vous avez en permanence la résistance aux dégâts psychiques (vous n'en subissez que la moitié). De plus, quand une créature vous inflige des dégâts psychiques, elle subit en retour le même nombre de dégâts psychiques que vous avez reçus. Cet effet est passif et automatique."
+          },
+          {
+            "level": 10,
+            "name": "Esclaves indésirés",
+            "desc": "Cette aptitude renforce votre protection mentale : vous ne pouvez plus être charmé ni effrayé pendant que vous êtes conscient, et votre esprit résiste à l'intrusion. Elle remplace la version de niveau 6 en cas de variante utilisée à table ; référez-vous à votre patron pour la forme exacte, mais l'idée reste une immunité mentale accrue avec renvoi de l'effet vers son lanceur une fois par repos long."
+          },
+          {
+            "level": 14,
+            "name": "Asservissement",
+            "desc": "Par une action, touchez une créature humanoïde neutralisée. Il n'y a pas de jet de sauvegarde : elle devient charmée par vous jusqu'à ce qu'on lève le charme (par exemple avec le sort levée de malédiction). Vous pouvez communiquer par télépathie avec elle tant qu'elle se trouve sur le même plan que vous."
+          }
+        ]
+      }
     ]
-   }
-  ]
- },
- "druid": {
-  "level": 2,
-  "label": "Cercle druidique",
-  "list": [
-   {
-    "key": "land",
-    "name": "Cercle de la Terre",
-    "blurb": "Gardien des savoirs anciens, puisant sa magie dans un terrain de prédilection.",
-    "features": [
-     {
-      "level": 2,
-      "name": "Tour de magie supplémentaire",
-      "desc": "Apprend un tour de magie de druide de plus."
-     },
-     {
-      "level": 2,
-      "name": "Récupération naturelle",
-      "desc": "Lors d'un repos court, une fois par jour, récupère des emplacements de sort jusqu'à la moitié du niveau de druide (arrondi sup.)."
-     },
-     {
-      "level": 3,
-      "name": "Sorts de cercle",
-      "desc": "Choix d'un terrain (arctique, désert, forêt...) octroyant des sorts toujours préparés à divers niveaux. Le terrain est fixé."
-     },
-     {
-      "level": 6,
-      "name": "Foulée terrestre",
-      "desc": "Ignore le terrain difficile naturel non magique et résiste aux entraves végétales magiques."
-     },
-     {
-      "level": 10,
-      "name": "Communion nature",
-      "desc": "Immunité contre le poison, les maladies et le charme ou l'effroi venant d'élémentaires et de fées."
-     },
-     {
-      "level": 14,
-      "name": "Sanctuaire naturel",
-      "desc": "Les bêtes et plantes hésitent à attaquer : elles doivent réussir un jet de Sagesse, sinon elles renoncent ou subissent le désavantage."
-     }
+  },
+  "wizard": {
+    "level": 2,
+    "label": "École de magie",
+    "list": [
+      {
+        "key": "abjuration",
+        "name": "École d'Abjuration",
+        "blurb": "Le maître des protections : il tisse une barrière d'énergie qui absorbe les coups et devient un rempart vivant contre la magie.",
+        "features": [
+          {
+            "level": 2,
+            "name": "Initié en abjuration",
+            "desc": "Aptitude passive liée à votre grimoire. Quand vous recopiez un sort d'abjuration dans votre grimoire, le temps de copie et le coût en or sont divisés par deux."
+          },
+          {
+            "level": 2,
+            "name": "Gardien arcanique",
+            "desc": "À partir du niveau 6, tant que votre gardien arcanique est actif, vous pouvez le faire protéger un allié. En réaction, quand une créature que vous voyez à moins de 9 mètres subit des dégâts, la réserve de points de vie du gardien absorbe ces dégâts à sa place (comme elle le ferait pour vous)."
+          },
+          {
+            "level": 6,
+            "name": "Gardien projeté",
+            "desc": "À partir du niveau 6, tant que votre gardien arcanique est actif, vous pouvez le déplacer sur un allié. Par une action, choisissez une créature que vous voyez à moins de 9 mètres : le gardien la protège désormais à votre place, avec sa réserve de points de vie restante. Le gardien revient sur vous quand vous le décidez."
+          },
+          {
+            "level": 10,
+            "name": "Résistance magique avancée",
+            "desc": "Aptitude passive à partir du niveau 10. Vous avez l'avantage à tous vos jets de sauvegarde contre les sorts et les autres effets magiques."
+          },
+          {
+            "level": 14,
+            "name": "Imposer la dissipation",
+            "desc": "À partir du niveau 14, votre dissipation devient offensive. Quand vous réussissez à dissiper un sort sur une créature avec dissipation de la magie, cette créature subit des dégâts de force : 1d8 par niveau du sort dissipé. Elle fait un jet de sauvegarde de Constitution pour réduire ces dégâts de moitié."
+          }
+        ]
+      },
+      {
+        "key": "conjuration",
+        "name": "École d'Invocation",
+        "blurb": "Il fait surgir créatures et objets du néant et se déplace par téléportations là où d'autres doivent marcher.",
+        "features": [
+          {
+            "level": 2,
+            "name": "Initié en invocation",
+            "desc": "Aptitude passive liée à votre grimoire. Quand vous recopiez un sort d'invocation (conjuration) dans votre grimoire, le temps de copie et le coût en or sont divisés par deux."
+          },
+          {
+            "level": 2,
+            "name": "Invocation mineure",
+            "desc": "Par une action, vous faites apparaître dans votre main ou sur le sol à vos pieds un objet inoffensif d'au plus 90 cm de côté et pesant moins de 5 kg. L'objet émet une faible lumière sur un court rayon. Il disparaît au bout d'une heure, si vous utilisez à nouveau cette aptitude, ou s'il subit des dégâts. Il ne peut servir ni d'arme ni d'outil, et n'a aucune valeur."
+          },
+          {
+            "level": 6,
+            "name": "Téléportation bénie",
+            "desc": "À partir du niveau 6, juste après avoir lancé un sort d'invocation de niveau 1 ou plus, vous pouvez vous téléporter jusqu'à 9 mètres vers un espace libre que vous voyez."
+          },
+          {
+            "level": 10,
+            "name": "Invocation focalisée",
+            "desc": "Aptitude passive à partir du niveau 10. Votre concentration ne peut plus être rompue par les dégâts quand vous vous concentrez sur un sort de l'école d'invocation."
+          },
+          {
+            "level": 14,
+            "name": "Invocation durable",
+            "desc": "À partir du niveau 14, les créatures que vous invoquez ou créez avec un sort d'invocation ont l'avantage aux jets de sauvegarde contre l'effet de dissipation de la magie tant qu'elles sont à moins de 9 mètres de vous."
+          }
+        ]
+      },
+      {
+        "key": "divination",
+        "name": "École de Divination",
+        "blurb": "Le voyant qui entrevoit l'avenir et le réécrit : il fige des jets de dés à l'avance pour tordre le destin en sa faveur.",
+        "features": [
+          {
+            "level": 2,
+            "name": "Initié en divination",
+            "desc": "Aptitude passive liée à votre grimoire. Quand vous recopiez un sort de divination dans votre grimoire, le temps de copie et le coût en or sont divisés par deux."
+          },
+          {
+            "level": 2,
+            "name": "Présage",
+            "desc": "À chaque repos long, vous lancez deux d20 et notez les résultats : ce sont vos dés de présage. Ensuite, quand vous ou une créature que vous voyez faites un jet d'attaque, un jet de sauvegarde ou un test de caractéristique, vous pouvez remplacer le dé lancé par l'un de vos présages (avant de connaître le résultat du jet). Chaque présage ne sert qu'une fois, et vous devez décider avant que le MJ n'annonce réussite ou échec."
+          },
+          {
+            "level": 6,
+            "name": "Savoir expert",
+            "desc": "À partir du niveau 6, vous pouvez lancer le sort divination ou contact avec l'au-delà sans dépenser d'emplacement ni de composante matérielle, et sans risque d'effet néfaste. Une fois cette aptitude utilisée, vous devez terminer un repos court ou long avant de vous en resservir."
+          },
+          {
+            "level": 10,
+            "name": "Le Troisième Œil",
+            "desc": "À partir du niveau 10, par une action, vous vous octroyez l'un de ces avantages, jusqu'à ce que vous soyez neutralisé ou que vous en changiez par une action : vision dans le noir sur 18 mètres ; capacité de lire n'importe quelle langue écrite ; voir les créatures et objets invisibles à moins de 3 mètres ; ou vision éthérée pour voir dans le plan Éthéré sur 18 mètres."
+          },
+          {
+            "level": 14,
+            "name": "Présage supérieur",
+            "desc": "Aptitude passive à partir du niveau 14. À chaque repos long, vous obtenez désormais trois dés de présage au lieu de deux."
+          }
+        ]
+      },
+      {
+        "key": "enchantment",
+        "name": "École d'Enchantement",
+        "blurb": "Le manipulateur d'esprits qui charme, endort et retourne les volontés ennemies contre elles-mêmes.",
+        "features": [
+          {
+            "level": 2,
+            "name": "Initié en enchantement",
+            "desc": "Aptitude passive liée à votre grimoire. Quand vous recopiez un sort d'enchantement dans votre grimoire, le temps de copie et le coût en or sont divisés par deux."
+          },
+          {
+            "level": 2,
+            "name": "Regard hypnotique",
+            "desc": "Par une action, vous fixez une créature que vous voyez à moins de 1,50 mètre. Elle fait un jet de sauvegarde de Sagesse contre le DD de vos sorts : en cas d'échec, elle est charmée par vous jusqu'à la fin de votre prochain tour, et tant qu'elle est charmée elle est neutralisée (vitesse de 0). À chacun de vos tours suivants, vous pouvez utiliser votre action pour prolonger l'effet. Il prend fin si elle finit son tour à plus de 1,50 mètre de vous ou si elle ne peut plus vous voir ni vous entendre. Après usage, il faut un repos court ou long pour recommencer, à moins de dépenser un emplacement de sort."
+          },
+          {
+            "level": 6,
+            "name": "Détourner l'enchantement",
+            "desc": "À partir du niveau 6, en réaction quand une créature que vous voyez à moins de 9 mètres vous vise (ou vise un allié à portée) avec un effet de charme ou de peur, vous pouvez renvoyer cet effet sur la créature qui l'a lancé plutôt que de le subir."
+          },
+          {
+            "level": 10,
+            "name": "Maître des esprits",
+            "desc": "Aptitude passive à partir du niveau 10. Quand vous lancez un sort d'enchantement de niveau 1 ou plus visant à charmer une créature, vous pouvez cibler une deuxième créature à sa portée si elle est à moins de 9 mètres de la première."
+          },
+          {
+            "level": 14,
+            "name": "Altérer les souvenirs",
+            "desc": "À partir du niveau 14, une créature charmée par vous ignore avoir été ensorcelée. De plus, tant qu'elle est charmée par vous, vous pouvez par une action lui modifier la mémoire du temps passé sous votre charme : elle fait un jet de sauvegarde d'Intelligence pour résister (avec avantage si vous ou vos alliés vous êtes battus contre elle), et sur un échec vous effacez ou remplacez ces souvenirs. Vous pouvez effacer jusqu'à un nombre d'heures égal à 1 plus votre modificateur de Charisme."
+          }
+        ]
+      },
+      {
+        "key": "evocation",
+        "name": "École d'Évocation",
+        "blurb": "Le canalisateur d'énergie brute qui déchaîne feu, foudre et glace tout en protégeant ses alliés de l'explosion.",
+        "features": [
+          {
+            "level": 2,
+            "name": "Initié en évocation",
+            "desc": "Aptitude passive liée à votre grimoire. Quand vous recopiez un sort d'évocation dans votre grimoire, le temps de copie et le coût en or sont divisés par deux."
+          },
+          {
+            "level": 2,
+            "name": "Façonner les sorts",
+            "desc": "Aptitude passive à partir du niveau 6. Quand une créature réussit son jet de sauvegarde contre l'un de vos sorts mineurs (cantrips) d'évocation, elle subit tout de même la moitié des dégâts du sort (au lieu de rien), sans en subir les autres effets."
+          },
+          {
+            "level": 6,
+            "name": "Sorts mineurs renforcés",
+            "desc": "Aptitude passive à partir du niveau 6. Quand un de vos sorts mineurs (cantrips) d'évocation qui vise une créature rate son jet d'attaque, cette créature subit tout de même des dégâts égaux à votre modificateur d'Intelligence (du type de dégâts du sort)."
+          },
+          {
+            "level": 10,
+            "name": "Évocateur acharné",
+            "desc": "Aptitude passive à partir du niveau 10. Quand vous lancez un sort d'évocation qui impose un jet de sauvegarde pour subir la moitié des dégâts, une créature qui réussit ne subit aucun dégât, et une créature qui échoue subit les dégâts normaux (sans changement). Autrement dit, vos sorts d'évocation à sauvegarde infligent toujours au moins la moitié des dégâts, même quand la cible réussit son jet."
+          },
+          {
+            "level": 14,
+            "name": "Surcharge",
+            "desc": "À partir du niveau 14, quand vous lancez un sort d'évocation de niveau 1 à 5 qui inflige des dégâts, vous pouvez maximiser ces dégâts (chaque dé de dégât atteint sa valeur la plus haute au lieu d'être lancé). Une fois cette aptitude utilisée, il faut terminer un repos long avant de vous en resservir."
+          }
+        ]
+      },
+      {
+        "key": "illusion",
+        "name": "École d'Illusion",
+        "blurb": "Le tisseur de mirages qui trompe les sens, se dédouble pour esquiver les coups et rend parfois ses illusions bien réelles.",
+        "features": [
+          {
+            "level": 2,
+            "name": "Initié en illusion",
+            "desc": "Aptitude passive liée à votre grimoire. Quand vous recopiez un sort d'illusion dans votre grimoire, le temps de copie et le coût en or sont divisés par deux."
+          },
+          {
+            "level": 2,
+            "name": "Illusion mineure améliorée",
+            "desc": "Vous connaissez le tour de magie illusion mineure sans qu'il compte parmi vos sorts. De plus, quand vous le lancez, vous pouvez créer à la fois un son et une image avec un seul lancement (au lieu de choisir l'un ou l'autre)."
+          },
+          {
+            "level": 6,
+            "name": "Soi illusoire",
+            "desc": "À partir du niveau 6, en réaction quand une créature vous touche avec un jet d'attaque, vous créez un double illusoire de vous-même : l'attaque rate automatiquement. Une fois cette aptitude utilisée, il faut terminer un repos court ou long avant de vous en resservir."
+          },
+          {
+            "level": 10,
+            "name": "Illusions adaptables",
+            "desc": "Aptitude passive à partir du niveau 10. Quand vous lancez un sort d'illusion demandant une concentration d'au moins 1 minute, vous pouvez, par une action à chacun de vos tours, modifier la nature de cette illusion (son apparence, ses sons, etc.) sans avoir à relancer le sort."
+          },
+          {
+            "level": 14,
+            "name": "Réalité illusoire",
+            "desc": "À partir du niveau 14, quand vous vous concentrez sur un sort d'illusion, vous pouvez par une action rendre réel l'un des objets inertes de cette illusion. Cet objet physique dure 1 minute : par exemple, un pont illusoire devient assez solide pour être franchi. Il ne peut pas infliger de dégâts ni nuire directement à quiconque."
+          }
+        ]
+      },
+      {
+        "key": "necromancy",
+        "name": "École de Nécromancie",
+        "blurb": "Le maître de la vie et de la mort qui se soigne en tuant, renforce ses morts-vivants et finit par commander les défunts.",
+        "features": [
+          {
+            "level": 2,
+            "name": "Initié en nécromancie",
+            "desc": "Aptitude passive liée à votre grimoire. Quand vous recopiez un sort de nécromancie dans votre grimoire, le temps de copie et le coût en or sont divisés par deux."
+          },
+          {
+            "level": 2,
+            "name": "Moisson funeste",
+            "desc": "Aptitude passive. Quand vous tuez une ou plusieurs créatures (autres que des créatures artificielles ou des morts-vivants) avec un sort de niveau 1 ou plus, vous récupérez des points de vie égaux à deux fois le niveau du sort, plus votre modificateur d'Intelligence."
+          },
+          {
+            "level": 6,
+            "name": "Mort-vivant servile",
+            "desc": "Aptitude passive à partir du niveau 6. Chaque mort-vivant que vous créez ou animez avec un sort de nécromancie gagne des points de vie supplémentaires (son maximum augmente d'un montant égal à votre niveau de magicien) et ajoute votre modificateur d'Intelligence aux dégâts de ses attaques d'arme."
+          },
+          {
+            "level": 10,
+            "name": "Résistance à la nécromancie",
+            "desc": "Aptitude passive à partir du niveau 10. Vous avez la résistance aux dégâts nécrotiques (vous n'en subissez que la moitié) et votre maximum de points de vie ne peut plus être réduit par aucun effet."
+          },
+          {
+            "level": 14,
+            "name": "Commandement des morts-vivants",
+            "desc": "À partir du niveau 14, par une action, vous ciblez un mort-vivant que vous voyez à moins de 18 mètres. Il fait un jet de sauvegarde de Charisme contre le DD de vos sorts : en cas d'échec, il vous obéit pendant 24 heures, ou de façon permanente s'il a un facteur de puissance égal ou inférieur à votre niveau de magicien divisé par trois. Vous pouvez ainsi contrôler un seul mort-vivant à la fois de manière permanente ; en dominer un autre libère le précédent."
+          }
+        ]
+      },
+      {
+        "key": "transmutation",
+        "name": "École de Transmutation",
+        "blurb": "L'altérateur de matière qui transforme objets et corps, et forge une pierre magique aux multiples pouvoirs.",
+        "features": [
+          {
+            "level": 2,
+            "name": "Initié en transmutation",
+            "desc": "Aptitude passive liée à votre grimoire. Quand vous recopiez un sort de transmutation dans votre grimoire, le temps de copie et le coût en or sont divisés par deux."
+          },
+          {
+            "level": 2,
+            "name": "Bricoleur mineur",
+            "desc": "Vous devenez capable de petites altérations de la matière. Par une action, vous produisez l'un de ces effets à portée de main : rendre un petit objet lumineux ou éteint ; nettoyer ou salir un objet ; réchauffer ou refroidir légèrement un objet ; changer l'odeur ou la couleur d'un objet pendant 1 heure. Vous pouvez maintenir jusqu'à trois de ces effets à la fois."
+          },
+          {
+            "level": 6,
+            "name": "Pierre du transmutateur",
+            "desc": "À partir du niveau 6, vous pouvez passer votre temps de repos court à créer une pierre du transmutateur. Tant que vous la portez ou qu'une créature à qui vous l'avez donnée la porte, celle-ci gagne un bénéfice au choix : vision dans le noir sur 18 mètres ; +3 mètres de vitesse ; maîtrise des jets de sauvegarde de Constitution ; ou résistance à un type de dégât parmi acide, froid, feu, foudre ou tonnerre. Vous pouvez changer le bénéfice chaque fois que vous lancez un sort de transmutation."
+          },
+          {
+            "level": 10,
+            "name": "Don de l'alchimiste",
+            "desc": "À partir du niveau 10, tant que vous avez votre pierre du transmutateur, vous pouvez y puiser un effet magique unique. Par une action, choisissez l'un de ces effets : lancer transformation générale (polymorph) sur vous-même sans dépenser d'emplacement ; vous octroyer une vitesse de nage égale à votre vitesse et la respiration aquatique pendant 1 heure ; obtenir une vitesse de vol égale à votre vitesse pendant 10 minutes ; ou vous soigner de 3d8 points de vie et neutraliser tout poison ou maladie qui vous affecte. Une fois un effet utilisé, il faut recréer la pierre lors d'un repos court avant de réutiliser cette aptitude."
+          },
+          {
+            "level": 14,
+            "name": "Maître transmutateur",
+            "desc": "À partir du niveau 14, vous pouvez consumer votre pierre du transmutateur pour lancer, sans emplacement ni composante, l'un de ces sorts : transformation de pierre en chair, transformation générale (polymorph), soins de groupe (mass polymorph selon interprétation), ou rajeunissement partiel. Concrètement, vous choisissez un effet majeur (transmuter une matière, soigner et purger tous les maux d'une créature, ou modifier la forme d'une créature consentante). La pierre est détruite après usage et doit être recréée."
+          }
+        ]
+      }
     ]
-   },
-   {
-    "key": "moon",
-    "name": "Cercle de la Lune",
-    "blurb": "Métamorphe féroce qui maîtrise des formes animales puissantes au combat.",
-    "features": [
-     {
-      "level": 2,
-      "name": "Forme sauvage de combat",
-      "desc": "La Forme sauvage devient une action bonus et permet d'adopter des bêtes de FP 1 maximum."
-     },
-     {
-      "level": 2,
-      "name": "Soins en forme sauvage",
-      "desc": "En forme de bête, dépense une action bonus et un emplacement de sort pour récupérer 1d8 PV par niveau d'emplacement."
-     },
-     {
-      "level": 6,
-      "name": "Frappes primitives",
-      "desc": "Les attaques de la forme de bête comptent comme magiques pour franchir les résistances et immunités."
-     },
-     {
-      "level": 10,
-      "name": "Forme élémentaire",
-      "desc": "Peut dépenser deux usages de Forme sauvage pour se transformer en élémentaire d'air, de terre, de feu ou d'eau."
-     },
-     {
-      "level": 14,
-      "name": "Mille formes",
-      "desc": "Lance le sort Métamorphose à volonté, sans composantes, en se ciblant soi-même."
-     }
-    ]
-   }
-  ]
- },
- "fighter": {
-  "level": 3,
-  "label": "Archétype martial",
-  "list": [
-   {
-    "key": "champion",
-    "name": "Champion",
-    "blurb": "Un combattant simple et redoutable misant sur la puissance physique brute et les coups dévastateurs.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Critique amélioré",
-      "desc": "Vos attaques portent un coup critique sur un résultat de 19 ou 20 au dé d'attaque."
-     },
-     {
-      "level": 7,
-      "name": "Athlète remarquable",
-      "desc": "Demi-bonus de maîtrise (arrondi au sup.) aux tests FOR, DEX ou CON non maîtrisés ; saut en longueur avec élan amélioré."
-     },
-     {
-      "level": 10,
-      "name": "Style de combat supplémentaire",
-      "desc": "Vous choisissez un second style de combat parmi la liste du guerrier."
-     },
-     {
-      "level": 15,
-      "name": "Critique supérieur",
-      "desc": "Vos attaques portent un coup critique sur un résultat de 18, 19 ou 20 au dé d'attaque."
-     },
-     {
-      "level": 18,
-      "name": "Survivant",
-      "desc": "Au début de votre tour, si vous êtes à la moitié de vos PV ou moins, vous récupérez 5 + votre mod. CON points de vie."
-     }
-    ]
-   },
-   {
-    "key": "battlemaster",
-    "name": "Maître de guerre",
-    "blurb": "Un tacticien aguerri qui exploite des manœuvres calculées pour dominer le champ de bataille.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Manœuvres",
-      "desc": "Apprenez 3 manœuvres parmi la liste ; activées au combat, elles ajoutent souvent un effet tactique à vos attaques."
-     },
-     {
-      "level": 3,
-      "name": "Dés de supériorité",
-      "desc": "Quatre dés de d8 alimentent vos manœuvres ; un dé dépensé s'ajoute aux dégâts ou à l'effet. Récupérés sur un repos."
-     },
-     {
-      "level": 3,
-      "name": "Maîtrise d'outils",
-      "desc": "Vous gagnez la maîtrise d'un type d'outils d'artisan de votre choix."
-     },
-     {
-      "level": 7,
-      "name": "Sachez votre ennemi",
-      "desc": "En observant une créature 1 minute, vous apprenez si elle vous dépasse sur deux caractéristiques de combat."
-     },
-     {
-      "level": 7,
-      "name": "Dés supplémentaires",
-      "desc": "Vous disposez désormais de cinq dés de supériorité, et passez au d10 pour leur taille."
-     },
-     {
-      "level": 10,
-      "name": "Manœuvres supplémentaires",
-      "desc": "Vous apprenez deux manœuvres additionnelles de votre choix."
-     },
-     {
-      "level": 15,
-      "name": "Dés améliorés (d12)",
-      "desc": "La taille de vos dés de supériorité passe au d12, et vous en disposez de six."
-     },
-     {
-      "level": 15,
-      "name": "Manœuvres (niv. 15)",
-      "desc": "Vous apprenez deux manœuvres supplémentaires de votre choix."
-     },
-     {
-      "level": 18,
-      "name": "Implacable",
-      "desc": "Si vous lancez l'initiative sans dé de supériorité disponible, vous en récupérez un automatiquement."
-     }
-    ]
-   },
-   {
-    "key": "eldritch-knight",
-    "name": "Chevalier occulte",
-    "blurb": "Un guerrier qui marie la maîtrise des armes à une magie arcanique défensive et combative.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Incantation",
-      "desc": "Vous lancez des sorts de magicien (surtout abjuration et évocation), avec l'INT comme caractéristique d'incantation."
-     },
-     {
-      "level": 3,
-      "name": "Lien d'arme",
-      "desc": "Liez jusqu'à deux armes : vous pouvez les rappeler en main par une action bonus et ne pouvez être désarmé."
-     },
-     {
-      "level": 7,
-      "name": "Frappe martiale",
-      "desc": "Quand vous lancez un sort par votre action, vous pouvez faire une attaque d'arme en action bonus."
-     },
-     {
-      "level": 10,
-      "name": "Charge occulte",
-      "desc": "Téléportez-vous jusqu'à 9 m par action bonus, puis bénéficiez d'avantage à votre prochaine attaque ce tour-ci."
-     },
-     {
-      "level": 15,
-      "name": "Frappe occulte",
-      "desc": "Lancer un sort recharge votre attaque supplémentaire : vous pouvez attaquer deux fois au lieu d'une avec l'action bonus."
-     },
-     {
-      "level": 18,
-      "name": "Charge occulte améliorée",
-      "desc": "Votre téléportation par Charge occulte atteint jusqu'à 18 m de distance."
-     }
-    ]
-   }
-  ]
- },
- "monk": {
-  "level": 3,
-  "label": "Tradition monastique",
-  "list": [
-   {
-    "key": "open-hand",
-    "name": "Voie de la Main ouverte",
-    "blurb": "Le maître du combat à mains nues qui manipule le flux du ki de l'adversaire.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Technique de la Main ouverte",
-      "desc": "Quand la Déferlante des coups touche, choisir un effet : faire chuter, repousser de 4,50 m, ou priver de réaction (jet de SAG pour chute/poussée)."
-     },
-     {
-      "level": 6,
-      "name": "Quiétude totale",
-      "desc": "Pour 1 point de ki, récupérer des PV égaux à trois fois le niveau de moine durant une action."
-     },
-     {
-      "level": 11,
-      "name": "Tranquillité",
-      "desc": "Après un repos long, obtenir l'effet d'apaisement des émotions ; les créatures jettent un jet de SAG pour vous attaquer. Rompu si vous attaquez."
-     },
-     {
-      "level": 17,
-      "name": "Paume tremblante",
-      "desc": "Pour 3 points de ki, infliger une vibration de ki ; déclenchée à volonté ensuite, elle inflige 10d10 nécrotiques (jet de CON pour moitié)."
-     }
-    ]
-   },
-   {
-    "key": "shadow",
-    "name": "Voie de l'Ombre",
-    "blurb": "L'assassin furtif qui plie les ombres et le ki pour frapper sans être vu.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Arts de l'ombre",
-      "desc": "Pour 2 points de ki, lancer un sort parmi ténèbres, vision dans le noir, passage sans trace ou silence ; détecter aussi vibrations sans coût."
-     },
-     {
-      "level": 6,
-      "name": "Pas de l'ombre",
-      "desc": "Dans la pénombre, se téléporter par bonus jusqu'à 18 m vers une zone sombre ; avantage à la prochaine attaque de mêlée."
-     },
-     {
-      "level": 11,
-      "name": "Cape d'ombre",
-      "desc": "Dans la pénombre, devenir invisible par action ; effet rompu en cas d'attaque, de sort ou de passage en pleine lumière."
-     },
-     {
-      "level": 17,
-      "name": "Frappe de l'ombre",
-      "desc": "Avantage à l'attaque contre une créature surprise au premier tour d'un combat."
-     }
-    ]
-   },
-   {
-    "key": "four-elements",
-    "name": "Voie des Quatre Éléments",
-    "blurb": "Le moine élémentaliste qui canalise son ki en magie de feu, d'eau, d'air et de terre.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Disciple des éléments",
-      "desc": "Apprendre des disciplines élémentaires, dont Maîtrise des éléments ; les déclencher en dépensant du ki, parfois en lançant des sorts élémentaires."
-     },
-     {
-      "level": 6,
-      "name": "Discipline supplémentaire",
-      "desc": "Apprendre une discipline élémentaire de plus ; les sorts associés gagnent en puissance selon le niveau de moine."
-     },
-     {
-      "level": 11,
-      "name": "Discipline supplémentaire",
-      "desc": "Apprendre encore une discipline élémentaire, élargissant les effets de feu, eau, air ou terre disponibles."
-     },
-     {
-      "level": 17,
-      "name": "Discipline supplémentaire",
-      "desc": "Apprendre une ultime discipline élémentaire, donnant accès aux effets les plus coûteux en ki."
-     }
-    ]
-   }
-  ]
- },
- "paladin": {
-  "level": 3,
-  "label": "Serment sacré",
-  "list": [
-   {
-    "key": "devotion",
-    "name": "Serment de Dévotion",
-    "blurb": "Le chevalier vertueux qui incarne l'honneur, la loyauté et la justice.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Sorts de serment",
-      "desc": "Sorts toujours préparés gagnés aux niveaux 3, 5, 9, 13 et 17, dont protection contre le mal et le bien puis zone de vérité."
-     },
-     {
-      "level": 3,
-      "name": "Conduit divin : arme sacrée",
-      "desc": "Une action imbue une arme : +CHA aux jets d'attaque et lumière sur 6 m, pendant 1 minute."
-     },
-     {
-      "level": 3,
-      "name": "Conduit divin : repousser l'impie",
-      "desc": "Une action force morts-vivants et fiélons proches voyant le paladin à fuir 1 minute (jet de SAG)."
-     },
-     {
-      "level": 7,
-      "name": "Aura de dévotion",
-      "desc": "Le paladin et ses alliés à 3 m sont immunisés contre le charme. Portée 9 m au niveau 18."
-     },
-     {
-      "level": 15,
-      "name": "Pureté de l'esprit",
-      "desc": "Avantage permanent aux jets de sauvegarde contre le charme et la métamorphose."
-     },
-     {
-      "level": 20,
-      "name": "Avatar sacré",
-      "desc": "Action : pendant 1 minute, lumière rayonnante donnant avantage aux attaques et désavantage aux ennemis adjacents. 1/repos long."
-     }
-    ]
-   },
-   {
-    "key": "ancients",
-    "name": "Serment des Anciens",
-    "blurb": "Le gardien féerique de la lumière et de la vie contre les ténèbres.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Sorts de serment",
-      "desc": "Sorts toujours préparés aux niveaux 3, 5, 9, 13 et 17, dont enchevêtrement, peau d'écorce puis communion avec la nature."
-     },
-     {
-      "level": 3,
-      "name": "Conduit divin : courroux de la nature",
-      "desc": "Une action invoque des lianes spectrales entravant une créature proche ratant deux jets de FOR ou DEX."
-     },
-     {
-      "level": 3,
-      "name": "Conduit divin : réprimande des indomptés",
-      "desc": "Une action effraie morts-vivants et fiélons à 3 m ratant un jet de SAG, pendant 1 minute."
-     },
-     {
-      "level": 7,
-      "name": "Aura de garde",
-      "desc": "Les alliés à 3 m subissent une résistance aux dégâts des sorts. Portée 9 m au niveau 18."
-     },
-     {
-      "level": 15,
-      "name": "Âme intemporelle",
-      "desc": "Le paladin ne vieillit plus, ne peut être vieilli magiquement et n'a plus besoin de nourriture ni d'eau."
-     },
-     {
-      "level": 20,
-      "name": "Champion des anciens",
-      "desc": "Action : 1 minute de résistance aux dégâts d'armes et de sorts soignants pour les alliés blessés à 3 m. 1/repos long."
-     }
-    ]
-   },
-   {
-    "key": "vengeance",
-    "name": "Serment de Vengeance",
-    "blurb": "Le justicier impitoyable qui poursuit les coupables pour les châtier.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Sorts de serment",
-      "desc": "Sorts toujours préparés aux niveaux 3, 5, 9, 13 et 17, dont marque du chasseur, immobilisation de personne puis cloison de force."
-     },
-     {
-      "level": 3,
-      "name": "Conduit divin : serment d'inimitié",
-      "desc": "Une action : avantage aux attaques contre une créature visible pendant 1 minute."
-     },
-     {
-      "level": 3,
-      "name": "Conduit divin : repousser l'impie",
-      "desc": "Une action force morts-vivants et fiélons proches voyant le paladin à fuir 1 minute (jet de SAG)."
-     },
-     {
-      "level": 7,
-      "name": "Implacable poursuivant",
-      "desc": "Réaction : quand une créature proche se déplace, le paladin la suit en restant à moins de 1,5 m d'elle."
-     },
-     {
-      "level": 15,
-      "name": "Âme de vengeance",
-      "desc": "Réaction contre une cible de serment d'inimitié qui attaque : permet une attaque de mêlée immédiate."
-     },
-     {
-      "level": 20,
-      "name": "Ange vengeur",
-      "desc": "Action : pendant 1 heure, ailes (vol 18 m) et effroi des ennemis adjacents au décollage. 1/repos long."
-     }
-    ]
-   }
-  ]
- },
- "ranger": {
-  "level": 3,
-  "label": "Archétype de rôdeur",
-  "list": [
-   {
-    "key": "hunter",
-    "name": "Chasseur",
-    "blurb": "Un traqueur spécialisé qui adapte ses techniques pour abattre toutes sortes de menaces.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Proie du chasseur",
-      "desc": "Choisis une option : dégâts bonus contre une cible isolée, ou frappe un second ennemi adjacent quand tu en attaques un."
-     },
-     {
-      "level": 7,
-      "name": "Tactiques défensives",
-      "desc": "Choisis une option : avantage contre l'effroi, ne pas provoquer d'attaques d'opportunité, ou avantage défensif quand plusieurs ennemis t'attaquent."
-     },
-     {
-      "level": 11,
-      "name": "Attaques multiples",
-      "desc": "Choisis : une attaque qui touche jusqu'à trois cibles proches, ou une seconde attaque automatique si la première rate."
-     },
-     {
-      "level": 15,
-      "name": "Défense supérieure",
-      "desc": "Choisis une option de protection : résistance temporaire à tous les dégâts, esquive renforcée, ou réduction des dégâts subis par réaction."
-     }
-    ]
-   },
-   {
-    "key": "beastmaster",
-    "name": "Maître des bêtes",
-    "blurb": "Un rôdeur lié à un compagnon animal qui combat et chasse à ses côtés.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Compagnon animal",
-      "desc": "Gagne une bête (FP 1/4 max, taille moyenne au plus) qui agit à ton initiative et obéit à tes ordres."
-     },
-     {
-      "level": 3,
-      "name": "Compagnon aguerri",
-      "desc": "La bête ajoute ton bonus de maîtrise à sa CA, ses attaques, dégâts et jets de sauvegarde ; ses PV augmentent avec ton niveau."
-     },
-     {
-      "level": 7,
-      "name": "Camaraderie exceptionnelle",
-      "desc": "Avec ton action tu permets à la bête d'attaquer ; elle peut aussi se précipiter, se désengager, esquiver ou aider."
-     },
-     {
-      "level": 11,
-      "name": "Furie bestiale",
-      "desc": "Quand tu ordonnes une attaque, la bête peut effectuer deux attaques au lieu d'une."
-     },
-     {
-      "level": 15,
-      "name": "Défense partagée",
-      "desc": "Toi et ta bête bénéficiez chacun d'un avantage aux jets de sauvegarde si l'un de vous voit l'attaquant."
-     }
-    ]
-   }
-  ]
- },
- "rogue": {
-  "level": 3,
-  "label": "Archétype de roublard",
-  "list": [
-   {
-    "key": "thief",
-    "name": "Voleur",
-    "blurb": "Un spécialiste de l'agilité, du larcin et de l'escalade qui agit plus vite que les autres.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Mains agiles",
-      "desc": "Action bonus pour utiliser Escamotage, manier des outils de voleur ou employer un objet."
-     },
-     {
-      "level": 3,
-      "name": "Travail en hauteur",
-      "desc": "Grimper ne coûte pas de déplacement supplémentaire, et un saut avec élan gagne quelques mètres."
-     },
-     {
-      "level": 9,
-      "name": "Cambrioleur émérite",
-      "desc": "Un déplacement furtif rapide ne ralentit plus, et désamorcer un piège prend une seule action."
-     },
-     {
-      "level": 13,
-      "name": "Usage d'objets magiques",
-      "desc": "Permet d'utiliser n'importe quel objet magique en ignorant les restrictions de classe, de race ou de niveau."
-     },
-     {
-      "level": 17,
-      "name": "Réflexes du voleur",
-      "desc": "Au premier round d'un combat, deux tours d'action sont joués, l'un à initiative normale, l'autre réduite de 10."
-     }
-    ]
-   },
-   {
-    "key": "assassin",
-    "name": "Assassin",
-    "blurb": "Un tueur silencieux dont les coups par surprise sont d'une efficacité mortelle.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Maîtrises supplémentaires",
-      "desc": "Maîtrise du kit de déguisement et du kit d'empoisonnement."
-     },
-     {
-      "level": 3,
-      "name": "Assassinat",
-      "desc": "Avantage contre toute créature n'ayant pas encore agi; tout coup touchant une cible surprise est critique."
-     },
-     {
-      "level": 9,
-      "name": "Imposteur",
-      "desc": "Après préparation, imite parfaitement l'apparence, la voix et les manières d'une personne observée."
-     },
-     {
-      "level": 13,
-      "name": "Frappe mortelle",
-      "desc": "Frapper une cible surprise l'oblige à un jet de Constitution; en cas d'échec, dégâts sournois doublés."
-     },
-     {
-      "level": 17,
-      "name": "Mort apparente",
-      "desc": "Une attaque réussie permet, sur jet de Charisme, de feindre la mort; les attaques suivantes restent critiques."
-     }
-    ]
-   },
-   {
-    "key": "arcane-trickster",
-    "name": "Filou arcanique",
-    "blurb": "Un roublard qui mêle escroquerie et magie d'illusion ou d'enchantement pour duper ses cibles.",
-    "features": [
-     {
-      "level": 3,
-      "name": "Sorts (magicien)",
-      "desc": "Apprend des sorts de magicien, surtout illusion et enchantement, lancés avec l'Intelligence."
-     },
-     {
-      "level": 3,
-      "name": "Main de mage améliorée",
-      "desc": "La main spectrale devient invisible et permet crochetage, vol à la tire et désamorçage à distance."
-     },
-     {
-      "level": 9,
-      "name": "Sortilège furtif",
-      "desc": "Lancer discrètement un sort sur un allié donne l'avantage à ce dernier sur un jet de Discrétion."
-     },
-     {
-      "level": 13,
-      "name": "Tour de passe-passe magique",
-      "desc": "Une attaque sournoise réussie autorise gratuitement le sort principal main du mage sur la cible."
-     },
-     {
-      "level": 17,
-      "name": "Voleur de sorts",
-      "desc": "Réussir à résister à un sort permet de le contrer et de l'apprendre temporairement pour soi."
-     }
-    ]
-   }
-  ]
- },
- "sorcerer": {
-  "level": 1,
-  "label": "Origine magique",
-  "list": [
-   {
-    "key": "draconic-bloodline",
-    "name": "Lignée draconique",
-    "blurb": "Le sang d'un dragon coule dans vos veines et nourrit votre magie.",
-    "features": [
-     {
-      "level": 1,
-      "name": "Ancetre dragon",
-      "desc": "Choisissez un type de dragon liant un element. Vous parlez draconique et doublez votre bonus de maitrise sur les jets de Charisme face aux dragons."
-     },
-     {
-      "level": 1,
-      "name": "Resistance draconique",
-      "desc": "Vos PV maximaux augmentent de 1 par niveau d'ensorceleur. Sans armure, votre CA de base vaut 13 + modificateur de Dexterite."
-     },
-     {
-      "level": 6,
-      "name": "Affinite elementaire",
-      "desc": "Ajoutez votre modificateur de Charisme aux degats d'un sort de votre element. Vous pouvez depenser 1 point pour gagner 1 heure de resistance a cet element."
-     },
-     {
-      "level": 14,
-      "name": "Ailes de dragon",
-      "desc": "Par une action, faites pousser des ailes draconiques et obtenez une vitesse de vol egale a votre vitesse au sol, tant que vous etes sans armure."
-     },
-     {
-      "level": 18,
-      "name": "Presence draconique",
-      "desc": "Action et 5 points : les creatures a 18 m doivent reussir un jet de Sagesse ou etre charmees ou effrayees par vous pendant 1 minute."
-     }
-    ]
-   },
-   {
-    "key": "wild-magic",
-    "name": "Magie sauvage",
-    "blurb": "Votre magie chaotique echappe parfois a tout controle et bouleverse la realite.",
-    "features": [
-     {
-      "level": 1,
-      "name": "Sursaut de magie sauvage",
-      "desc": "Apres avoir lance un sort d'ensorceleur de niveau 1+, le MJ peut vous faire lancer un d20 ; sur 1, jet sur la table de magie sauvage."
-     },
-     {
-      "level": 1,
-      "name": "Maree du chaos",
-      "desc": "Une fois par repos, octroyez un avantage a un jet d'attaque, de caracteristique ou de sauvegarde. Le MJ peut alors declencher un sursaut sauvage."
-     },
-     {
-      "level": 6,
-      "name": "Flexion du hasard",
-      "desc": "Depensez 2 points de sorcellerie pour ajouter ou retirer 1d4 a un jet de caracteristique, d'attaque ou de sauvegarde d'une creature visible."
-     },
-     {
-      "level": 14,
-      "name": "Chance controlee",
-      "desc": "Quand une creature a 18 m fait un jet d'attaque, de caracteristique ou de sauvegarde, votre reaction lui impose un bonus ou malus de 2d4."
-     },
-     {
-      "level": 18,
-      "name": "Chaos maitrise",
-      "desc": "Quand vous lancez un d sur la table de magie sauvage, lancez-en deux et choisissez le resultat que vous preferez."
-     }
-    ]
-   }
-  ]
- },
- "warlock": {
-  "level": 1,
-  "label": "Protecteur d'outre-monde",
-  "list": [
-   {
-    "key": "fiend",
-    "name": "Le Fiélon",
-    "blurb": "Un pacte avec un démon ou diable, nourri de feu, de cruauté et de survie acharnée.",
-    "features": [
-     {
-      "level": 1,
-      "name": "Bénédiction du Sombre Patron",
-      "desc": "Quand vous réduisez une créature à 0 PV, gagnez des PV temporaires égaux à votre niveau d'occultiste + mod. CHA."
-     },
-     {
-      "level": 6,
-      "name": "Résistance fielleuse",
-      "desc": "À chaque repos court ou long, choisissez un type de dégâts (sauf magie d'armes) auquel vous résistez jusqu'au repos suivant."
-     },
-     {
-      "level": 10,
-      "name": "Marchandage d'âmes",
-      "desc": "Si vous tomberiez à 0 PV sans mourir net, descendez plutôt à 1 PV. Utilisable une fois par repos long."
-     },
-     {
-      "level": 14,
-      "name": "Précipitation infernale",
-      "desc": "Action : désignez une créature visible. À son prochain jet, en cas d'échec elle est happée et tuée (CR ≤ moitié niveau). Une fois par repos long."
-     }
-    ]
-   },
-   {
-    "key": "archfey",
-    "name": "L'Archifée",
-    "blurb": "Un pacte avec un seigneur féerique, mêlant illusion, charme et fuite trompeuse.",
-    "features": [
-     {
-      "level": 1,
-      "name": "Présence féerique",
-      "desc": "Action : créatures à 3 m doivent réussir un JdS de Sagesse ou être charmées ou effrayées par vous jusqu'à votre prochain tour. Une fois par repos."
-     },
-     {
-      "level": 6,
-      "name": "Retraite brumeuse",
-      "desc": "Réaction quand on vous touche : devenez invisible et téléportez-vous jusqu'à 18 m. Une fois par repos court ou long."
-     },
-     {
-      "level": 10,
-      "name": "Défense séduisante",
-      "desc": "Vous êtes immunisé contre le charme. Si une créature vous charme et rate son jet, elle subit à son tour l'effet qu'elle voulait vous infliger."
-     },
-     {
-      "level": 14,
-      "name": "Cercle des fées",
-      "desc": "Action : envoyez une créature visible (3 m) dans un demi-plan féerique. JdS de Sagesse pour résister. Une fois par repos long."
-     }
-    ]
-   },
-   {
-    "key": "great-old-one",
-    "name": "Le Grand Ancien",
-    "blurb": "Un pacte avec une entité cosmique, source de secrets psychiques et de domination mentale.",
-    "features": [
-     {
-      "level": 1,
-      "name": "Esprit indicible",
-      "desc": "Communication télépathique sur 9 m avec toute créature partageant un langage que vous connaissez, dans les deux sens."
-     },
-     {
-      "level": 6,
-      "name": "Bouclier de la pensée",
-      "desc": "Résistance aux dégâts psychiques. Immunité contre la lecture mentale ; un agresseur psychique encaisse vos propres dégâts en retour."
-     },
-     {
-      "level": 10,
-      "name": "Esclaves indésirés",
-      "desc": "Immunité aux dégâts psychiques et au charme/frayeur. Une fois par repos long, vous renvoyez un tel effet vers la créature qui l'a lancé."
-     },
-     {
-      "level": 14,
-      "name": "Asservissement",
-      "desc": "Action : une créature visible (9 m) doit réussir un JdS de Sagesse ou être charmée et sous votre contrôle. Concentration, nouveau jet quand blessée."
-     }
-    ]
-   }
-  ]
- },
- "wizard": {
-  "level": 2,
-  "label": "École de magie",
-  "list": [
-   {
-    "key": "abjuration",
-    "name": "École d'Abjuration",
-    "blurb": "Le spécialiste des protections, qui dresse des barrières et brise les sortilèges ennemis.",
-    "features": [
-     {
-      "level": 2,
-      "name": "Initié en abjuration",
-      "desc": "Copier un sort d'abjuration dans son grimoire coûte moitié moins de temps et d'or."
-     },
-     {
-      "level": 2,
-      "name": "Gardien arcanique",
-      "desc": "Lancer un sort d'abjuration crée un bouclier de PV (2x niveau + mod INT) qui absorbe les dégâts subis."
-     },
-     {
-      "level": 6,
-      "name": "Gardien projeté",
-      "desc": "Utiliser une réaction pour transférer le gardien arcanique sur une créature à 30 pieds."
-     },
-     {
-      "level": 10,
-      "name": "Résistance magique avancée",
-      "desc": "Avantage aux jets de sauvegarde contre les sorts et autres effets magiques."
-     },
-     {
-      "level": 14,
-      "name": "Imposer la dissipation",
-      "desc": "Une cible ratant sa sauvegarde contre votre dissipation de la magie subit 1d8 par niveau du sort dissipé."
-     }
-    ]
-   },
-   {
-    "key": "conjuration",
-    "name": "École d'Invocation",
-    "blurb": "Le maître qui fait surgir créatures et objets, ou se téléporte d'un point à l'autre.",
-    "features": [
-     {
-      "level": 2,
-      "name": "Initié en invocation",
-      "desc": "Copier un sort d'invocation dans son grimoire coûte moitié moins de temps et d'or."
-     },
-     {
-      "level": 2,
-      "name": "Invocation mineure",
-      "desc": "Action pour faire apparaître un objet inoffensif d'au plus 3 pieds et 10 livres, qui disparaît après 1 heure."
-     },
-     {
-      "level": 6,
-      "name": "Téléportation bénie",
-      "desc": "Après un sort d'invocation de niveau 1+, se téléporter jusqu'à 30 pieds vers un espace libre."
-     },
-     {
-      "level": 10,
-      "name": "Invocation focalisée",
-      "desc": "Subir des dégâts ne rompt plus la concentration sur les sorts de l'école d'invocation."
-     },
-     {
-      "level": 14,
-      "name": "Invocation durable",
-      "desc": "Vos créatures invoquées gagnent l'avantage aux sauvegardes pour résister à la dissipation."
-     }
-    ]
-   },
-   {
-    "key": "divination",
-    "name": "École de Divination",
-    "blurb": "Le voyant qui perce les secrets du temps et infléchit le destin par présage.",
-    "features": [
-     {
-      "level": 2,
-      "name": "Initié en divination",
-      "desc": "Copier un sort de divination dans son grimoire coûte moitié moins de temps et d'or."
-     },
-     {
-      "level": 2,
-      "name": "Présage",
-      "desc": "Après un repos long, lancer deux d20 conservés pour remplacer un futur jet d'attaque, de sauvegarde ou de caractéristique."
-     },
-     {
-      "level": 6,
-      "name": "Savoir expert",
-      "desc": "Lancer divination ou contact avec l'au-delà sans risque ni emplacement, une fois par repos court."
-     },
-     {
-      "level": 10,
-      "name": "Le Troisième Œil",
-      "desc": "Action pour gagner un bonus parmi vision dans le noir, lecture de toute langue écrite ou perception accrue."
-     },
-     {
-      "level": 14,
-      "name": "Présage supérieur",
-      "desc": "Trois dés de présage par repos long au lieu de deux."
-     }
-    ]
-   },
-   {
-    "key": "enchantment",
-    "name": "École d'Enchantement",
-    "blurb": "Le manipulateur d'esprits qui charme, endort et plie les volontés à son gré.",
-    "features": [
-     {
-      "level": 2,
-      "name": "Initié en enchantement",
-      "desc": "Copier un sort d'enchantement dans son grimoire coûte moitié moins de temps et d'or."
-     },
-     {
-      "level": 2,
-      "name": "Regard hypnotique",
-      "desc": "Action pour charmer une créature proche qui rate sa sauvegarde SAG ; elle est neutralisée tant que vous l'observez."
-     },
-     {
-      "level": 6,
-      "name": "Détourner l'enchantement",
-      "desc": "Réaction pour renvoyer un effet de charme ou de peur vers la créature qui l'a provoqué."
-     },
-     {
-      "level": 10,
-      "name": "Maître des esprits",
-      "desc": "Sortir indemne d'un charme ou d'une domination améliore les chances qu'une cible vous obéisse ensuite."
-     },
-     {
-      "level": 14,
-      "name": "Altérer les souvenirs",
-      "desc": "Une cible que vous charmez ignore avoir été ensorcelée ; vous pouvez lui effacer jusqu'à plusieurs heures de souvenirs."
-     }
-    ]
-   },
-   {
-    "key": "evocation",
-    "name": "École d'Évocation",
-    "blurb": "Le canalisateur d'énergies brutes qui sculpte la foudre, le feu et la glace.",
-    "features": [
-     {
-      "level": 2,
-      "name": "Initié en évocation",
-      "desc": "Copier un sort d'évocation dans son grimoire coûte moitié moins de temps et d'or."
-     },
-     {
-      "level": 2,
-      "name": "Façonner les sorts",
-      "desc": "Protéger 1 + niveau du sort de créatures alliées dans la zone : elles évitent les dégâts ou les réduisent de moitié."
-     },
-     {
-      "level": 6,
-      "name": "Sorts mineurs renforcés",
-      "desc": "Ajouter son modificateur d'INT aux dégâts des sorts mineurs d'évocation qui ratent leur cible."
-     },
-     {
-      "level": 10,
-      "name": "Évocateur acharné",
-      "desc": "Un sort de dégâts infligeant un jet de sauvegarde inflige tout de même la moitié des dégâts sur un échec total."
-     },
-     {
-      "level": 14,
-      "name": "Surcharge",
-      "desc": "Une fois par repos long, maximiser les dégâts d'un sort d'évocation de niveau 1 à 5."
-     }
-    ]
-   },
-   {
-    "key": "illusion",
-    "name": "École d'Illusion",
-    "blurb": "Le tisseur de mirages qui trompe les sens et brouille la frontière du réel.",
-    "features": [
-     {
-      "level": 2,
-      "name": "Initié en illusion",
-      "desc": "Copier un sort d'illusion dans son grimoire coûte moitié moins de temps et d'or."
-     },
-     {
-      "level": 2,
-      "name": "Illusion mineure améliorée",
-      "desc": "Connaître le tour illusion mineure et produire son et image simultanément avec un seul lancement."
-     },
-     {
-      "level": 6,
-      "name": "Soi illusoire",
-      "desc": "Réaction pour créer un double illusoire qui fait rater une attaque vous visant, une fois par repos."
-     },
-     {
-      "level": 10,
-      "name": "Illusions adaptables",
-      "desc": "Modifier la nature d'une illusion à concentration sans avoir à la relancer."
-     },
-     {
-      "level": 14,
-      "name": "Réalité illusoire",
-      "desc": "Action pour rendre réel un objet inerte d'une illusion durant 1 minute."
-     }
-    ]
-   },
-   {
-    "key": "necromancy",
-    "name": "École de Nécromancie",
-    "blurb": "Le maître de la vie et de la mort, qui draine l'énergie vitale et commande les morts.",
-    "features": [
-     {
-      "level": 2,
-      "name": "Initié en nécromancie",
-      "desc": "Copier un sort de nécromancie dans son grimoire coûte moitié moins de temps et d'or."
-     },
-     {
-      "level": 2,
-      "name": "Moisson funeste",
-      "desc": "Tuer une créature non-construct avec un sort restaure des PV égaux à 2x le niveau du sort + mod INT."
-     },
-     {
-      "level": 6,
-      "name": "Mort-vivant servile",
-      "desc": "Vos morts-vivants animés gagnent des PV bonus et un bonus aux dégâts d'arme égal à votre mod INT."
-     },
-     {
-      "level": 10,
-      "name": "Résistance à la nécromancie",
-      "desc": "Vous résistez aux dégâts nécrotiques et votre maximum de PV ne peut plus être réduit."
-     },
-     {
-      "level": 14,
-      "name": "Commandement des morts-vivants",
-      "desc": "Action pour soumettre à votre volonté un mort-vivant qui rate une sauvegarde de Charisme."
-     }
-    ]
-   },
-   {
-    "key": "transmutation",
-    "name": "École de Transmutation",
-    "blurb": "L'altérateur de matière qui transforme objets, corps et propriétés du monde.",
-    "features": [
-     {
-      "level": 2,
-      "name": "Initié en transmutation",
-      "desc": "Copier un sort de transmutation dans son grimoire coûte moitié moins de temps et d'or."
-     },
-     {
-      "level": 2,
-      "name": "Bricoleur mineur",
-      "desc": "Conférer une propriété mineure utile à un objet ou produire un petit effet matériel d'altération."
-     },
-     {
-      "level": 6,
-      "name": "Pierre du transmutateur",
-      "desc": "Créer une pierre offrant un bénéfice au choix (vision nocturne, vitesse, résistance, sauvegardes CON), réassignable."
-     },
-     {
-      "level": 10,
-      "name": "Don de l'alchimiste",
-      "desc": "Action pour conférer un effet de la pierre du transmutateur, ou la consacrer à soigner ou neutraliser un poison."
-     },
-     {
-      "level": 14,
-      "name": "Maître transmutateur",
-      "desc": "Consumer la pierre pour transformer une matière, panacée, rajeunir ou modifier la forme d'une créature consentante."
-     }
-    ]
-   }
-  ]
- }
+  }
 };
 
 function renderIdentity() {
@@ -2706,6 +2727,11 @@ function renderIdentity() {
   const race = SRD.races[state.identity.race];
   const subOpts = race ? race.subraces.map(si => ({ value:si, label:(SRD.subraces[si]||{}).name||si })) : [];
   const alignOpts = SRD.alignments.map(a => ({ value:a.name, label:a.name }));
+  const sexToggle = () => {
+    const mk = (val,label) => el("button",{ class:"seg-btn"+((state.appearance.sex||"")===val?" active":""), text:label,
+      onclick:()=>{ state.appearance.sex = ((state.appearance.sex||"")===val ? "" : val); save(); render(); } });
+    return el("div",{class:"seg"},[ mk("M","M"), mk("F","F") ]);
+  };
 
   const grid = el("div", { class:"id-grid" }, [
     field("Nom du joueur", textInput(()=>state.identity.playerName, v=>state.identity.playerName=v)),
@@ -2720,15 +2746,16 @@ function renderIdentity() {
     field("Alignement", select(()=>state.identity.alignment, v=>state.identity.alignment=v, alignOpts, "—")),
     field("Niveau", levelControl()),
     field("Expérience", xpControl()),
-    archetypeField()
+    archetypeField(),
+    field("Sexe", sexToggle()),
+    field("Âge", textInput(()=>state.appearance.age, v=>state.appearance.age=v)),
+    field("Taille", textInput(()=>state.appearance.height, v=>state.appearance.height=v)),
+    field("Poids", textInput(()=>state.appearance.weight, v=>state.appearance.weight=v)),
+    field("Cheveux", textInput(()=>state.appearance.hair, v=>state.appearance.hair=v)),
+    field("Peau", textInput(()=>state.appearance.skin, v=>state.appearance.skin=v)),
+    field("Yeux", textInput(()=>state.appearance.eyes, v=>state.appearance.eyes=v))
   ]);
-  const diceToggle = dmMode ? el("label", { class:"chk dice-toggle",
-    title:"Affiche le lanceur de dés pour les joueurs (caché par défaut)" }, [
-    el("input", { type:"checkbox", checked: state.showDice ? "checked" : null,
-      onchange:(e)=>{ state.showDice = e.target.checked; save(); render(); } }),
-    el("span", { text:" Afficher le lanceur de dés" })
-  ]) : null;
-  return card("Identité", el("div", {}, [grid, diceToggle, diceTray()]), { span:12 });
+  return card("Identité", el("div", {}, [grid]), { span:12 });
 }
 function field(label, node) {
   return el("label", { class:"field" }, [ el("span", { class:"field-lbl", text:label }), node ]);
@@ -3185,7 +3212,6 @@ function renderAbilities() {
 // --- Combat (vitesse, CA, des de vie, PV) ---
 function renderCombat() {
   const c = Calc.classOf(state);
-  const hd = c ? "d"+c.hitDie : "—";
   const suggested = Calc.suggestedMaxHP(state);
   // Methode PV "par formule" : recalcul automatique a chaque rendu
   if (state.hpAuto && suggested != null) {
@@ -3207,16 +3233,6 @@ function renderCombat() {
   const initShape = statShape("hexagon", "Initiative",
     el("span",{class:"shape-val"},[ lockable("init", ()=>Calc.initiative(state), Calc.fmt) ]),
     null, "Détermine l'ordre des tours : jet de Dextérité au début du combat.");
-
-  const hdShape = statShape("rounded", "Dés de vie",
-    el("span",{class:"shape-val",text:hd}),
-    CFG.options.trackHitDice ? el("div",{class:"hd-track",
-      title:"Dés de vie disponibles pour récupérer des PV lors d'un repos court (sur "+state.identity.level+" au total)"},[
-      el("span",{class:"muted lbl-maj",text:"repos :"}),
-      stepper(()=>state.hitDiceCurrent, v=>state.hitDiceCurrent=Math.max(0,Math.min(state.identity.level,v)), {min:0}),
-      el("span",{class:"muted",text:"/ "+state.identity.level})
-    ]) : null,
-    "Dés de vie : dépensés lors d'un repos court pour regagner des points de vie.");
 
   const maxBoosted = state.hpAuto && suggested != null && state.hp.maxOverride != null && state.hp.maxOverride > suggested;
   const maxField = el("input",{class:"hp-mini-i max"+(state.hpAuto?" auto":"")+(maxBoosted?" boosted":""),type:"number",value:state.hp.max,
@@ -3262,15 +3278,16 @@ function renderCombat() {
     const l1 = c.hitDie + conMod;
     const per = half + 1 + conMod;
     pvNote = el("div",{class:"combat-note"},[
-      el("strong",{text:"Dés de vie → PV (formule) "}),
+      el("strong",{text:"Points de vie → calcul "}),
       el("span",{class:"muted",text:"— d"+c.hitDie+", mod CON "+Calc.fmt(conMod)}),
       el("div",{text:"• Niv 1 : dé max + mod CON = "+c.hitDie+" "+Calc.fmt(conMod)+" = "+l1}),
       el("div",{text:"• Niv 2+ : dé÷2 +1 + mod CON = "+half+" +1 "+Calc.fmt(conMod)+" = "+per+" par niveau"})
     ]);
   }
 
-  const stats = el("div", { class:"combat-grid" }, [ speedShape, acShape, initShape, hdShape, hpShape ]);
-  return card("Combat", el("div",{},[stats, pvNote]), { span:12 });
+  const initSpeed = el("div", { class:"stat-col" }, [ initShape, speedShape ]);
+  const stats = el("div", { class:"combat-grid combat-half" }, [ acShape, hpShape, initSpeed ]);
+  return card("Combat", el("div",{},[stats, pvNote]), { span:6 });
 }
 function statShape(shape, label, valueNode, extraNode, tooltip) {
   return el("div", { class:"stat-shape" }, [
@@ -3376,7 +3393,7 @@ function renderSaves() {
     ]);
     grid.appendChild(row);
   });
-  return card("Jets de sauvegarde", grid, { span:4 });
+  return card("Jets de sauvegarde", grid, { span:6 });
 }
 
 // --- Competences ---
@@ -3417,7 +3434,7 @@ function renderSkills() {
   const skillMax = el("div", { class:"skill-limit",
     title:"Nombre de compétences que votre classe vous laisse choisir"+(dmMode?" — le MJ peut dépasser cette limite":"")+". (Les bonus d'historique ne sont pas gérés.)",
     text:"MAX COMPÉTENCES : "+usedSkills+" / "+maxSkills });
-  return card("Compétences", el("div", {}, [grid, el("div",{class:"skills-foot"},[passive, skillMax])]), { span:8 });
+  return card("Compétences", el("div", {}, [grid, el("div",{class:"skills-foot"},[passive, skillMax])]), { span:6 });
 }
 
 // --- Attaques ---
@@ -3467,9 +3484,15 @@ function renderAttacks() {
   const note = magicWeapons.length
     ? el("div", { class:"atk-note muted", text:"⚔ Une arme magique +1/+2/+3 ajoutée dans « Objets magiques » apparaît ici avec son attaque et ses dégâts calculés. Une arme magique inventée demande une saisie manuelle." })
     : el("div", { class:"atk-note muted", text:"Astuce : ajoutez une arme magique dans « Objets magiques » pour la retrouver ici avec ses dégâts." });
+  const diceToggle = dmMode ? el("label", { class:"chk dice-toggle",
+    title:"Affiche le lanceur de dés pour les joueurs (caché par défaut)" }, [
+    el("input", { type:"checkbox", checked: state.showDice ? "checked" : null,
+      onchange:(e)=>{ state.showDice = e.target.checked; save(); render(); } }),
+    el("span", { text:" Afficher le lanceur de dés" })
+  ]) : null;
   return card("Attaques", el("div", {}, [
     el("div",{class:"attack-head"},[el("span",{text:"ARME"}),el("span",{text:"ATT."}),el("span",{text:"DÉGÂTS"}),el("span",{text:""})]),
-    ...rows, add, note ]), { span:12, tall:true });
+    ...rows, add, note, diceToggle, diceTray() ]), { span:6, tall:true });
 }
 
 // --- Maitrises & langues ---
@@ -3532,7 +3555,9 @@ function renderFeatures() {
       if (!L) continue;
       (L.features||[]).forEach(fi => {
         const f = SRD.features[fi]; if (!f) return;
-        list.appendChild(featureItem(f.name, "Niv "+lv, withFeatureOptions(fi, f.desc)));
+        const optNode = featureOptionsNode(fi);
+        const desc = optNode ? f.desc : withFeatureOptions(fi, f.desc);
+        list.appendChild(featureItem(f.name, "Niv "+lv, desc, optNode));
       });
     }
   }
@@ -3561,7 +3586,7 @@ function renderFeatures() {
   }
   return card("Capacités", el("div",{},children), { span:12 });
 }
-function featureItem(name, tag, desc) {
+function featureItem(name, tag, desc, extraNode) {
   const head = el("button", { class:"feat-head",
     onclick:(e)=>{ const b=e.currentTarget.nextSibling; b.classList.toggle("open"); } }, [
     el("span",{class:"feat-name",text:name}),
@@ -3569,6 +3594,7 @@ function featureItem(name, tag, desc) {
     el("span",{class:"feat-caret",text:"▾"})
   ]);
   const body = el("div", { class:"feat-body" }, [ el("p",{text:desc}) ]);
+  if (extraNode) body.appendChild(extraNode);
   return el("div", { class:"feat-item" }, [head, body]);
 }
 // Certaines aptitudes à options (ex. « Style de combat ») ont leurs choix stockés
@@ -3582,6 +3608,32 @@ function withFeatureOptions(index, desc) {
   let extra = (desc || "").trim() + "\n\nOptions :";
   opts.forEach(o => { extra += "\n\n• " + o.name + (o.desc ? " — " + o.desc.trim() : ""); });
   return extra;
+}
+// Aptitudes à choix (ex. Style de combat) : boutons de sélection persistés dans
+// state.featureChoices[index]. On n'inclut que les vraies options (pas les paliers
+// « -improvement »). Le texte affiché reste celui du SRD (déjà dans les données).
+function featureOptionsNode(index) {
+  const keys = Object.keys(SRD.features)
+    .filter(k => k.indexOf(index + "-") === 0 && !/-improvement(-\d+)?$/.test(k));
+  const opts = keys.map(k => ({ key:k, f:SRD.features[k] })).filter(o => o.f);
+  if (opts.length < 2) return null;   // besoin d'au moins deux options pour un choix
+  const cur = (state.featureChoices || {})[index] || "";
+  const wrap = el("div", { class:"feat-options" }, [
+    el("div", { class:"feat-opt-lbl", text: cur ? "Choix :" : "À choisir :" })
+  ]);
+  const btnRow = el("div", { class:"opt-row" });
+  opts.forEach(o => {
+    btnRow.appendChild(el("button", {
+      class: "opt-btn" + (cur === o.key ? " active" : ""),
+      title: o.f.desc || "",
+      onclick: () => { state.featureChoices = state.featureChoices || {};
+        state.featureChoices[index] = (cur === o.key ? "" : o.key); save(); render(); }
+    }, [ el("span", { class:"opt-name", text: o.f.name }) ]));
+  });
+  wrap.appendChild(btnRow);
+  const chosen = cur ? SRD.features[cur] : null;
+  if (chosen && chosen.desc) wrap.appendChild(el("div", { class:"opt-desc", text: chosen.desc }));
+  return wrap;
 }
 
 // --- Sorts ---
@@ -3638,14 +3690,16 @@ function renderSpells() {
   if (CFG.options.trackSpellSlots && slotLevels.length) {
     const slotRow = el("div", { class:"slots-row" });
     slotLevels.forEach(lvl => {
-      const tot = slots[lvl];
       slotRow.appendChild(el("div",{class:"slot-group"},[
-        el("span",{class:"slot-lbl",text:"Niv "+lvl}),
-        stepper(()=>(state.spells.slotsUsed||{})[lvl]||0, v=>{ state.spells.slotsUsed=state.spells.slotsUsed||{}; state.spells.slotsUsed[lvl]=Math.max(0,Math.min(tot,v)); }, {min:0}),
-        el("span",{class:"slot-tot",text:"/ "+tot})
+        el("span",{class:"slot-lbl",text:"Niv "+lvl+" :"}),
+        el("span",{class:"slot-tot",text:slots[lvl]+(slots[lvl]>1?" emplacements":" emplacement")})
       ]));
     });
-    slotsNode = el("div",{},[el("div",{class:"sub-lbl",text:"Emplacements utilisés"}), slotRow]);
+    slotsNode = el("div",{},[
+      el("div",{class:"sub-lbl",text:"Emplacements de sorts"}),
+      el("div",{class:"muted slots-help",text:"Nombre d'emplacements par niveau de sort, selon la classe et le niveau. Un emplacement est dépensé quand on lance un sort ; ils reviennent après un repos long."}),
+      slotRow
+    ]);
   }
 
   // Liste de sorts de la classe
@@ -4012,18 +4066,7 @@ function renderMagicItems() {
 }
 
 // --- Apparence ---
-function renderAppearance() {
-  const f = [["age","Âge"],["height","Taille"],["weight","Poids"],["hair","Cheveux"],["skin","Peau"],["eyes","Yeux"]];
-  const sexToggle = () => {
-    const mk = (val,label) => el("button",{ class:"seg-btn"+((state.appearance.sex||"")===val?" active":""), text:label,
-      onclick:()=>{ state.appearance.sex = ((state.appearance.sex||"")===val ? "" : val); save(); render(); } });
-    return el("div",{class:"seg"},[ mk("M","M"), mk("F","F") ]);
-  };
-  const cells = [ field("Sexe", sexToggle()) ].concat(
-    f.map(([k,lbl]) => field(lbl, textInput(()=>state.appearance[k], v=>state.appearance[k]=v))) );
-  const grid = el("div",{class:"appearance-grid"}, cells);
-  return card("Apparence", grid, { span:12 });
-}
+// Apparence : ses champs sont désormais fusionnés dans la carte Identité (voir renderIdentity).
 
 // --- Notes ---
 function renderNotes() {
@@ -4071,11 +4114,12 @@ function render() {
   const root = app(); if (!root) return;
   root.innerHTML = "";
   const order = [
-    ["identity", renderIdentity], ["abilities", renderAbilities], ["combat", renderCombat],
-    ["saves", renderSaves], ["skills", renderSkills], ["attacks", renderAttacks],
-    ["proficiencies", renderProficiencies], ["features", renderFeatures], ["spells", renderSpells],
+    ["combat", renderCombat], ["attacks", renderAttacks],
+    ["saves", renderSaves], ["skills", renderSkills],
+    ["spells", renderSpells], ["features", renderFeatures],
     ["inventory", renderInventory], ["magicItems", renderMagicItems], ["money", renderMoney],
-    ["appearance", renderAppearance], ["notes", renderNotes]
+    ["identity", renderIdentity], ["abilities", renderAbilities], ["proficiencies", renderProficiencies],
+    ["notes", renderNotes]
   ];
   const dmPanel = renderDMPanel(); if (dmPanel) root.appendChild(dmPanel);
   order.forEach(([name, fn]) => {
