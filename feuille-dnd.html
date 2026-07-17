@@ -264,8 +264,26 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 
 /* --- Identité -------------------------------------------------------------- */
 .id-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 14px; }
-.xp-ctl, .lvl-ctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.xp-add { width: 78px; font-family: var(--font-num); padding: 6px; border-radius: 7px;
+/* Personnage & Attributs : rangée qui remplit la boîte */
+.person-grid { display: flex; flex-wrap: wrap; gap: 12px 14px; align-items: flex-start; }
+.attr-grid { display: flex; flex-wrap: wrap; gap: 12px 14px; align-items: flex-end; }
+/* Personnage : les champs se partagent la largeur disponible (flex-grow) */
+.person-grid .field { flex: 1 1 0; min-width: 130px; }
+.pf-name { flex-grow: 2.4; min-width: 200px; }
+.pf-class { flex-grow: 1.2; }
+.pf-arch { flex-grow: 1.8; min-width: 165px; }
+.pf-lvl { flex-grow: 0.8; min-width: 135px; }
+.pf-xp { flex-grow: 1.3; min-width: 150px; }
+/* Attributs : Race/Sous-race/Alignement fixes larges ; le reste remplit l'espace à droite */
+.attr-grid .field { flex: 0 0 auto; }
+.fw-race { width: 300px; } .fw-align { width: 235px; } .fw-sex { width: 84px; }
+.attr-grid .fw-age, .attr-grid .fw-taille, .attr-grid .fw-poids { flex: 0 0 auto; width: 94px; }
+.attr-grid .fw-desc { flex: 1 1 auto; width: auto; min-width: 150px; }
+.lvl-ctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.xp-ctl { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.xp-row { display: flex; gap: 6px; align-items: center; width: 100%; }
+.xp-row .stepper { flex: 1 1 auto; min-width: 0; }
+.xp-add { flex: 0 0 58px; width: 58px; font-family: var(--font-num); padding: 6px; border-radius: 7px;
   border: 1px solid var(--line); background: var(--paper-2); }
 
 /* --- Plateau de dés -------------------------------------------------------- */
@@ -396,16 +414,13 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 }
 
 /* --- Combat (formes iconiques) -------------------------------------------- */
-.combat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12em, 1fr)); gap: 14px;
-  align-items: start; justify-items: center; }
-/* Combat à demi-largeur : 3 colonnes fixes (CA · PV · Initiative/Vitesse empilées) */
-.combat-grid.combat-half { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.stat-col { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
-.combat-half .shape.hexagon { width: 92px; height: 69px; }
-.combat-half .shape.shield { width: 80px; height: 88px; }
-.combat-half .shape.heart { width: 90px; height: 84px; }
-.combat-half .stat-lbl { font-size: 1.04rem; }
-.combat-half .shape-val, .combat-half .big-val { font-size: 1.25rem; }
+/* Combat pleine largeur : Classe d'armure · Points de vie · Initiative/Vitesse */
+.combat-row { display: flex; flex-wrap: wrap; gap: 20px 30px; justify-content: space-evenly; align-items: flex-start; }
+.combat-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.combat-body { display: flex; align-items: center; gap: 12px; }
+.combat-side { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.hp-heart { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.combat-row > .stat-shape { width: auto; }
 .stat-shape { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; }
 .stat-lbl { font-family: var(--font-display); font-weight: 800; font-size: 1.22rem;
   text-transform: uppercase; letter-spacing: .5px; color: var(--ink); text-align: center; white-space: nowrap; }
@@ -438,14 +453,21 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .chk input { width: 18px; height: 18px; accent-color: var(--red); cursor: pointer; }
 
 /* --- Sauvegardes (1 colonne verticale, pour laisser la place aux compétences) - */
-.saves-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.saves-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px 14px; }
 .save-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 7px; min-width: 0; }
 .save-row:hover { background: var(--paper-2); }
 .save-val { min-width: 38px; flex: none; }
 .save-name { font-family: var(--font-display); flex: 1; min-width: 0; }
+/* Cases de sauvegarde bien visibles même en lecture seule (maîtrise fixée par la classe) */
+.save-row .chk input { appearance: none; -webkit-appearance: none; width: 18px; height: 18px;
+  border: 2px solid var(--ink); border-radius: 4px; background: var(--paper); position: relative; opacity: 1; cursor: pointer; }
+.save-row .chk input:disabled { cursor: default; }
+.save-row .chk input:checked { background: var(--red); border-color: var(--red-deep); }
+.save-row .chk input:checked::after { content: "✓"; position: absolute; inset: 0; display: flex;
+  align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 900; line-height: 1; }
 
 /* --- Compétences (pas de débordement de la balise (DEX)/(INT)) -------------- */
-.skills-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 4px 18px; }
+.skills-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 4px 16px; }
 .skill-row { display: flex; align-items: center; gap: 7px; padding: 3px 6px; border-radius: 6px;
   font-size: .92rem; min-width: 0; }
 .skill-row:hover { background: var(--paper-2); }
@@ -458,7 +480,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 
 /* --- Attaques (ARME | ATT | DÉGÂTS | ✕ dedans) ----------------------------- */
 .attack-head, .attack-row { display: grid;
-  grid-template-columns: minmax(0,1fr) 48px minmax(0,1.05fr) 28px; gap: 6px; align-items: center; }
+  grid-template-columns: minmax(0,1fr) 60px minmax(0,1.25fr) 32px; gap: 8px; align-items: center; }
 .attack-head { font-size: .66rem; text-transform: uppercase; color: var(--ink-soft);
   font-weight: 700; padding: 0 2px 4px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
 .attack-row { padding: 3px 0; min-width: 0; }
@@ -468,6 +490,12 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   border-top: 1px dashed var(--line); }
 .atk-bonus { font-family: var(--font-num); font-weight: 700; text-align: center; }
 .atk-dmg { font-family: var(--font-num); font-size: .82rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* Attaques : 2/3 table · 1/3 dés (3 + 3, avec « Lancer un dé » dessous) */
+.atk-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
+.atk-dice { border-left: 1px dashed var(--line); padding-left: 14px; }
+.atk-dice .dice-tray { margin-top: 0; border-top: none; padding-top: 0; }
+.atk-dice .dice-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; justify-items: center; }
+.atk-dice .dice-btn { width: 72px; height: 72px; }
 .icon-btn { font: inherit; background: var(--paper-2); border: 1px solid var(--line);
   border-radius: 6px; cursor: pointer; min-height: 32px; min-width: 30px; }
 .icon-btn:hover { background: var(--paper); }
@@ -526,6 +554,11 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .sg-pill.over { color: #fff; background: var(--red); border-color: var(--red-deep); }
 .spell-picker .txt { width: 100%; }
 .known-spells { display: flex; flex-direction: column; gap: 5px; }
+.spell-item.always { border-left-color: var(--green); }
+/* Tableau des sorts de sous-classe (Capacités) */
+.subclass-spells { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.scs-row { display: grid; grid-template-columns: 72px 1fr; gap: 8px; padding: 3px 0; font-size: .92rem; align-items: baseline; }
+.scs-lvl { font-family: var(--font-num); font-weight: 700; color: var(--red-deep); }
 .spell-item { border: 1px solid var(--line); border-left: 4px solid var(--line-strong);
   border-radius: 8px; background: var(--paper-2); overflow: hidden; }
 .spell-name-btn { width: 100%; display: flex; align-items: center; gap: 8px; text-align: left;
@@ -543,10 +576,15 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .sp-higher { color: var(--red-deep); }
 
 /* --- Inventaire ------------------------------------------------------------ */
-.inv-head, .inv-row { display: grid; grid-template-columns: 1fr 132px 78px 32px; gap: 8px; align-items: center; }
+.inv-head, .inv-row { display: grid; grid-template-columns: 1fr 132px 78px 64px; gap: 8px; align-items: center; }
 .inv-head { font-size: .66rem; text-transform: uppercase; color: var(--ink-soft);
   font-weight: 700; padding-bottom: 4px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
 .inv-row { padding: 3px 0; }
+.inv-name { padding: 7px 2px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center; }
+.inv-wt { padding: 7px 2px; font-family: var(--font-num); align-self: center; }
+.inv-actions { display: flex; gap: 4px; justify-content: flex-end; }
+.icon-btn.ok { color: var(--green); font-weight: 700; }
+.icon-btn.ok:hover { background: var(--green); color: #fff; border-color: var(--green); }
 .inv-add { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
 .inv-add .add-sel { flex: 1; min-width: 200px; }
 .add-sel { font-weight: 700; }
@@ -661,6 +699,9 @@ body.high-contrast .shape.hexagon, body.high-contrast .shape.shield, body.high-c
   #sheet { grid-template-columns: 1fr; gap: 12px; margin-top: 10px; }
   .span-3, .span-4, .span-6, .span-8, .span-12, .dm-card { grid-column: 1 / -1; }
   .skills-grid, .prof-grid, .id-grid, .lang-multi { grid-template-columns: 1fr; }
+  .person-grid .field, .attr-grid .field { width: 100%; }
+  .atk-layout { grid-template-columns: 1fr; }
+  .atk-dice { border-left: none; padding-left: 0; border-top: 1px dashed var(--line); padding-top: 10px; margin-top: 10px; }
   .dice-tray { justify-content: center; }
   /* .abilities / .combat-grid : colonnes gérées par auto-fit (voir règle de base) */
   .abilities { gap: 10px; }
@@ -737,7 +778,7 @@ window.RULES = {
   //  dmPinHash = EMPREINTE du code (PAS le code en clair). Generez la votre dans la
   //  console du navigateur (F12) : dmHash("votre-code"), puis collez le resultat ici.
   //  Laissez "" pour aucun code. Obfuscation seulement, pas une vraie securite.
-  dmPinHash: "1afe84456937d1",
+  dmPinHash: "pbkdf2$200000$J6hr8a6w1oJ6DYb8EpXXcg==$aWInuYHrNjs/pYte9Yb9q7OrnvuF16SFgAwdIuYOpPU=",
 
   // --- APPARENCE DU TEXTE (tout se regle ici) --------------------------------
   display: {
@@ -830,18 +871,31 @@ const CFG = {
 //  synchrone, marche même en file://. Pour fabriquer la valeur de rules.js →
 //  dmPinHash : ouvrez la console du navigateur (F12) et tapez  dmHash("votre-code").
 // =============================================================================
-function dmHash(str) {
-  str = (str == null ? "" : str).toString();
-  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
-  for (let i = 0; i < str.length; i++) {
-    const ch = str.charCodeAt(i);
-    h1 = Math.imul(h1 ^ ch, 2654435761);
-    h2 = Math.imul(h2 ^ ch, 1597334677);
-  }
-  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-  const n = 4294967296 * (2097151 & h2) + (h1 >>> 0);
-  return n.toString(16).padStart(14, "0");
+const DM_PBKDF2_ITER = 200000;
+function _b64ToBytes(b64) { const s = atob(b64); const a = new Uint8Array(s.length); for (let i=0;i<s.length;i++) a[i]=s.charCodeAt(i); return a; }
+function _bytesToB64(buf) { const a = new Uint8Array(buf); let s=""; for (let i=0;i<a.length;i++) s+=String.fromCharCode(a[i]); return btoa(s); }
+async function _dmDerive(code, saltBytes, iter) {
+  const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(code || ""), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name:"PBKDF2", salt:saltBytes, iterations:iter, hash:"SHA-256" }, km, 256);
+  return _bytesToB64(bits);
+}
+// Génère une empreinte complète (nouveau sel) pour un code — à coller dans rules.js.
+async function dmHash(code) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const h = await _dmDerive(code, salt, DM_PBKDF2_ITER);
+  const out = "pbkdf2$" + DM_PBKDF2_ITER + "$" + _bytesToB64(salt) + "$" + h;
+  try { console.log("dmPinHash :", out); } catch (e) {}
+  return out;
+}
+// Vérifie un code face à l'empreinte stockée (Promise<bool>, comparaison ~constante).
+async function dmVerifyPin(code, stored) {
+  if (!stored) return false;
+  const p = (stored+"").split("$");
+  if (p[0] !== "pbkdf2" || p.length !== 4) return false;
+  const got = await _dmDerive(code, _b64ToBytes(p[2]), parseInt(p[1],10)), want = p[3];
+  if (got.length !== want.length) return false;
+  let d = 0; for (let i=0;i<got.length;i++) d |= got.charCodeAt(i) ^ want.charCodeAt(i);
+  return d === 0;
 }
 if (typeof window !== "undefined") window.dmHash = dmHash;
 
@@ -953,7 +1007,7 @@ const Calc = {
 
   totalCarried(state) {
     let w = 0;
-    (state.inventory || []).forEach(i => { w += (Number(i.weight || 0) * Number(i.qty || 1)); });
+    (state.inventory || []).forEach(i => { w += (Number(i.weight || 0) * Number(i.qty != null ? i.qty : 1)); });
     // Armure équipée
     const eq = state.armor && state.armor.equipped;
     if (eq && SRD.armor[eq] && SRD.armor[eq].weight) w += Number(SRD.armor[eq].weight);
@@ -1222,10 +1276,11 @@ function stepper(getVal, setVal, opts) {
     onclick: () => { setVal(Number(getVal()) - (opts.step || 1)); sfx(); save(); render(); } });
   const inp = el("input", { class:"step-input", type:"number", value: getVal() });
   if (opts.min != null) inp.setAttribute("min", opts.min);
+  if (opts.readOnly) inp.setAttribute("readonly", "readonly");
   inp.addEventListener("change", () => { setVal(Number(inp.value || 0)); save(); render(); });
   inp.addEventListener("focus", () => glow(wrap));
-  const plus = el("button", { class:"step-btn", text:"+", title:"Augmenter",
-    onclick: () => { setVal(Number(getVal()) + (opts.step || 1)); sfx(); save(); render(); } });
+  const plus = el("button", { class:"step-btn", text:"+", title:"Augmenter", disabled: opts.noPlus ? "disabled" : null,
+    onclick: () => { if (opts.noPlus) return; setVal(Number(getVal()) + (opts.step || 1)); sfx(); save(); render(); } });
   wrap.append(minus, inp, plus);
   return wrap;
 }
@@ -2719,9 +2774,100 @@ const ARCHETYPES = {
   }
 };
 
+// Sorts accordés par la sous-classe (SRD) : domaines (clerc), Cercle de la Terre par
+// terrain (druide, + 1 cantrip bonus), serments (paladin). Toujours préparés, EN PLUS
+// des sorts habituels. Les rares sorts hors-SRD absents des données sont omis à l'affichage.
+const SUBCLASS_SPELLS = {
+  cleric: {
+    knowledge:{byLevel:{1:["command","identify"],3:["augury","suggestion"],5:["nondetection","speak-with-dead"],7:["arcane-eye","confusion"],9:["legend-lore","scrying"]}},
+    life:{byLevel:{1:["bless","cure-wounds"],3:["lesser-restoration","spiritual-weapon"],5:["beacon-of-hope","revivify"],7:["death-ward","guardian-of-faith"],9:["mass-cure-wounds","raise-dead"]}},
+    light:{byLevel:{1:["burning-hands","faerie-fire"],3:["flaming-sphere","scorching-ray"],5:["daylight","fireball"],7:["guardian-of-faith","wall-of-fire"],9:["flame-strike","scrying"]}},
+    nature:{byLevel:{1:["animal-friendship","speak-with-animals"],3:["barkskin","spike-growth"],5:["plant-growth","wind-wall"],7:["dominate-beast","grasping-vine"],9:["insect-plague","tree-stride"]}},
+    tempest:{byLevel:{1:["fog-cloud","thunderwave"],3:["gust-of-wind","shatter"],5:["call-lightning","sleet-storm"],7:["control-water","ice-storm"],9:["destructive-wave","insect-plague"]}},
+    trickery:{byLevel:{1:["charm-person","disguise-self"],3:["mirror-image","pass-without-trace"],5:["blink","dispel-magic"],7:["dimension-door","polymorph"],9:["dominate-person","modify-memory"]}},
+    war:{byLevel:{1:["divine-favor","shield-of-faith"],3:["magic-weapon","spiritual-weapon"],5:["crusaders-mantle","spirit-guardians"],7:["freedom-of-movement","stoneskin"],9:["flame-strike","hold-monster"]}}
+  },
+  druid: {
+    land:{ bonusCantrip:1, terrains:{
+      arctic:{3:["hold-person","spike-growth"],5:["sleet-storm","slow"],7:["freedom-of-movement","ice-storm"],9:["commune-with-nature","cone-of-cold"]},
+      coast:{3:["mirror-image","misty-step"],5:["water-breathing","water-walk"],7:["control-water","freedom-of-movement"],9:["conjure-elemental","scrying"]},
+      desert:{3:["blur","silence"],5:["create-food-and-water","protection-from-energy"],7:["blight","hallucinatory-terrain"],9:["insect-plague","wall-of-stone"]},
+      forest:{3:["barkskin","spider-climb"],5:["call-lightning","plant-growth"],7:["divination","freedom-of-movement"],9:["commune-with-nature","tree-stride"]},
+      grassland:{3:["invisibility","pass-without-trace"],5:["daylight","haste"],7:["divination","freedom-of-movement"],9:["dream","insect-plague"]},
+      mountain:{3:["spider-climb","spike-growth"],5:["lightning-bolt","meld-into-stone"],7:["stone-shape","stoneskin"],9:["passwall","wall-of-stone"]},
+      swamp:{3:["darkness","acid-arrow"],5:["water-walk","stinking-cloud"],7:["freedom-of-movement","locate-creature"],9:["insect-plague","scrying"]},
+      underdark:{3:["spider-climb","web"],5:["gaseous-form","stinking-cloud"],7:["greater-invisibility","stone-shape"],9:["cloudkill","insect-plague"]}
+    }}
+  },
+  paladin: {
+    devotion:{byLevel:{3:["protection-from-evil-and-good","sanctuary"],5:["lesser-restoration","zone-of-truth"],9:["beacon-of-hope","dispel-magic"],13:["freedom-of-movement","guardian-of-faith"],17:["commune","flame-strike"]}},
+    ancients:{byLevel:{3:["ensnaring-strike","speak-with-animals"],5:["moonbeam","misty-step"],9:["plant-growth","protection-from-energy"],13:["ice-storm","stoneskin"],17:["commune-with-nature","tree-stride"]}},
+    vengeance:{byLevel:{3:["bane","hunters-mark"],5:["hold-person","misty-step"],9:["haste","protection-from-energy"],13:["banishment","dimension-door"],17:["hold-monster","scrying"]}}
+  }
+};
+const TERRAINS = [
+  {value:"arctic",label:"Arctique"},{value:"coast",label:"Côte"},{value:"desert",label:"Désert"},
+  {value:"forest",label:"Forêt"},{value:"grassland",label:"Prairie"},{value:"mountain",label:"Montagne"},
+  {value:"swamp",label:"Marais"},{value:"underdark",label:"Outreterre"}
+];
+// Teintes plausibles cheveux/peau/yeux par race (repli générique si absente). Les sous-races
+// SRD n'ont pas de coloration distincte : la recherche tente d'abord la sous-race puis la race.
+const RACE_LOOK = {
+  human:{hair:["Bruns","Noirs","Châtains","Blonds","Roux","Gris","Blancs"],skin:["Pâle","Claire","Hâlée","Mate","Olive","Brune","Foncée"],eyes:["Bruns","Noisette","Verts","Bleus","Gris","Noirs"]},
+  elf:{hair:["Noirs","Argentés","Blonds","Cuivrés","Blancs"],skin:["Pâle","Claire","Cuivrée","Basanée"],eyes:["Bleus","Verts","Dorés","Ambrés","Cuivrés"]},
+  dwarf:{hair:["Bruns","Noirs","Roux","Gris","Blancs"],skin:["Claire","Hâlée","Basanée","Brune"],eyes:["Bruns","Noisette","Gris","Verts"]},
+  halfling:{hair:["Bruns","Châtains","Noirs","Roux"],skin:["Claire","Hâlée","Cuivrée"],eyes:["Bruns","Noisette","Verts"]},
+  gnome:{hair:["Bruns","Châtains","Blonds","Roux","Blancs"],skin:["Claire","Ocre","Cuivrée","Hâlée"],eyes:["Bleus","Bruns","Verts","Ambrés"]},
+  dragonborn:{hair:["Aucun (écailles)"],skin:["Écailles bronze","Écailles or","Écailles airain","Écailles cuivre","Écailles rouges","Écailles bleues","Écailles vertes","Écailles blanches","Écailles noires"],eyes:["Rouges","Or","Ambrés","Verts"]},
+  "half-elf":{hair:["Bruns","Noirs","Blonds","Argentés","Roux"],skin:["Claire","Hâlée","Cuivrée","Mate"],eyes:["Bleus","Verts","Bruns","Dorés"]},
+  "half-orc":{hair:["Noirs","Bruns"],skin:["Grise","Verdâtre","Olive","Basanée"],eyes:["Bruns","Rouges","Noirs"]},
+  tiefling:{hair:["Noirs","Bruns","Rouges","Pourpres","Bleus"],skin:["Rouge","Pourpre","Rose foncé","Bleutée","Cendrée","Humaine"],eyes:["Noirs unis","Rouges","Dorés","Argentés","Blancs"]}
+};
+// Résout les sorts accordés par la sous-classe active (selon niveau et terrain choisi).
+function subclassGrants(state) {
+  const def = (SUBCLASS_SPELLS[state.identity.class]||{})[state.identity.archetype];
+  if (!def) return null;
+  const terr = (state.featureChoices||{})["land-terrain"] || "";
+  const table = def.terrains ? (terr ? def.terrains[terr] : null) : def.byLevel;
+  const lvl = state.identity.level, rows = [], granted = [];
+  if (table) Object.keys(table).map(Number).sort((a,b)=>a-b).forEach(L=>{
+    rows.push({ level:L, spells:table[L] });
+    if (L<=lvl) table[L].forEach(si=>granted.push(si));
+  });
+  return { needsTerrain: !!def.terrains, terrain: terr, bonusCantrip: def.bonusCantrip||0, rows, granted };
+}
+// Tableau « niveau → sorts » affiché dans Capacités.
+function subclassSpellTableNode(g) {
+  if (!g) return null;
+  const kind = g.needsTerrain ? "de cercle" : (state.identity.class==="paladin" ? "de serment" : "de domaine");
+  if (g.needsTerrain && !g.terrain)
+    return el("div",{class:"subclass-spells"},[
+      el("div",{class:"sub-lbl",text:"Sorts de cercle"}),
+      el("div",{class:"muted",text:"Choisissez un terrain dans « Personnage » pour révéler les sorts de cercle."})
+    ]);
+  if (!g.rows.length) return null;
+  const rows = g.rows.map(r => el("div",{class:"scs-row"},[
+    el("span",{class:"scs-lvl",text:"Niv "+r.level}),
+    el("span",{class:"scs-sp",text:r.spells.map(si=>(SRD.spells[si]||{}).name).filter(Boolean).join(", ")})
+  ]));
+  return el("div",{class:"subclass-spells"},[ el("div",{class:"sub-lbl",text:"Sorts "+kind+" (toujours préparés)"}), ...rows ]);
+}
 function renderIdentity() {
   const classOpts = Object.values(SRD.classes).map(c => ({ value:c.index, label:c.name }))
     .sort((a,b)=>a.label.localeCompare(b.label));
+  const g = subclassGrants(state);
+  const grid = el("div", { class:"person-grid" }, [
+    field("Nom du personnage", textInput(()=>state.identity.charName, v=>state.identity.charName=v), "pf-name"),
+    field("Classe", select(()=>state.identity.class, v=>{ state.identity.class=v; state.identity.archetype=""; }, classOpts, "Choisir…"), "pf-class"),
+    archetypeField(),
+    (g && g.needsTerrain) ? field("Terrain (cercle)", select(()=>((state.featureChoices||{})["land-terrain"]||""), v=>{ state.featureChoices=state.featureChoices||{}; state.featureChoices["land-terrain"]=v; }, TERRAINS, "Choisir…"), "pf-arch") : el("span"),
+    field("Niveau", levelControl(), "pf-lvl"),
+    field("XP", xpControl(), "pf-xp")
+  ]);
+  return card("Personnage", el("div", {}, [grid]), { span:12 });
+}
+// --- Attributs du personnage (race, alignement, description physique) ---
+function renderAttributes() {
   const raceOpts = Object.values(SRD.races).map(r => ({ value:r.index, label:r.name }))
     .sort((a,b)=>a.label.localeCompare(b.label));
   const race = SRD.races[state.identity.race];
@@ -2732,43 +2878,50 @@ function renderIdentity() {
       onclick:()=>{ state.appearance.sex = ((state.appearance.sex||"")===val ? "" : val); save(); render(); } });
     return el("div",{class:"seg"},[ mk("M","M"), mk("F","F") ]);
   };
-
-  const grid = el("div", { class:"id-grid" }, [
-    field("Nom du joueur", textInput(()=>state.identity.playerName, v=>state.identity.playerName=v)),
-    field("Nom du personnage", textInput(()=>state.identity.charName, v=>state.identity.charName=v)),
+  // Menus déroulants (valeurs courantes) — une valeur déjà saisie est conservée
+  const withCur = (arr, cur) => (cur && arr.indexOf(cur)<0) ? [cur].concat(arr) : arr;
+  const GEN = { hair:["Bruns","Noirs","Châtains","Blonds","Roux","Gris","Blancs"], skin:["Pâle","Claire","Hâlée","Mate","Olive","Brune","Foncée"], eyes:["Bruns","Noisette","Verts","Bleus","Gris","Noirs"] };
+  const look = RACE_LOOK[state.identity.subrace] || RACE_LOOK[state.identity.race] || GEN;
+  const opts = a => a.map(v=>({ value:v, label:v }));
+  // Approximations selon la race (placeholder d'aide, n'écrase aucune saisie)
+  const RACE_APPROX = {
+    human:{age:"≈ 30 ans",height:"≈ 1,75 m",weight:"≈ 75 kg"}, elf:{age:"≈ 120 ans",height:"≈ 1,65 m",weight:"≈ 60 kg"},
+    dwarf:{age:"≈ 80 ans",height:"≈ 1,35 m",weight:"≈ 75 kg"}, halfling:{age:"≈ 30 ans",height:"≈ 0,90 m",weight:"≈ 18 kg"},
+    dragonborn:{age:"≈ 20 ans",height:"≈ 1,90 m",weight:"≈ 110 kg"}, gnome:{age:"≈ 80 ans",height:"≈ 0,95 m",weight:"≈ 18 kg"},
+    "half-elf":{age:"≈ 40 ans",height:"≈ 1,75 m",weight:"≈ 70 kg"}, "half-orc":{age:"≈ 25 ans",height:"≈ 1,85 m",weight:"≈ 100 kg"},
+    tiefling:{age:"≈ 30 ans",height:"≈ 1,75 m",weight:"≈ 70 kg"}
+  };
+  const rap = RACE_APPROX[state.identity.race] || {};
+  const grid = el("div", { class:"attr-grid" }, [
     field("Race", select(()=>state.identity.race, v=>{
       if (state.appliedRacial) { const a=state.appliedRacial;
         for (const k in a) state.abilities[k]=Number(state.abilities[k]||0)-a[k]; state.appliedRacial=null; }
       state.identity.race=v; state.identity.subrace="";
-    }, raceOpts, "Choisir…")),
-    subOpts.length ? field("Sous-race", select(()=>state.identity.subrace, v=>state.identity.subrace=v, subOpts, "—")) : el("span"),
-    field("Classe", select(()=>state.identity.class, v=>{ state.identity.class=v; state.identity.archetype=""; }, classOpts, "Choisir…")),
-    field("Alignement", select(()=>state.identity.alignment, v=>state.identity.alignment=v, alignOpts, "—")),
-    field("Niveau", levelControl()),
-    field("Expérience", xpControl()),
-    archetypeField(),
-    field("Sexe", sexToggle()),
-    field("Âge", textInput(()=>state.appearance.age, v=>state.appearance.age=v)),
-    field("Taille", textInput(()=>state.appearance.height, v=>state.appearance.height=v)),
-    field("Poids", textInput(()=>state.appearance.weight, v=>state.appearance.weight=v)),
-    field("Cheveux", textInput(()=>state.appearance.hair, v=>state.appearance.hair=v)),
-    field("Peau", textInput(()=>state.appearance.skin, v=>state.appearance.skin=v)),
-    field("Yeux", textInput(()=>state.appearance.eyes, v=>state.appearance.eyes=v))
+    }, raceOpts, "Choisir…"), "fw-race"),
+    subOpts.length ? field("Sous-race", select(()=>state.identity.subrace, v=>state.identity.subrace=v, subOpts, "—"), "fw-race") : el("span"),
+    field("Alignement", select(()=>state.identity.alignment, v=>state.identity.alignment=v, alignOpts, "—"), "fw-align"),
+    field("Sexe", sexToggle(), "fw-sex"),
+    field("Âge", textInput(()=>state.appearance.age, v=>state.appearance.age=v, rap.age), "fw-age"),
+    field("Taille", textInput(()=>state.appearance.height, v=>state.appearance.height=v, rap.height), "fw-taille"),
+    field("Poids", textInput(()=>state.appearance.weight, v=>state.appearance.weight=v, rap.weight), "fw-poids"),
+    field("Cheveux", select(()=>state.appearance.hair, v=>state.appearance.hair=v, opts(withCur(look.hair, state.appearance.hair)), "—"), "fw-desc"),
+    field("Peau", select(()=>state.appearance.skin, v=>state.appearance.skin=v, opts(withCur(look.skin, state.appearance.skin)), "—"), "fw-desc"),
+    field("Yeux", select(()=>state.appearance.eyes, v=>state.appearance.eyes=v, opts(withCur(look.eyes, state.appearance.eyes)), "—"), "fw-desc")
   ]);
-  return card("Identité", el("div", {}, [grid]), { span:12 });
+  return card("Attributs du personnage", grid, { span:12 });
 }
-function field(label, node) {
-  return el("label", { class:"field" }, [ el("span", { class:"field-lbl", text:label }), node ]);
+function field(label, node, cls) {
+  return el("label", { class:"field"+(cls?" "+cls:"") }, [ el("span", { class:"field-lbl", text:label }), node ]);
 }
 // Sélecteur d'archétype (sous-classe) : visible dès que la classe y a droit
 function archetypeField() {
   const a = ARCHETYPES[state.identity.class];
   if (!a) return el("span");
   if (state.identity.level < a.level)
-    return field(a.label, el("span", { class:"muted", text:"disponible au niveau "+a.level }));
+    return field(a.label, el("span", { class:"muted", text:"disponible au niveau "+a.level }), "pf-arch");
   return field(a.label+" (niv "+a.level+")",
     select(()=>state.identity.archetype, v=>state.identity.archetype=v,
-      a.list.map(s=>({ value:s.key, label:s.name })), "Choisir…"));
+      a.list.map(s=>({ value:s.key, label:s.name })), "Choisir…"), "pf-arch");
 }
 function levelControl() {
   const wrap = el("span", { class:"lvl-ctl" });
@@ -2783,11 +2936,12 @@ function levelControl() {
 }
 function xpControl() {
   const wrap = el("span", { class:"xp-ctl" });
-  wrap.appendChild(stepper(()=>state.identity.xp, v=>{
+  const row = el("span", { class:"xp-row" });
+  row.appendChild(stepper(()=>state.identity.xp, v=>{
     state.identity.xp=Math.max(0,v);
     if (CFG.options.autoLevelFromXP) state.identity.level = Calc.levelFromXP(state.identity.xp);
   }, {step:50, min:0, wide:true}));
-  // ajout rapide « +N XP »
+  // ajout rapide « +N XP » (à droite du compteur)
   const add = el("input", { class:"xp-add", type:"number", placeholder:"+ XP", title:"Saisir un gain puis Entrée" });
   add.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -2797,7 +2951,8 @@ function xpControl() {
       add.value = ""; if (g>0) Audio.levelUp(); save(); render();
     }
   });
-  wrap.appendChild(add);
+  row.appendChild(add);
+  wrap.appendChild(row);
   if (!CFG.options.autoLevelFromXP) {
     wrap.appendChild(el("button", { class:"mini-btn", text:"⇪ niveau selon XP",
       title:"Ajuster le niveau d'apres l'XP",
@@ -3222,18 +3377,16 @@ function renderCombat() {
   }
   if (state.hp.current > state.hp.max) state.hp.current = state.hp.max;
 
-  const speedShape = statShape("hexagon", "Vitesse",
-    el("span",{class:"shape-val"},[ lockable("speed", ()=>Calc.speed(state), v=>v+"m") ]),
-    null, "Distance parcourue en un déplacement lors d'un tour (en mètres).");
+  // --- Classe d'armure : bouclier + (menu d'armure / case bouclier) à droite ---
+  const acGroup = el("div", { class:"combat-group" }, [
+    el("div", { class:"stat-lbl", title:"Classe d'armure (CA) : difficulté pour vous toucher au combat. Plus c'est élevé, mieux c'est.", text:"Classe d'armure" }),
+    el("div", { class:"combat-body" }, [
+      el("div", { class:"shape shield" }, [ el("span",{class:"shape-val"},[ lockable("ac", ()=>Calc.armorClass(state)) ]) ]),
+      el("div", { class:"combat-side" }, [ armorPicker() ])
+    ])
+  ]);
 
-  const acShape = statShape("shield", "Classe d'armure",
-    el("span",{class:"shape-val"},[ lockable("ac", ()=>Calc.armorClass(state)) ]), armorPicker(),
-    "Classe d'armure (CA) : difficulté pour vous toucher au combat. Plus c'est élevé, mieux c'est.");
-
-  const initShape = statShape("hexagon", "Initiative",
-    el("span",{class:"shape-val"},[ lockable("init", ()=>Calc.initiative(state), Calc.fmt) ]),
-    null, "Détermine l'ordre des tours : jet de Dextérité au début du combat.");
-
+  // --- Points de vie : cœur + −/+ ; (Max / PV par formule) à droite ---
   const maxBoosted = state.hpAuto && suggested != null && state.hp.maxOverride != null && state.hp.maxOverride > suggested;
   const maxField = el("input",{class:"hp-mini-i max"+(state.hpAuto?" auto":"")+(maxBoosted?" boosted":""),type:"number",value:state.hp.max,
     title: state.hpAuto
@@ -3244,32 +3397,43 @@ function renderCombat() {
         state.hp.maxOverride = (v > base) ? v : null; }   // > formule = bonus temporaire ; sinon retour à la formule
       else { state.hp.max = v; }
       save(); render(); }});
-
-  const hpShape = statShape("heart", "Points de vie",
-    el("input",{class:"hp-current",type:"number",value:state.hp.current,title:"PV actuels",
-      onchange:(e)=>{ const b=state.hp.current; state.hp.current=Number(e.target.value||0);
-        if (state.hp.current>b) Audio.heal(); else if (state.hp.current<b) Audio.damage(); save(); render(); }}),
-    el("div",{class:"hp-extra"},[
-      el("div",{class:"hp-quick"},[
-        el("button",{class:"step-btn",text:"−",title:"Subir des dégâts",
-          onclick:()=>{ state.hp.current--; Audio.damage(); save(); render(); }}),
-        el("button",{class:"step-btn",text:"+",title:"Se soigner",
-          onclick:()=>{ state.hp.current++; Audio.heal(); save(); render(); }})
+  const pvGroup = el("div", { class:"combat-group" }, [
+    el("div", { class:"stat-lbl", title:"Points de vie : à 0, vous tombez inconscient. Les boutons − / + appliquent dégâts et soins.", text:"Points de vie" }),
+    el("div", { class:"combat-body" }, [
+      el("div", { class:"hp-heart" }, [
+        el("div", { class:"shape heart" }, [
+          el("input",{class:"hp-current",type:"number",value:state.hp.current,title:"PV actuels",
+            onchange:(e)=>{ const b=state.hp.current; state.hp.current=Number(e.target.value||0);
+              if (state.hp.current>b) Audio.heal(); else if (state.hp.current<b) Audio.damage(); save(); render(); }})
+        ]),
+        el("div",{class:"hp-quick"},[
+          el("button",{class:"step-btn",text:"−",title:"Subir des dégâts",
+            onclick:()=>{ state.hp.current--; Audio.damage(); save(); render(); }}),
+          el("button",{class:"step-btn",text:"+",title:"Se soigner",
+            onclick:()=>{ state.hp.current++; Audio.heal(); save(); render(); }})
+        ])
       ]),
-      el("div",{class:"hp-mini"},[
-        el("label",{class:"hp-mini-f"},[ el("span",{class:"lbl-maj",text:"Max"}), maxField ])
-      ]),
-      el("label",{class:"hp-method",
-        title:"Au dé : tu entres tes PV toi-même. Par formule : (dé÷2 +1 +mod de CON) par niveau, calculé automatiquement."},[
-        el("input",{type:"checkbox",checked: state.hpAuto?"checked":null,
-          onchange:(e)=>{ state.hpAuto=e.target.checked;
-            if(state.hpAuto && suggested){ state.hp.max=suggested; state.hp.current=suggested; state.hp.maxOverride=null; }
-            save(); render(); }}),
-        el("span",{text:"PV par formule"})
+      el("div", { class:"combat-side" }, [
+        el("label",{class:"hp-mini-f"},[ el("span",{class:"lbl-maj",text:"Max"}), maxField ]),
+        el("label",{class:"hp-method",
+          title:"Au dé : tu entres tes PV toi-même. Par formule : (dé÷2 +1 +mod de CON) par niveau, calculé automatiquement."},[
+          el("input",{type:"checkbox",checked: state.hpAuto?"checked":null,
+            onchange:(e)=>{ state.hpAuto=e.target.checked;
+              if(state.hpAuto && suggested){ state.hp.max=suggested; state.hp.current=suggested; state.hp.maxOverride=null; }
+              save(); render(); }}),
+          el("span",{text:"PV par formule"})
+        ])
       ])
-    ]),
-    "Points de vie : à 0, vous tombez inconscient. Les boutons − / + appliquent dégâts et soins.");
+    ])
+  ]);
 
+  // --- Initiative + Vitesse côte à côte ---
+  const initShape = statShape("hexagon", "Initiative",
+    el("span",{class:"shape-val"},[ lockable("init", ()=>Calc.initiative(state), Calc.fmt) ]),
+    null, "Détermine l'ordre des tours : jet de Dextérité au début du combat.");
+  const speedShape = statShape("hexagon", "Vitesse",
+    el("span",{class:"shape-val"},[ lockable("speed", ()=>Calc.speed(state), v=>v+"m") ]),
+    null, "Distance parcourue en un déplacement lors d'un tour (en mètres).");
   // Note explicative de la formule PV (avec les vraies valeurs du perso)
   let pvNote = el("span");
   if (c) {
@@ -3279,15 +3443,12 @@ function renderCombat() {
     const per = half + 1 + conMod;
     pvNote = el("div",{class:"combat-note"},[
       el("strong",{text:"Points de vie → calcul "}),
-      el("span",{class:"muted",text:"— d"+c.hitDie+", mod CON "+Calc.fmt(conMod)}),
-      el("div",{text:"• Niv 1 : dé max + mod CON = "+c.hitDie+" "+Calc.fmt(conMod)+" = "+l1}),
-      el("div",{text:"• Niv 2+ : dé÷2 +1 + mod CON = "+half+" +1 "+Calc.fmt(conMod)+" = "+per+" par niveau"})
+      el("span",{class:"muted",text:"— d"+c.hitDie+", mod CON "+Calc.fmt(conMod)+" · Niv 1 : "+c.hitDie+" "+Calc.fmt(conMod)+" = "+l1+" · Niv 2+ : "+half+"+1"+Calc.fmt(conMod)+" = "+per+"/niv"})
     ]);
   }
 
-  const initSpeed = el("div", { class:"stat-col" }, [ initShape, speedShape ]);
-  const stats = el("div", { class:"combat-grid combat-half" }, [ acShape, hpShape, initSpeed ]);
-  return card("Combat", el("div",{},[stats, pvNote]), { span:6 });
+  const stats = el("div", { class:"combat-row" }, [ acGroup, pvGroup, initShape, speedShape ]);
+  return card("Combat", el("div",{},[stats, pvNote]), { span:12 });
 }
 function statShape(shape, label, valueNode, extraNode, tooltip) {
   return el("div", { class:"stat-shape" }, [
@@ -3332,9 +3493,9 @@ const ABILITY_HELP = {
   cha: "Personnalité : sorts de barde/ensorceleur, Persuasion, Intimidation, Tromperie, Représentation."
 };
 const SECTION_HELP = {
-  "Identité":"Qui est le personnage : nom, race, classe, niveau, expérience. Les dés à droite servent à faire un jet.",
+  "Personnage":"Nom, classe, sous-classe, niveau et expérience — l'essentiel en haut de page.",
   "Caractéristiques":"Les 6 valeurs de base. Le grand chiffre = le score (réglé avec + / −), le petit pentagone = le modificateur utilisé dans tous les calculs.",
-  "Combat":"Vitesse, classe d'armure (CA), initiative, dés de vie et points de vie (PV).",
+  "Combat":"Classe d'armure (CA), points de vie (PV), initiative et vitesse.",
   "Jets de sauvegarde":"Tests pour résister à un danger (poison, peur, piège…). Cochez ceux que votre classe maîtrise.",
   "Compétences":"Ce que le personnage sait faire. Cochez celles que vous maîtrisez. Survolez chacune pour son explication.",
   "Attaques":"Vos armes. Choisissez l'arme : le bonus d'attaque et les dégâts se calculent automatiquement.",
@@ -3344,7 +3505,7 @@ const SECTION_HELP = {
   "Équipement":"Ce que vous transportez. La charge totale est comparée à votre capacité de port.",
   "Monnaie & trésors":"Votre argent (platine, or, argent, cuivre) et vos objets de valeur.",
   "Objets magiques":"Vos objets magiques et leurs propriétés.",
-  "Apparence":"Âge, taille, cheveux, peau… la description physique du personnage.",
+  "Attributs du personnage":"Race, alignement et description physique (sexe, âge, taille, cheveux…).",
   "Notes":"Histoire, contacts, objectifs, liens avec les autres personnages."
 };
 const SKILL_HELP = {
@@ -3393,7 +3554,7 @@ function renderSaves() {
     ]);
     grid.appendChild(row);
   });
-  return card("Jets de sauvegarde", grid, { span:6 });
+  return card("Jets de sauvegarde", grid, { span:4 });
 }
 
 // --- Competences ---
@@ -3434,7 +3595,7 @@ function renderSkills() {
   const skillMax = el("div", { class:"skill-limit",
     title:"Nombre de compétences que votre classe vous laisse choisir"+(dmMode?" — le MJ peut dépasser cette limite":"")+". (Les bonus d'historique ne sont pas gérés.)",
     text:"MAX COMPÉTENCES : "+usedSkills+" / "+maxSkills });
-  return card("Compétences", el("div", {}, [grid, el("div",{class:"skills-foot"},[passive, skillMax])]), { span:6 });
+  return card("Compétences", el("div", {}, [grid, el("div",{class:"skills-foot"},[passive, skillMax])]), { span:8 });
 }
 
 // --- Attaques ---
@@ -3490,9 +3651,14 @@ function renderAttacks() {
       onchange:(e)=>{ state.showDice = e.target.checked; save(); render(); } }),
     el("span", { text:" Afficher le lanceur de dés" })
   ]) : null;
-  return card("Attaques", el("div", {}, [
+  const atkMain = el("div", { class:"atk-main" }, [
     el("div",{class:"attack-head"},[el("span",{text:"ARME"}),el("span",{text:"ATT."}),el("span",{text:"DÉGÂTS"}),el("span",{text:""})]),
-    ...rows, add, note, diceToggle, diceTray() ]), { span:6, tall:true });
+    ...rows, add, note ]);
+  if (state.showDice || dmMode) {
+    return card("Attaques", el("div", { class:"atk-layout" }, [
+      atkMain, el("div", { class:"atk-dice" }, [ diceToggle, diceTray() ]) ]), { span:12, tall:true });
+  }
+  return card("Attaques", atkMain, { span:12, tall:true });
 }
 
 // --- Maitrises & langues ---
@@ -3578,6 +3744,8 @@ function renderFeatures() {
   if (!list.children.length) list.appendChild(el("div",{class:"muted",text:"Choisissez une classe et une race."}));
 
   const children = [list];
+  const grantsTbl = subclassSpellTableNode(subclassGrants(state));
+  if (grantsTbl) children.push(grantsTbl);
   if (CFG.options.showFeatureNotes) {
     children.push(el("div", { class:"feat-notes" }, [
       el("div",{class:"sub-lbl",text:"Notes personnelles :"}),
@@ -3709,7 +3877,8 @@ function renderSpells() {
 
   // Limites d'apprentissage selon la classe ET le niveau du personnage
   const maxLvl = slotLevels.length ? Math.max.apply(null, slotLevels) : 0;
-  const cantripCap = casterCantripsFor(c, state.identity.level);
+  const grants = subclassGrants(state);
+  const cantripCap = casterCantripsFor(c, state.identity.level) + (grants ? grants.bonusCantrip : 0);
   const knownNum = casterSpellsKnownFor(c, state.identity.level);
   const hasKnown = knownNum != null;                 // barde/ensorceleur/occultiste/rôdeur = sorts "connus"
   const abilMod = Calc.mod(Calc.abilityTotal(state, c.spellcastingAbility));
@@ -3753,7 +3922,32 @@ function renderSpells() {
     known.appendChild(item);
   });
 
-  return card("Sorts", el("div",{},[head, slotsNode, guide, picker, known]), { span:12 });
+  let alwaysNode = el("span");
+  if (grants && grants.granted.length) {
+    const kind = grants.needsTerrain ? "de cercle" : (state.identity.class==="paladin" ? "de serment" : "de domaine");
+    const items = grants.granted.filter(si=>SRD.spells[si]).map(si => {
+      const s = SRD.spells[si]; const fx = SCHOOL_FX[s.school] || {};
+      return el("div", { class:"spell-item always", style: CFG.fx.colorByType && fx.color ? ("border-left-color:"+fx.color) : "" }, [
+        el("button", { class:"spell-name-btn",
+          onclick:(e)=>{ if (fx.sound && Audio[fx.sound]) Audio[fx.sound](); e.currentTarget.parentNode.querySelector(".spell-desc").classList.toggle("open"); } }, [
+          el("span",{class:"sp-lvl",text: s.level===0?"T":s.level}),
+          el("span",{class:"sp-name",text:s.name}),
+          el("span",{class:"sp-school",text:s.school})
+        ]),
+        el("div", { class:"spell-desc" }, [
+          el("div",{class:"sp-meta",text:[s.castingTime,s.range,s.duration,s.concentration?"Concentration":""].filter(Boolean).join(" · ")}),
+          el("p",{text:s.desc}),
+          s.higherLevel ? el("p",{class:"sp-higher",text:"Aux niveaux supérieurs : "+s.higherLevel}) : el("span")
+        ])
+      ]);
+    });
+    alwaysNode = el("div",{},[
+      el("div",{class:"sub-lbl",text:"Toujours préparés — sorts "+kind}),
+      el("div",{class:"muted slots-help",text:"Accordés par votre sous-classe : toujours préparés et en plus de votre limite de sorts."}),
+      el("div",{class:"known-spells"}, items)
+    ]);
+  }
+  return card("Sorts", el("div",{},[head, slotsNode, guide, picker, known, alwaysNode]), { span:12 });
 }
 function spellPicker(classSpells, lim) {
   lim = lim || {};
@@ -3810,24 +4004,46 @@ const GEAR_FR = [
 const GEAR_WEIGHT = {}; GEAR_FR.forEach(([n,w])=>GEAR_WEIGHT[n.toLowerCase()]=w);
 
 function renderInventory() {
-  const rows = (state.inventory||[]).map((it,i)=>el("div",{class:"inv-row"},[
-    el("input",{class:"txt grow",type:"text",value:it.name||"",placeholder:"Nom de l'objet…",
-      onchange:(e)=>{ it.name=e.target.value;
-        const w=GEAR_WEIGHT[it.name.trim().toLowerCase()];
-        if (w!=null && (!it.weight || it.weight===0)) it.weight=w;
-        save(); render(); }}),
-    stepper(()=>it.qty||1, v=>it.qty=Math.max(0,v), {min:0, wide:true}),
-    el("input",{class:"txt tiny",type:"number",value:it.weight||0,title:"Poids unitaire (livres)",onchange:(e)=>{it.weight=Number(e.target.value||0);save();render();}}),
-    el("button",{class:"icon-btn del",text:"✕",onclick:()=>{state.inventory.splice(i,1);save();render();}})
-  ]));
+  const rows = (state.inventory||[]).map((it,i)=>{
+    const ro = it.fromList || it.created;   // objet de liste, ou objet perso déjà « créé »
+    const nameCell = ro
+      ? el("span",{class:"inv-name",title:"Nom non modifiable",text:it.name||""})
+      : el("input",{class:"txt grow",type:"text",value:it.name||"",placeholder:"Nom de l'objet…",
+          onchange:(e)=>{ it.name=e.target.value;
+            const w=GEAR_WEIGHT[it.name.trim().toLowerCase()];
+            if (w!=null && (!it.weight || it.weight===0)) it.weight=w;
+            save(); render(); }});
+    const wtCell = ro
+      ? el("span",{class:"inv-wt",title:"Poids non modifiable",text:(it.weight||0)+" lb"})
+      : el("input",{class:"txt tiny",type:"number",value:it.weight||0,title:"Poids unitaire (livres)",onchange:(e)=>{it.weight=Number(e.target.value||0);save();render();}});
+    const okBtn = (it.custom && !it.created)
+      ? el("button",{class:"icon-btn ok",text:"✓",title:"Créer (verrouille le nom et le poids)",
+          onclick:()=>{ if(!(it.name||"").trim()){ alert("Donnez d'abord un nom à l'objet."); return; } it.created=true; Audio.click(); save(); render(); }})
+      : null;
+    return el("div",{class:"inv-row"},[ nameCell,
+      stepper(()=>(it.qty!=null?it.qty:1), v=>it.qty=Math.max(0,v), {min:0, wide:true}),
+      wtCell,
+      el("div",{class:"inv-actions"},[ okBtn,
+        el("button",{class:"icon-btn del",text:"✕",title:"Retirer",onclick:()=>{state.inventory.splice(i,1);save();render();}}) ])
+    ]);
+  });
   // Menu déroulant : choisir un objet dans toute la liste (ajoute une ligne)
   const addSel = el("select",{class:"sel add-sel"});
   addSel.appendChild(el("option",{value:"",text:"＋ Ajouter depuis la liste…"}));
   GEAR_FR.slice().sort((a,b)=>a[0].localeCompare(b[0])).forEach(([n,w])=>
     addSel.appendChild(el("option",{value:n,text:n+" — "+w+" lb"})));
   addSel.addEventListener("change",()=>{ const n=addSel.value; if(!n) return;
-    state.inventory.push({name:n,qty:1,weight:GEAR_WEIGHT[n.toLowerCase()]||0}); Audio.click(); save(); render(); });
-  const add = el("button",{class:"add-btn",text:"＋ Objet personnalisé",onclick:()=>{state.inventory.push({name:"",qty:1,weight:0});save();render();}});
+    const m=/^(.*?)\s*\(×20\)$/.exec(n);
+    if (m) {   // paquet de 20 : on suit les unités individuelles (poids = paquet ÷ 20)
+      const base=m[1].trim(), unit=(GEAR_WEIGHT[n.toLowerCase()]||0)/20;
+      const it=(state.inventory||[]).find(x=>x.pack20===base);
+      if (it) it.qty=Number(it.qty!=null?it.qty:0)+20;
+      else state.inventory.push({name:base,qty:20,weight:unit,pack20:base,fromList:true});
+    } else {
+      state.inventory.push({name:n,qty:1,weight:GEAR_WEIGHT[n.toLowerCase()]||0,fromList:true});
+    }
+    Audio.click(); save(); render(); });
+  const add = el("button",{class:"add-btn",text:"＋ Objet personnalisé",onclick:()=>{state.inventory.push({name:"",qty:1,weight:0,custom:true});save();render();}});
   let encum = el("span");
   if (CFG.options.trackEncumbrance) {
     const carried = Calc.totalCarried(state), cap = Calc.carryCapacity(state);
@@ -4017,7 +4233,7 @@ function renderMagicItems() {
     const hasCharges = (it.maxCharges||0) > 0;
     const chargeLine = el("div",{class:"mi-charges"},[
       el("span",{class:"mi-ch-lbl",text:"⚡ Charges"}),
-      stepper(()=>it.charges||0, v=>{ it.charges=Math.max(0,Math.min(it.maxCharges||0,v)); }, {min:0}),
+      stepper(()=>it.charges||0, v=>{ const cur=it.charges||0; if (!dmMode && v>cur) return; it.charges=Math.max(0,Math.min(it.maxCharges||0,v)); }, {min:0, noPlus:!dmMode, readOnly:!dmMode}),
       el("span",{class:"mi-ch-sep",text:"/ max"}),
       el("input",{class:"txt tiny",type:"number",min:"0",disabled:locked?"disabled":null,value:it.maxCharges||0,title:"Nombre de charges maximum (0 = sans charges)",
         onchange:(e)=>{ it.maxCharges=Math.max(0,Number(e.target.value||0)); if((it.charges||0)>it.maxCharges) it.charges=it.maxCharges; save(); render(); }}),
@@ -4066,7 +4282,7 @@ function renderMagicItems() {
 }
 
 // --- Apparence ---
-// Apparence : ses champs sont désormais fusionnés dans la carte Identité (voir renderIdentity).
+// Apparence : ses champs vivent dans la carte « Attributs du personnage » (voir renderAttributes).
 
 // --- Notes ---
 function renderNotes() {
@@ -4114,12 +4330,11 @@ function render() {
   const root = app(); if (!root) return;
   root.innerHTML = "";
   const order = [
-    ["combat", renderCombat], ["attacks", renderAttacks],
-    ["saves", renderSaves], ["skills", renderSkills],
-    ["spells", renderSpells], ["features", renderFeatures],
-    ["inventory", renderInventory], ["magicItems", renderMagicItems], ["money", renderMoney],
-    ["identity", renderIdentity], ["abilities", renderAbilities], ["proficiencies", renderProficiencies],
-    ["notes", renderNotes]
+    ["identity", renderIdentity], ["combat", renderCombat], ["attacks", renderAttacks],
+    ["saves", renderSaves], ["skills", renderSkills], ["spells", renderSpells],
+    ["features", renderFeatures], ["abilities", renderAbilities], ["inventory", renderInventory],
+    ["magicItems", renderMagicItems], ["money", renderMoney], ["proficiencies", renderProficiencies],
+    ["appearance", renderAttributes], ["notes", renderNotes]
   ];
   const dmPanel = renderDMPanel(); if (dmPanel) root.appendChild(dmPanel);
   order.forEach(([name, fn]) => {
@@ -4171,10 +4386,13 @@ function toggleDM() {
   if (CFG.pinHash || CFG.pin) {
     promptPassword("Code du Mode MJ :", (code) => {
       if (code == null) return;
-      // Empreinte (le code n'est jamais stocké en clair) ; repli sur dmPin en clair.
-      const ok = CFG.pinHash ? (dmHash(code) === CFG.pinHash) : (code === CFG.pin);
-      if (!ok) { alert("Code incorrect."); return; }
-      dmMode = true; Audio.unlock(); buildTopbar(); render();
+      if (CFG.pinHash && (!window.crypto || !crypto.subtle)) { alert("Ce navigateur ne peut pas vérifier le code ici."); return; }
+      // Empreinte PBKDF2 (le code n'est jamais stocké en clair) ; repli sur dmPin en clair (dev).
+      const check = CFG.pinHash ? dmVerifyPin(code, CFG.pinHash) : Promise.resolve(code === CFG.pin);
+      check.then((ok) => {
+        if (!ok) { alert("Code incorrect."); return; }
+        dmMode = true; Audio.unlock(); buildTopbar(); render();
+      });
     });
     return;
   }
