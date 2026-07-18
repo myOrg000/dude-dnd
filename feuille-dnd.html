@@ -481,6 +481,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .atk-note { font-size: .82rem; line-height: 1.45; margin-top: 8px; padding-top: 8px;
   border-top: 1px dashed var(--line); }
 .atk-bonus { font-family: var(--font-num); font-weight: 700; text-align: center; }
+.atk-weapon-name { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 4px 2px; }
 .atk-dmg { font-family: var(--font-num); font-size: .82rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 /* Colonne EN MAIN : emoji main (grisé = inactif, couleur = actif) + budget de 2 mains */
 .hands-count { font-family: var(--font-display); font-weight: 700; color: var(--red-deep); margin-bottom: 6px; }
@@ -1062,9 +1063,8 @@ const Calc = {
   totalCarried(state) {
     let w = 0;
     (state.inventory || []).forEach(i => { w += (Number(i.weight || 0) * Number(i.qty != null ? i.qty : 1)); });
-    // Armure équipée
-    const eq = state.armor && state.armor.equipped;
-    if (eq && SRD.armor[eq] && SRD.armor[eq].weight) w += Number(SRD.armor[eq].weight);
+    // Armure équipée : son poids est porté par l'objet d'inventaire correspondant (une armure doit
+    // être dans l'équipement pour être équipée) — donc plus compté ici, pour éviter le double comptage.
     // Bouclier : son poids est désormais porté par l'objet « Bouclier » de l'inventaire
     // (voir contrainte des mains) — donc plus compté ici, pour éviter le double comptage.
     // Armes listées dans Attaques
@@ -3534,7 +3534,7 @@ function hpMaxField(suggested) {
 }
 function armorPicker() {
   const opts = Object.values(SRD.armor)
-    .filter(a => a.category !== "shield")
+    .filter(a => a.category !== "shield" && (armorOwned(state, a.name) || state.armor.equipped === a.index))
     .map(a => ({ value:a.index, label:a.name+" (CA "+a.baseAC+")" }))
     .sort((a,b)=>a.label.localeCompare(b.label));
   const box = el("div", { class:"armor-pick" }, [
@@ -3725,9 +3725,15 @@ function renderAttacks() {
         Audio.click(); save(); render();
       } : null
     }, [ el("span",{text: twoH?"🤲":"✋"}) ]);
+    // Une fois une arme choisie, la cellule ARME devient un texte fixe (plus de menu déroulant).
+    const wi = atk.weaponIndex || "";
+    const armeCell = wi
+      ? el("span", { class:"atk-weapon-name", title:"Arme fixée — supprimez l'attaque (✕) pour en choisir une autre",
+          text: wi.indexOf("mw:")===0 ? wi.slice(3) : (wi.indexOf("magic:")===0 ? wi.slice(6) : (SRD.weapons[wi] ? SRD.weapons[wi].name : wi)) })
+      : weaponSelect(atk);
     return el("div", { class:"attack-row"+(atk.active?"":" inactive")+(isManual?" magic":((atk.weaponIndex||"").indexOf("mw:")===0?" magic":"")) }, [
       el("div",{class:"hand-cell"},[handBtn]),
-      weaponSelect(atk), attCell, dmgCell,
+      armeCell, attCell, dmgCell,
       el("button", { class:"icon-btn del", text:"✕", title:"Retirer cette attaque",
         onclick:()=>{ state.attacks.splice(i,1); save(); render(); } })
     ]);
@@ -4140,6 +4146,12 @@ function renderInventory() {
   addSel.appendChild(el("option",{value:"",text:"＋ Ajouter depuis la liste…"}));
   GEAR_FR.slice().sort((a,b)=>a[0].localeCompare(b[0])).forEach(([n,w])=>
     addSel.appendChild(el("option",{value:n,text:n+" — "+w+" lb"})));
+  // Armures (depuis SRD.armor) : les ajouter ici permet ensuite de les choisir dans « Combat ».
+  const armorList = Object.values(SRD.armor).filter(a=>a.category!=="shield").sort((a,b)=>a.name.localeCompare(b.name));
+  const armWeight = {}; armorList.forEach(a=>armWeight[a.name.toLowerCase()]=a.weight);
+  const ogArm = el("optgroup",{label:"Armures"});
+  armorList.forEach(a=>ogArm.appendChild(el("option",{value:a.name,text:a.name+" — "+a.weight+" lb"})));
+  addSel.appendChild(ogArm);
   addSel.addEventListener("change",()=>{ const n=addSel.value; if(!n) return;
     const m=/^(.*?)\s*\(×20\)$/.exec(n);
     if (m) {   // paquet de 20 : on suit les unités individuelles (poids = paquet ÷ 20)
@@ -4148,7 +4160,9 @@ function renderInventory() {
       if (it) it.qty=Number(it.qty!=null?it.qty:0)+20;
       else state.inventory.push({name:base,qty:20,weight:unit,pack20:base,fromList:true});
     } else {
-      state.inventory.push({name:n,qty:1,weight:GEAR_WEIGHT[n.toLowerCase()]||0,fromList:true});
+      const lc=n.toLowerCase();
+      const w=(lc in GEAR_WEIGHT) ? GEAR_WEIGHT[lc] : (armWeight[lc]||0);
+      state.inventory.push({name:n,qty:1,weight:w,fromList:true});
     }
     Audio.click(); save(); render(); });
   const add = el("button",{class:"add-btn",text:"＋ Objet personnalisé",onclick:()=>{state.inventory.push({name:"",qty:1,weight:0,custom:true});save();render();}});
@@ -5005,6 +5019,12 @@ function hasShieldItem(state){
   const inv = (state.inventory||[]).some(i => /bouclier/i.test(i.name||""));
   const mag = (state.magicItems||[]).some(m => /bouclier|shield/i.test(m.name||""));
   return inv || mag;
+}
+// Une armure n'est sélectionnable que si elle est POSSÉDÉE (équipement ou objet magique), par le nom exact.
+function armorOwned(state, name){
+  const nm = (name||"").toLowerCase();
+  return (state.inventory||[]).some(i => (i.name||"").toLowerCase() === nm)
+      || (state.magicItems||[]).some(m => (m.name||"").toLowerCase() === nm);
 }
 // --- Système de « mains » (budget 2) : tenir une arme 1 main / un bouclier = 1 ; une arme 2 mains = 2. ---
 function handCostOf(state, atk){ return weaponIsTwoHanded(resolveAtkWeapon(state, atk).w) ? 2 : 1; }
