@@ -472,7 +472,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 
 /* --- Attaques (ARME | ATT | DÉGÂTS | ✕ dedans) ----------------------------- */
 .attack-head, .attack-row { display: grid;
-  grid-template-columns: minmax(0,1fr) 60px minmax(0,1.25fr) 32px; gap: 8px; align-items: center; }
+  grid-template-columns: 44px minmax(0,1fr) 60px minmax(0,1.25fr) 32px; gap: 8px; align-items: center; }
 .attack-head { font-size: .66rem; text-transform: uppercase; color: var(--ink-soft);
   font-weight: 700; padding: 0 2px 4px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
 .attack-row { padding: 3px 0; min-width: 0; }
@@ -482,6 +482,16 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   border-top: 1px dashed var(--line); }
 .atk-bonus { font-family: var(--font-num); font-weight: 700; text-align: center; }
 .atk-dmg { font-family: var(--font-num); font-size: .82rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* Colonne EN MAIN : emoji main (grisé = inactif, couleur = actif) + budget de 2 mains */
+.hands-count { font-family: var(--font-display); font-weight: 700; color: var(--red-deep); margin-bottom: 6px; }
+.hand-cell { display: flex; justify-content: center; }
+.hand-emoji { background: none; border: none; cursor: pointer; font-size: 1.5rem; line-height: 1; padding: 2px 4px;
+  border-radius: 6px; filter: grayscale(1); opacity: .4; transition: transform .1s, opacity .12s, filter .12s; }
+.hand-emoji.active { filter: none; opacity: 1; }
+.hand-emoji:hover:not([disabled]) { transform: scale(1.15); background: var(--paper); }
+.hand-emoji[disabled] { cursor: default; opacity: .2; }
+.attack-row.inactive > *:not(.hand-cell):not(.del) { opacity: .5; }
+.shield-hand { display: inline-flex; align-items: center; gap: 4px; }
 /* Attaques : 2/3 table · 1/3 dés (3 + 3, avec « Lancer un dé » dessous) */
 .atk-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
 .atk-dice { border-left: 1px dashed var(--line); padding-left: 14px; }
@@ -3529,20 +3539,18 @@ function armorPicker() {
     .sort((a,b)=>a.label.localeCompare(b.label));
   const box = el("div", { class:"armor-pick" }, [
     select(()=>state.armor.equipped, v=>state.armor.equipped=v, opts, "Sans armure"),
-    el("label", { class:"chk" }, [
-      el("input", { type:"checkbox", checked: state.armor.shield ? "checked" : null,
-        onchange:(e)=>{
-          if (e.target.checked) {
-            if (hasTwoHandedEquipped(state)) {
-              e.target.checked=false; Audio.click();
-              alert("Vous utilisez une arme à deux mains : impossible d'équiper un bouclier. Changez d'arme pour libérer une main."); return;
-            }
-            if (!hasShieldItem(state)) {
-              e.target.checked=false; Audio.click();
-              alert("Vous n'avez pas de bouclier. Ajoutez un « Bouclier » à votre équipement (ou un objet magique bouclier) avant de cocher cette case."); return;
-            }
+    el("div", { class:"shield-hand" }, [
+      el("button", { class:"hand-emoji"+(state.armor.shield?" active":""),
+        title: state.armor.shield ? "Bouclier en main (+2 CA) — cliquer pour lâcher" : "Prendre le bouclier en main (+2 CA)",
+        onclick:()=>{
+          if (state.armor.shield) { state.armor.shield=false; }
+          else {
+            if (!hasShieldItem(state)) { Audio.click();
+              alert("Vous n'avez pas de bouclier. Ajoutez un « Bouclier » à votre équipement (ou un objet magique bouclier) avant de l'équiper."); return; }
+            state.armor.shieldSeq = grabHands(state, 1); state.armor.shield = true;   // libère une main au besoin
           }
-          state.armor.shield=e.target.checked; save(); render(); } }),
+          Audio.click(); save(); render(); } },
+        [ el("span",{text:"✋"}) ]),
       el("span", { class:"lbl-maj", text:" Bouclier (+2)" })
     ])
   ]);
@@ -3687,12 +3695,7 @@ function renderAttacks() {
     }
     s.value = atk.weaponIndex || "";
     s.addEventListener("change", () => {
-      const prev = atk.weaponIndex || "";
-      atk.weaponIndex = s.value;
-      if (state.armor && state.armor.shield && weaponIsTwoHanded(resolveAtkWeapon(state, atk).w)) {
-        atk.weaponIndex = prev; s.value = prev; Audio.click();
-        alert("Un bouclier occupe une main : décochez le bouclier pour utiliser une arme à deux mains."); return;
-      }
+      atk.weaponIndex = s.value; atk.active = false;   // changer d'arme la retire de la main (coût recalculé au ré-clic)
       Audio.click(); save(); render(); });
     return s;
   }
@@ -3709,7 +3712,21 @@ function renderAttacks() {
           title:"Dégâts (à saisir pour une arme magique inventée)",
           onchange:(e)=>{ atk.damageOverride=e.target.value; save(); } })
       : el("span", { class:"atk-dmg", text: Calc.damageString(state, atk) });
-    return el("div", { class:"attack-row"+(isManual?" magic":((atk.weaponIndex||"").indexOf("mw:")===0?" magic":"")) }, [
+    const w = resolveAtkWeapon(state, atk).w;
+    const hasWeapon = !!(w || isManual);
+    const twoH = weaponIsTwoHanded(w);
+    const handBtn = el("button", {
+      class:"hand-emoji"+(atk.active?" active":""),
+      disabled: hasWeapon?null:"disabled",
+      title: hasWeapon ? (atk.active?"En main — cliquer pour lâcher":(twoH?"Arme à deux mains — cliquer pour la prendre":"Cliquer pour la prendre en main")) : "Choisissez d'abord une arme",
+      onclick: hasWeapon ? ()=>{
+        if (atk.active) atk.active=false;
+        else { atk.hseq = grabHands(state, handCostOf(state,atk)); atk.active=true; }
+        Audio.click(); save(); render();
+      } : null
+    }, [ el("span",{text: twoH?"🤲":"✋"}) ]);
+    return el("div", { class:"attack-row"+(atk.active?"":" inactive")+(isManual?" magic":((atk.weaponIndex||"").indexOf("mw:")===0?" magic":"")) }, [
+      el("div",{class:"hand-cell"},[handBtn]),
       weaponSelect(atk), attCell, dmgCell,
       el("button", { class:"icon-btn del", text:"✕", title:"Retirer cette attaque",
         onclick:()=>{ state.attacks.splice(i,1); save(); render(); } })
@@ -3726,8 +3743,12 @@ function renderAttacks() {
       onchange:(e)=>{ state.showDice = e.target.checked; save(); render(); } }),
     el("span", { text:" Afficher le lanceur de dés" })
   ]) : null;
+  const handsCount = el("div", { class:"hands-count",
+    title:"Mains occupées (max 2). Une arme à deux mains occupe les 2 mains ; un bouclier en occupe 1." },
+    [ el("span",{text:"✋ Mains : "+usedHands(state)+" / 2"}) ]);
   const atkMain = el("div", { class:"atk-main" }, [
-    el("div",{class:"attack-head"},[el("span",{text:"ARME"}),el("span",{text:"ATT."}),el("span",{text:"DÉGÂTS"}),el("span",{text:""})]),
+    handsCount,
+    el("div",{class:"attack-head"},[el("span",{text:"MAIN"}),el("span",{text:"ARME"}),el("span",{text:"ATT."}),el("span",{text:"DÉGÂTS"}),el("span",{text:""})]),
     ...rows, add, note ]);
   if (state.showDice || dmMode) {
     return card("Attaques", el("div", { class:"atk-layout" }, [
@@ -4985,6 +5006,23 @@ function hasShieldItem(state){
   const mag = (state.magicItems||[]).some(m => /bouclier|shield/i.test(m.name||""));
   return inv || mag;
 }
+// --- Système de « mains » (budget 2) : tenir une arme 1 main / un bouclier = 1 ; une arme 2 mains = 2. ---
+function handCostOf(state, atk){ return weaponIsTwoHanded(resolveAtkWeapon(state, atk).w) ? 2 : 1; }
+function handItems(state){
+  const arr = [];
+  (state.attacks||[]).forEach(a => { if (a.active) arr.push({ seq:a.hseq||0, cost:handCostOf(state,a), off:()=>{ a.active=false; } }); });
+  if (state.armor && state.armor.shield) arr.push({ seq:state.armor.shieldSeq||0, cost:1, off:()=>{ state.armor.shield=false; } });
+  return arr;
+}
+function usedHands(state){ return handItems(state).reduce((n,x)=>n+x.cost,0); }
+// Libère la place pour « cost » mains en désactivant les plus anciens tenus, puis renvoie le nouvel ordre d'activation.
+function grabHands(state, cost){
+  const items = handItems(state).sort((a,b)=>a.seq-b.seq);
+  let used = items.reduce((n,x)=>n+x.cost,0), k=0;
+  while (used + cost > 2 && k < items.length){ items[k].off(); used -= items[k].cost; k++; }
+  state.handSeq = (state.handSeq||0) + 1;
+  return state.handSeq;
+}
 
 function renderMagicItems() {
   const locked = !dmMode && state.magicItemsLocked;   // verrou MJ : lecture seule pour les joueurs
@@ -5002,25 +5040,27 @@ function renderMagicItems() {
         onchange:(e)=>{ it.maxCharges=Math.max(0,Number(e.target.value||0)); if((it.charges||0)>it.maxCharges) it.charges=it.maxCharges; save(); render(); }}),
       (hasCharges && (it.charges||0)===0) ? el("span",{class:"mi-ch-empty",text:"épuisé"}) : null
     ]);
-    // Description complète, dépliable au clic sur le nom (comme les sorts), sans redimensionner.
-    const descPanel = el("div",{class:"mi-desc"},[ el("p",{text: it.desc||"—"}) ]);
+    // Description : MASQUÉE au départ, révélée seulement par « Voir la description » (comme les sorts).
+    // En Mode MJ, l'édition se fait dans le panneau déplié ; en mode joueur, texte en lecture seule.
+    const descBody = locked
+      ? el("p",{text: it.desc||"—"})
+      : el("textarea",{class:"ta small",placeholder:"Propriétés / description",onchange:(e)=>{it.desc=e.target.value;save();},text:it.desc||""});
+    const descPanel = el("div",{class:"mi-desc"},[ descBody ]);
     const toggleDesc = ()=>{ descPanel.classList.toggle("open"); };
     const nameNode = locked
       ? el("button",{class:"mi-name-btn",title:"Voir la description",onclick:toggleDesc},[
           el("span",{class:"mi-name-txt",text: it.name||"(sans nom)"}), el("span",{class:"mi-caret",text:"▾"}) ])
       : el("input",{class:"txt grow",type:"text",value:it.name||"",placeholder:"Nom de l'objet",onchange:(e)=>{it.name=e.target.value;save();}});
-    const mkids = [
+    return el("div",{class:"mi-row"},[
       el("div",{class:"mi-line"},[
         nameNode,
         it.weapon ? el("span",{class:"mi-tag",title:"Disponible dans la liste des armes (section Attaques)",text:"⚔"}) : null,
         locked ? null : el("button",{class:"icon-btn",text:"▾",title:"Voir la description",onclick:toggleDesc}),
         el("button",{class:"icon-btn del",text:"✕",title:"Retirer",disabled:locked?"disabled":null,onclick:()=>{state.magicItems.splice(i,1);save();render();}})
       ]),
-      chargeLine
-    ];
-    if (!locked) mkids.push(el("textarea",{class:"ta small",placeholder:"Propriétés / description",onchange:(e)=>{it.desc=e.target.value;save();},text:it.desc||""}));
-    mkids.push(descPanel);
-    return el("div",{class:"mi-row"},mkids);
+      chargeLine,
+      descPanel
+    ]);
   });
 
   // Menu groupé : armes magiques (+1/+2/+3) · objets FR · catalogue SRD complet
