@@ -3224,7 +3224,7 @@ function buildPolyDie(sides, result, color, isFail) {
 // Fait rebondir le dé DANS la fenêtre (host) puis l'arrête sur le résultat
 function bounceInside(stage, dieEl, sides, result, host, done) {
   const rect = host.getBoundingClientRect();
-  const dieSize = sides===6 ? 72 : 116;
+  const dieSize = (sides===6 ? 72 : 116) * 2;   // dé 3D du lancer animé : double grosseur
   const W = Math.max(dieSize+24, rect.width), H = Math.max(dieSize+24, rect.height);
   const maxX = Math.max(8, W - dieSize - 10), maxY = Math.max(8, H - dieSize - 10);
   const cx = (W - dieSize)/2, cy = (H - dieSize)/2;
@@ -3233,7 +3233,7 @@ function bounceInside(stage, dieEl, sides, result, host, done) {
   // Accessibilité : aucun rebond si l'utilisateur préfère le mouvement réduit (ou sans WAAPI) — le résultat s'affiche direct.
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduce || !dieEl.animate || !window.requestAnimationFrame) {
-    stage.style.transform = "translate("+Math.round(cx)+"px,"+Math.round(cy)+"px)";
+    stage.style.transform = "translate("+Math.round(cx)+"px,"+Math.round(cy)+"px) scale(2)";
     dieEl.style.transform = finalRot;
     done();
     return;
@@ -3291,7 +3291,7 @@ function bounceInside(stage, dieEl, sides, result, host, done) {
       q=qnorm(qmul(qaxis(ax,ay,0,ang), q));
     }
     const damp=Math.exp(-FRICTION*dt); vx*=damp; vy*=damp;
-    stage.style.transform="translate("+Math.round(px)+"px,"+Math.round(py)+"px)";
+    stage.style.transform="translate("+Math.round(px)+"px,"+Math.round(py)+"px) scale(2)";
     dieEl.style.transform=qmat(q);
     if (sp>VMIN && elapsed<MAXT){ requestAnimationFrame(step); return; }
     // Le dé s'est arrêté : on le pose à PLAT sur la face naturellement la plus en face
@@ -5078,7 +5078,7 @@ function renderMagicItems() {
         locked ? null : el("button",{class:"icon-btn",text:"▾",title:"Voir la description",onclick:toggleDesc}),
         el("button",{class:"icon-btn del",text:"✕",title:"Retirer",disabled:locked?"disabled":null,onclick:()=>{state.magicItems.splice(i,1);save();render();}})
       ]),
-      chargeLine,
+      (hasCharges || !locked) ? chargeLine : null,   // objet sans charges (usage infini) : pas d'UI de charges
       descPanel
     ]);
   });
