@@ -30,6 +30,18 @@
   --radius: 10px;
   --shadow: 0 1px 3px rgba(60,45,20,.18), 0 4px 14px rgba(60,45,20,.10);
   --shape-stroke: %232b2620;
+  /* --- État visuel PV / CA (indicateur cœur + bouclier) -----------------------
+     Rampe perceptuellement régulière en oklch : l'urgence perçue suit la valeur,
+     pas l'arithmétique sRGB. Ces L DOIVENT rester synchrones avec le calcul d'encre
+     de etatPV (engine.js). Valeurs à confirmer au contraste réel (DevTools). */
+  --pv-vif:    oklch(0.55 0.215 20);   /* PV bas — rouge vif, danger      */
+  --pv-pale:   oklch(0.86 0.060 15);   /* PV plein — rose pâle, parchemin */
+  --pv-sombre: oklch(0.34 0.145 22);   /* négatif — rouge-foncé, nécrose  */
+  --pv-mort:   oklch(0.48 0.015 265);  /* mort — ardoise, plus de sang    */
+  --pv-ink-clair: oklch(0.98 0 0);     /* encre sur fond foncé (rouge)    */
+  --pv-ink-fonce: var(--ink);          /* encre sur fond clair (rose)     */
+  --ca-beige:  oklch(0.79 0.055 82);   /* CA basse — cuir bouilli         */
+  --ca-blanc:  oklch(0.97 0.014 240);  /* CA haute — acier poli           */
   --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
   --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-num: "SF Mono", "JetBrains Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace;
@@ -412,6 +424,12 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .combat-body { display: flex; align-items: center; gap: 12px; }
 .combat-side { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .hp-heart { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+/* Emoji d'état : aligné sur le CENTRE du cœur (align-self flex-start + hauteur du cœur),
+   pas sur le centre de la colonne cœur+boutons. min-width réserve la place du cas le plus
+   large (« 😵 💀💀 » = 3 glyphes) → le bloc Combat ne saute pas quand l'emoji change. */
+.hp-etat { align-self: flex-start; height: 96px; min-width: 5rem;
+  display: inline-flex; align-items: center; justify-content: flex-start;
+  font-size: 1.9rem; line-height: 1; white-space: nowrap; user-select: none; }
 .combat-row > .stat-shape { width: auto; }
 .stat-shape { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; }
 .stat-lbl { font-family: var(--font-display); font-weight: 800; font-size: 1.22rem;
@@ -422,15 +440,50 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 
 .shape.hexagon { width: 104px; height: 78px;
   background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 90'><polygon points='30,4 90,4 116,45 90,86 30,86 4,45' fill='%23fbf6ea' stroke='%232b2620' stroke-width='3'/></svg>"); }
-.shape.shield { width: 92px; height: 100px; padding-bottom: 14px;
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 110'><path d='M10,8 L90,8 L90,52 C90,86 64,100 50,104 C36,100 10,86 10,52 Z' fill='%23fbf6ea' stroke='%232b2620' stroke-width='3'/></svg>"); }
-.shape.heart { width: 104px; height: 96px; padding-bottom: 10px;
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 95'><path d='M50,90 C18,66 6,46 6,29 C6,14 18,6 31,6 C41,6 47,14 50,21 C53,14 59,6 69,6 C82,6 94,14 94,29 C94,46 82,66 50,90 Z' fill='%23fbf6ea' stroke='%232b2620' stroke-width='3'/></svg>"); }
+.shape.shield { width: 92px; height: 100px; padding-bottom: 14px; position: relative; }
+/* Bouclier en trois couches (même principe que le cœur) : ::before = remplissage CA
+   (beige cuir → blanc acier) masqué + reflet spéculaire (haut) + halo froid ; .shape-val
+   = la valeur, au milieu ; ::after = le contour, par-dessus. STATIQUE (aucune animation). */
+.shape.shield::before, .shape.shield::after { content: ""; position: absolute; inset: 0;
+  background-repeat: no-repeat; background-position: center; background-size: contain; }
+.shape.shield::before { z-index: 0;
+  background: linear-gradient(to bottom, rgb(255 255 255 / var(--ca-sheen, 0)) 0%, transparent 55%), var(--ca-fill, var(--paper));
+  filter: drop-shadow(0 0 7px rgb(205 222 255 / var(--ca-halo, 0)));
+  -webkit-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 110'><path d='M10,8 L90,8 L90,52 C90,86 64,100 50,104 C36,100 10,86 10,52 Z' fill='%23fff'/></svg>") no-repeat center / contain;
+          mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 110'><path d='M10,8 L90,8 L90,52 C90,86 64,100 50,104 C36,100 10,86 10,52 Z' fill='%23fff'/></svg>") no-repeat center / contain; }
+.shape.shield::after { z-index: 2; pointer-events: none;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 110'><path d='M10,8 L90,8 L90,52 C90,86 64,100 50,104 C36,100 10,86 10,52 Z' fill='none' stroke='%232b2620' stroke-width='3'/></svg>"); }
+.shape.shield .shape-val { position: relative; z-index: 1; }
+.shape.heart { width: 104px; height: 96px; padding-bottom: 10px; position: relative; }
+/* Cœur en trois couches : ::before = remplissage coloré (état PV) masqué à la silhouette ;
+   .hp-current (le nombre) au milieu ; ::after = le contour, par-dessus. Le masque rend
+   --pv-fill colorable/animable — impossible via le fill codé en dur d'un background-image.
+   Masque en fill blanc = opaque en mode alpha ET luminance (robuste multi-navigateur). */
+.shape.heart::before, .shape.heart::after { content: ""; position: absolute; inset: 0;
+  background-repeat: no-repeat; background-position: center; background-size: contain; }
+.shape.heart::before { z-index: 0; background-color: var(--pv-fill, var(--paper));
+  filter: var(--pv-lueur, none); animation: var(--pv-anim, none);
+  -webkit-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 95'><path d='M50,90 C18,66 6,46 6,29 C6,14 18,6 31,6 C41,6 47,14 50,21 C53,14 59,6 69,6 C82,6 94,14 94,29 C94,46 82,66 50,90 Z' fill='%23fff'/></svg>") no-repeat center / contain;
+          mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 95'><path d='M50,90 C18,66 6,46 6,29 C6,14 18,6 31,6 C41,6 47,14 50,21 C53,14 59,6 69,6 C82,6 94,14 94,29 C94,46 82,66 50,90 Z' fill='%23fff'/></svg>") no-repeat center / contain; }
+.shape.heart::after { z-index: 2; pointer-events: none;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 95'><path d='M50,90 C18,66 6,46 6,29 C6,14 18,6 31,6 C41,6 47,14 50,21 C53,14 59,6 69,6 C82,6 94,14 94,29 C94,46 82,66 50,90 Z' fill='none' stroke='%232b2620' stroke-width='3'/></svg>"); }
+/* Battement du cœur (lub-dub) PAR-DESSUS la couleur d'état au repos (--pv-fill).
+   Cible (--pv-pulse-vers) et amplitude (--pv-pulse-amp) posées inline ; période via --pv-anim.
+   En no-anim / prefers-reduced-motion l'animation est coupée (!important) -> reste à --pv-fill. */
+@keyframes pouls {
+  0%   { background-color: var(--pv-fill); }
+  12%  { background-color: color-mix(in oklch, var(--pv-pulse-vers) calc(var(--pv-pulse-amp) * 100%), var(--pv-fill)); }
+  24%  { background-color: var(--pv-fill); }
+  36%  { background-color: color-mix(in oklch, var(--pv-pulse-vers) calc(var(--pv-pulse-amp) * 60%), var(--pv-fill)); }
+  52%  { background-color: var(--pv-fill); }
+  100% { background-color: var(--pv-fill); }
+}
 .shape.rounded { width: 96px; min-height: 72px; border: 2.5px solid var(--ink);
   border-radius: 14px; background: var(--paper); padding: 6px; }
 
 .hp-current { width: 64px; text-align: center; font-family: var(--font-num); font-size: 1.6rem;
-  font-weight: 700; border: none; background: transparent; color: var(--ink); padding: 0; }
+  font-weight: 700; border: none; background: transparent; color: var(--pv-ink, var(--ink)); padding: 0;
+  position: relative; z-index: 1; }
 .hp-extra { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 2px; }
 .hp-quick { display: inline-flex; gap: 8px; }
 .hp-quick .step-btn { border: 1px solid var(--line); border-radius: 7px; width: 40px; }
@@ -695,8 +748,10 @@ body.high-contrast {
   --red: #b00000; --red-deep: #8a0000;
 }
 body.high-contrast .card { border-width: 2px; box-shadow: none; }
+/* Cœur et bouclier exclus : leur couleur est sémantique (rampes PV/CA) — un contrast(1.4)
+   la déformerait. Ils sont en masque + couleur tokenisée, qui suit déjà le fort contraste. */
 body.high-contrast .octagon, body.high-contrast .ability-mod.pentagon,
-body.high-contrast .shape.hexagon, body.high-contrast .shape.shield, body.high-contrast .shape.heart {
+body.high-contrast .shape.hexagon {
   filter: contrast(1.4);
 }
 
@@ -819,7 +874,8 @@ window.RULES = {
     trackFood: false,         // suivre les rations / nourriture
     trackHitDice: true,       // suivre les des de vie (repos)
     trackSpellSlots: true,    // suivre les emplacements de sorts
-    showFeatureNotes: false   // boite "Notes perso" dans Aptitudes (cachee par defaut)
+    showFeatureNotes: false,  // boite "Notes perso" dans Aptitudes (cachee par defaut)
+    pvNegatifs: false         // PV sous zero autorises (regle maison) : plancher a -PVmax + cœur stylé mourant. false = borne a 0 (regles officielles).
   },
 
   // --- Effets sensoriels ------------------------------------------------------
@@ -837,6 +893,8 @@ window.RULES = {
   // --- Maisons-regles ---------------------------------------------------------
   houseRules: {
     // carryMultiplier: 15,   // capacite = FOR x ce nombre (defaut 15)
+    // caMin: 10,             // CA du bouclier au plus bas = couleur beige (defaut 10)
+    // caMax: 22,             // CA du bouclier au plus haut = couleur blanche/acier (defaut 22)
   }
 };
 
@@ -859,7 +917,7 @@ const CFG = {
   }, RULES.sections || {}),
   options: Object.assign({
     autoLevelFromXP:false, trackEncumbrance:true, trackFood:false,
-    trackHitDice:true, trackSpellSlots:true, showFeatureNotes:false
+    trackHitDice:true, trackSpellSlots:true, showFeatureNotes:false, pvNegatifs:false
   }, RULES.options || {}),
   fx: Object.assign({ sounds:true, animations:true, clickGlow:true, colorByType:true, allowThemeChange:true }, RULES.fx || {}),
   display: Object.assign({
@@ -3427,6 +3485,110 @@ function renderAbilities() {
   return card("Caractéristiques", el("div", {}, [wrap, hint]), { span:12 });
 }
 
+// =============================================================================
+//  ÉTAT VISUEL PV / CA — fonctions PURES (aucun DOM, aucun état global lu)
+//  La couleur et le mouvement sont de l'INFORMATION : chaque sortie est fonction
+//  d'une valeur de jeu. renderCombat les lit et pose des variables CSS inline.
+//  Testables hors navigateur (voir scripts de test). Les L de référence ci-dessous
+//  DOIVENT rester synchrones avec les tokens --pv-* de :root (style.css).
+//    --pv-vif L.55 · --pv-pale L.86 · --pv-sombre L.34 · --pv-mort L.48
+// === ETAT-VISUEL:START ===
+function _clamp(x, lo, hi) { return x < lo ? lo : (x > hi ? hi : x); }
+
+// PV. Rampe vivante (ROUGE = DANGER) : plein = rose pâle → blessé = rouge vif. vif = √(1−r)
+//   → L(r) = .86 − .31·√(1−r). Rampe négative : pâle → sombre (nécrose), L(n) = .86 − .52·n^0.7.
+// Encre : claire si le fond est foncé (L < .64), foncée sinon. Ce seuil tombe pile à
+//   r = .5 (frontière « Mal en point ») : ≥ .5 rose → encre foncée, < .5 rouge → encre claire.
+function etatPV(pvActuel, pvMax, opts) {
+  opts = opts || {};
+  const ds = opts.deathSaves || {};
+  const fails = Number(ds.fails || 0), stable = !!ds.stable;
+  const surplus = Number(opts.degatsSurplus || 0);
+  const negAutorise = !!(opts.options && opts.options.pvNegatifs);
+  const pv = Number(pvActuel), max = Number(pvMax);
+
+  const INK_CLAIR = "var(--pv-ink-clair)", INK_FONCE = "var(--pv-ink-fonce)";
+  const encre = (L) => (L < 0.64 ? INK_CLAIR : INK_FONCE);
+  const base = { zone:"", emoji:"", libelle:"", ratio:0,
+    fill:"var(--paper)", ink:"var(--ink)",
+    pulse:false, pulseVers:null, periodeMs:0, amplitude:0, lueur:{ rayon:0, opacite:0 } };
+
+  // Feuille neuve (pvMax = 0, défaut de blankCharacter) ou valeur inexploitable
+  // → neutre : le cœur garde le look parchemin actuel, aucune division par zéro.
+  if (!isFinite(pv) || !isFinite(max) || max <= 0)
+    return Object.assign(base, { zone:"INDETERMINE" });
+
+  // --- PV > 0 : zones vivantes (rouge = danger) -------------------------------
+  if (pv > 0) {
+    const r = _clamp(pv / max, 0, 1), vif = Math.sqrt(1 - r), L = 0.86 - 0.31 * vif;
+    const fill = "color-mix(in oklch, var(--pv-vif) " + Math.round(vif * 100) + "%, var(--pv-pale))";
+    let zone, emoji, libelle;
+    if (r >= 1)        { zone = "PLEIN";     emoji = "😄"; libelle = "Pleine forme"; }
+    else if (r > 0.75) { zone = "EGRATIGNE"; emoji = "🙂"; libelle = "Égratigné"; }
+    else if (r > 0.50) { zone = "ENTAME";    emoji = "😐"; libelle = "Ça chauffe"; }
+    else if (r > 0.25) { zone = "SANGLANT";  emoji = "😣"; libelle = "Mal en point"; }
+    else               { zone = "CRITIQUE";  emoji = "😰"; libelle = "Au bout du rouleau"; }
+    return Object.assign(base, {
+      zone, emoji, libelle, ratio:r, fill, ink:encre(L),
+      pulse:true, pulseVers:"var(--pv-pale)",
+      periodeMs: Math.round(350 + 850 * r),
+      amplitude: +(0.15 + 0.45 * (1 - r)).toFixed(3),
+      lueur:{ rayon:+(12 * r).toFixed(1), opacite:+(0.55 * r).toFixed(3) } });
+  }
+
+  // --- PV < 0 (option maison pvNegatifs) : hémorragie → agonie → mort ---------
+  if (pv < 0 && negAutorise) {
+    const n = _clamp(-pv / max, 0, 1);
+    if (n >= 1)
+      return Object.assign(base, { zone:"MORT_NEGATIF", emoji:"⚰️", libelle:"Mort",
+        fill:"var(--pv-mort)", ink:INK_CLAIR });
+    const L = 0.86 - 0.52 * Math.pow(n, 0.7), grave = n > 0.5;
+    const fill = "color-mix(in oklch, var(--pv-sombre) " + Math.round(Math.pow(n, 0.7) * 100) + "%, var(--pv-pale))";
+    return Object.assign(base, {
+      zone: grave ? "NEGATIF_GRAVE" : "NEGATIF_LEGER",
+      emoji: grave ? "😵‍💫" : "🤕",
+      libelle: grave ? "Agonie" : "Hémorragie",
+      fill, ink:encre(L),
+      pulse:true, pulseVers:"var(--pv-vif)",            // flash d'urgence, pas un battement
+      periodeMs: Math.round(600 - 350 * n),
+      amplitude: +(0.35 + 0.4 * n).toFixed(3) });
+  }
+
+  // --- PV = 0 (ou < 0 sans l'option) : ligne plate + jets contre la mort -------
+  // Pâle fixe, zéro lueur, zéro animation. Le calme EST le signal (§5.3).
+  const mourant = Object.assign(base, { fill:"var(--pv-pale)", ink:INK_FONCE });
+  if (surplus >= max)
+    return Object.assign(mourant, { zone:"MORT_MASSIVE", emoji:"💥☠️", libelle:"Mort — dégâts massifs",
+      fill:"var(--pv-mort)", ink:INK_CLAIR });
+  if (fails >= 3)
+    return Object.assign(mourant, { zone:"MORT", emoji:"☠️", libelle:"Mort",
+      fill:"var(--pv-mort)", ink:INK_CLAIR });
+  if (stable) return Object.assign(mourant, { zone:"STABILISE", emoji:"😴", libelle:"Stabilisé" });
+  if (fails === 2) return Object.assign(mourant, { zone:"MOURANT_2", emoji:"😵 💀💀", libelle:"Mourant — 2 échecs" });
+  if (fails === 1) return Object.assign(mourant, { zone:"MOURANT_1", emoji:"😵 💀", libelle:"Mourant — 1 échec" });
+  return Object.assign(mourant, { zone:"MOURANT_0", emoji:"😵", libelle:"Mourant" });
+}
+
+// CA. Bouclier : cuir bouilli (beige) → acier poli (blanc). STATIQUE (aucune anim).
+//   En Mode MJ, lockable("ac") peut rendre une CHAÎNE libre ("18 (bénédiction)", "")
+//   → garde : tout non-nombre = couleur neutre (--paper), jamais de NaN peint.
+function etatCA(ca, opts) {
+  opts = opts || {};
+  const caMin = isFinite(opts.caMin) ? Number(opts.caMin) : 10;
+  const caMax = isFinite(opts.caMax) ? Number(opts.caMax) : 22;
+  const neutre = { ca:null, ratio:null, fill:"var(--paper)", ink:"var(--ink)", sheen:0, halo:0 };
+  if (typeof ca === "string" && ca.trim() === "") return neutre;   // Number("") = 0 : à intercepter avant
+  const n = Number(ca);
+  if (!isFinite(n) || caMax === caMin) return neutre;
+  const c = _clamp((n - caMin) / (caMax - caMin), 0, 1);
+  const fill = "color-mix(in oklch, var(--ca-blanc) " + Math.round(Math.pow(c, 0.85) * 100) + "%, var(--ca-beige))";
+  return {
+    ca:n, ratio:c, fill, ink:"var(--ink)",              // beige ET blanc sont clairs → encre foncée
+    sheen: +(0.20 + 0.50 * c).toFixed(3),               // reflet spéculaire, opacité croissante
+    halo: c > 0.75 ? +((c - 0.75) * 4 * 0.40).toFixed(3) : 0 };   // halo froid, discret, haut de gamme seulement
+}
+// === ETAT-VISUEL:END ===
+
 // --- Combat (vitesse, CA, des de vie, PV) ---
 function renderCombat() {
   const c = Calc.classOf(state);
@@ -3439,12 +3601,23 @@ function renderCombat() {
       ? state.hp.maxOverride : suggested;
   }
   if (state.hp.current > state.hp.max) state.hp.current = state.hp.max;
+  // Plancher des PV : 0 en regles officielles ; -PVmax si le MJ autorise le negatif
+  // (options.pvNegatifs). Applique au rendu -> couvre boutons, saisie, vieilles saves
+  // et un flag repasse a false (une valeur negative sauvegardee s'auto-corrige ici).
+  const hpFloor = CFG.options.pvNegatifs ? -state.hp.max : 0;
+  if (state.hp.current < hpFloor) state.hp.current = hpFloor;
 
   // --- Classe d'armure : bouclier + (menu d'armure / case bouclier) à droite ---
+  // État visuel du bouclier : remplissage CA (--ca-fill), reflet (--ca-sheen) et halo
+  // (--ca-halo), posés inline sur .shape.shield. On calcule la MÊME valeur que lockable
+  // affiche (surcharge MJ si présente, sinon CA calculée) ; chaîne libre gérée par etatCA.
+  const acAuto = Calc.armorClass(state);
+  const acVal = (state.overrides.ac != null && state.overrides.ac !== "") ? state.overrides.ac : acAuto;
+  const evCA = etatCA(acVal, { caMin: CFG.house.caMin, caMax: CFG.house.caMax });
   const acGroup = el("div", { class:"combat-group" }, [
     el("div", { class:"stat-lbl", title:"Classe d'armure (CA) : difficulté pour vous toucher au combat. Plus c'est élevé, mieux c'est.", text:"Classe d'armure" }),
     el("div", { class:"combat-body" }, [
-      el("div", { class:"shape shield" }, [ el("span",{class:"shape-val"},[ lockable("ac", ()=>Calc.armorClass(state)) ]) ]),
+      el("div", { class:"shape shield", style:"--ca-fill:"+evCA.fill+";--ca-sheen:"+evCA.sheen+";--ca-halo:"+evCA.halo }, [ el("span",{class:"shape-val"},[ lockable("ac", ()=>Calc.armorClass(state)) ]) ]),
       el("div", { class:"combat-side" }, [ armorPicker() ])
     ])
   ]);
@@ -3460,11 +3633,28 @@ function renderCombat() {
         state.hp.maxOverride = (v > base) ? v : null; }   // > formule = bonus temporaire ; sinon retour à la formule
       else { state.hp.max = v; }
       save(); render(); }});
+  // État visuel du cœur : couleur de fond (--pv-fill) + encre du nombre (--pv-ink),
+  // fonctions pures de state.hp. Le masque CSS (::before) peint --pv-fill dans la silhouette.
+  const evPV = etatPV(state.hp.current, state.hp.max, { options: CFG.options });
+  // Pulsation + lueur du cœur en variables CSS (l'animation @keyframes pouls les lit).
+  // Couleur d'état au REPOS = --pv-fill : en no-anim / reduced-motion l'info reste (§2.4).
+  // Lueur = halo doré de vitalité, ∝ r (vive au plein, éteinte à 0) ; rouge = danger, réservé au fond.
+  const lueurCoeur = evPV.lueur.opacite > 0
+    ? "drop-shadow(0 0 " + evPV.lueur.rayon + "px rgba(184,144,47," + evPV.lueur.opacite + "))" : "none";
+  const animCoeur = evPV.pulse ? "pouls " + evPV.periodeMs + "ms ease-in-out infinite" : "none";
+  const styleCoeur = "--pv-fill:" + evPV.fill + ";--pv-ink:" + evPV.ink
+    + ";--pv-pulse-vers:" + (evPV.pulseVers || evPV.fill) + ";--pv-pulse-amp:" + evPV.amplitude
+    + ";--pv-lueur:" + lueurCoeur + ";--pv-anim:" + animCoeur;
+  // Emoji d'état à droite du cœur : redondance sémantique de la couleur (a11y).
+  // role=img + aria-label = le libellé (lecteur d'écran/clavier l'annonce, pas « emoji »).
+  const etatEmoji = el("div", { class:"hp-etat",
+    role: evPV.emoji ? "img" : null, "aria-label": evPV.libelle || null,
+    title: evPV.libelle || null, text: evPV.emoji });
   const pvGroup = el("div", { class:"combat-group" }, [
     el("div", { class:"stat-lbl", title:"Points de vie : à 0, vous tombez inconscient. Les boutons − / + appliquent dégâts et soins.", text:"Points de vie" }),
     el("div", { class:"combat-body" }, [
       el("div", { class:"hp-heart" }, [
-        el("div", { class:"shape heart" }, [
+        el("div", { class:"shape heart", style: styleCoeur }, [
           el("input",{class:"hp-current",type:"number",value:state.hp.current,title:"PV actuels",
             onchange:(e)=>{ const b=state.hp.current; state.hp.current=Number(e.target.value||0);
               if (state.hp.current>b) Audio.heal(); else if (state.hp.current<b) Audio.damage(); save(); render(); }})
@@ -3476,6 +3666,7 @@ function renderCombat() {
             onclick:()=>{ state.hp.current++; Audio.heal(); save(); render(); }})
         ])
       ]),
+      etatEmoji,
       el("div", { class:"combat-side" }, [
         el("label",{class:"hp-mini-f"},[ el("span",{class:"lbl-maj",text:"Max"}), maxField ]),
         el("label",{class:"hp-method",
