@@ -199,6 +199,7 @@ body.has-bg-image #sheet, body.has-bg-image #topbar { backdrop-filter: blur(1px)
 .skills-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
   flex-wrap: wrap; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); }
 .skill-limit { font-family: var(--font-display); font-weight: 700; color: var(--red-deep); white-space: nowrap; }
+.skill-row.granted .skill-name { color: var(--red-deep); }
 .prof-other { margin-top: 14px; }
 .mi-locked { margin-bottom: 8px; font-style: italic; }
 :disabled { opacity: .5; cursor: not-allowed; }
@@ -548,7 +549,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .spell-item.always { border-left-color: var(--green); }
 /* Tableau des sorts de sous-classe (Capacités) */
 .subclass-spells { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); }
-.scs-row { display: grid; grid-template-columns: 72px 1fr; gap: 8px; padding: 3px 0; font-size: .92rem; align-items: baseline; }
+.scs-row { display: grid; grid-template-columns: 72px 1fr; gap: 8px; padding: 3px 0; font-size: 1rem; line-height: 1.5; align-items: baseline; }
 .scs-lvl { font-family: var(--font-num); font-weight: 700; color: var(--red-deep); }
 .spell-item { border: 1px solid var(--line); border-left: 4px solid var(--line-strong);
   border-radius: 8px; background: var(--paper-2); overflow: hidden; }
@@ -959,6 +960,19 @@ const Calc = {
     if (this.hasDraconicResilience(state)) n += 1;           // Résilience draconique
     return n;
   },
+  // Compétences accordées d'office (fixes) par des traits de race/sous-race (ex. Perception pour l'elfe).
+  racialSkills(state) {
+    const MAP = { "keen-senses":"perception", "menacing":"intimidation" };
+    const out = [];
+    this.traitsOf(state).forEach(t => { if (MAP[t]) out.push(MAP[t]); });
+    return out;
+  },
+  // Compétences SUPPLÉMENTAIRES au choix accordées par des traits/capacités (ex. Polyvalence demi-elfe : +2).
+  bonusSkillChoices(state) {
+    let n = 0;
+    if (this.hasTrait(state, "skill-versatility")) n += 2;   // Demi-elfe — Polyvalence
+    return n;
+  },
 
   isProficientSave(state, ab) {
     if (state.saveProf && state.saveProf[ab] != null) return !!state.saveProf[ab];
@@ -976,7 +990,7 @@ const Calc = {
     const sk = SRD.skills.find(s => s.index === skillIndex);
     if (!sk) return 0;
     const base = this.mod(this.abilityTotal(state, sk.ability));
-    const prof = state.skillProf && state.skillProf[skillIndex];
+    const prof = (state.skillProf && state.skillProf[skillIndex]) || this.racialSkills(state).indexOf(skillIndex) !== -1;
     const exp = state.skillExpertise && state.skillExpertise[skillIndex];
     const pb = prof ? this.profBonus(state.identity.level) * (exp ? 2 : 1) : 0;
     return base + pb + this.dmMod(state, "skill." + skillIndex) + this.dmMod(state, "skill.all");
@@ -3469,12 +3483,14 @@ function renderCombat() {
   let pvNote = el("span");
   if (c) {
     const conMod = Calc.mod(Calc.abilityTotal(state, "con"));
+    const bhp = Calc.bonusHPPerLevel(state);                 // +X PV/niveau (Ténacité naine, Résilience draconique)
+    const bt = bhp ? " "+Calc.fmt(bhp) : "";
     const half = Math.floor(c.hitDie/2);
-    const l1 = c.hitDie + conMod;
-    const per = half + 1 + conMod;
+    const l1 = c.hitDie + conMod + bhp;
+    const per = half + 1 + conMod + bhp;
     pvNote = el("div",{class:"combat-note"},[
       el("strong",{text:"Points de vie → calcul "}),
-      el("span",{class:"muted",text:"— d"+c.hitDie+", mod CON "+Calc.fmt(conMod)+" · Niv 1 : "+c.hitDie+" "+Calc.fmt(conMod)+" = "+l1+" · Niv 2+ : "+half+"+1"+Calc.fmt(conMod)+" = "+per+"/niv"})
+      el("span",{class:"muted",text:"— d"+c.hitDie+", mod CON "+Calc.fmt(conMod)+(bhp?" , "+Calc.fmt(bhp)+"/niv (capacités)":"")+" · Niv 1 : "+c.hitDie+" "+Calc.fmt(conMod)+bt+" = "+l1+" · Niv 2+ : "+half+"+1"+Calc.fmt(conMod)+bt+" = "+per+"/niv"})
     ]);
   }
 
@@ -3603,16 +3619,18 @@ function renderSaves() {
 function renderSkills() {
   const grid = el("div", { class:"skills-grid" });
   const cc = Calc.classOf(state);
-  const maxSkills = (cc && cc.skillChoices && cc.skillChoices.choose) || 2;
-  const usedSkills = SRD.skills.reduce((n,s)=> n + (state.skillProf[s.index] ? 1 : 0), 0);
+  const racialSk = Calc.racialSkills(state);                                                   // maîtrises fixes de race
+  const maxSkills = ((cc && cc.skillChoices && cc.skillChoices.choose) || 2) + Calc.bonusSkillChoices(state);
+  const usedSkills = SRD.skills.reduce((n,s)=> n + ((state.skillProf[s.index] && racialSk.indexOf(s.index)===-1) ? 1 : 0), 0);
   SRD.skills.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(sk => {
-    const prof = state.skillProf[sk.index];
+    const granted = racialSk.indexOf(sk.index) !== -1;             // maîtrise accordée d'office par la race
+    const prof = granted || state.skillProf[sk.index];
     const exp = state.skillExpertise[sk.index];
     const abilName = (SRD.abilities.find(x=>x.index===sk.ability)||{}).name || "";
     const atLimit = !dmMode && !prof && usedSkills >= maxSkills;   // plus de choix dispo
-    const row = el("div", { class:"skill-row"+(atLimit?" at-limit":""), title: SKILL_HELP[sk.index] || "" }, [
-      el("label", { class:"chk", title:"Maîtrise" }, [
-        el("input", { type:"checkbox", checked: prof ? "checked":null, disabled: atLimit ? "disabled" : null,
+    const row = el("div", { class:"skill-row"+(atLimit?" at-limit":"")+(granted?" granted":""), title: SKILL_HELP[sk.index] || "" }, [
+      el("label", { class:"chk", title: granted?"Maîtrise accordée par la race":"Maîtrise" }, [
+        el("input", { type:"checkbox", checked: prof ? "checked":null, disabled: (granted||atLimit) ? "disabled" : null,
           onchange:(e)=>{
             if (e.target.checked && !dmMode && usedSkills >= maxSkills) {
               e.target.checked=false; Audio.click();
@@ -3621,7 +3639,7 @@ function renderSkills() {
             state.skillProf[sk.index]=e.target.checked; if(!e.target.checked) state.skillExpertise[sk.index]=false; Audio.click(); save(); render(); } })
       ]),
       el("span", { class:"skill-val" }, [ lockable("skill."+sk.index, ()=>Calc.skillBonus(state, sk.index), Calc.fmt) ]),
-      el("span", { class:"skill-name", text:sk.name }),
+      el("span", { class:"skill-name", text:sk.name+(granted?" · race":"") }),
       el("span", { class:"skill-ab", text:"("+abilName+")" }),
       dmMode ? el("label", { class:"chk exp", title:"Expertise (double maîtrise)" }, [
         el("input", { type:"checkbox", checked: exp?"checked":null, disabled: prof?null:"disabled",
