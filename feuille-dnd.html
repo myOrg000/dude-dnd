@@ -535,9 +535,13 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .attack-row.magic { background: rgba(184,144,47,.08); border-radius: 8px; }
 .atk-note { font-size: 1rem; line-height: 1.45; margin-top: 8px; padding-top: 8px;
   border-top: 1px dashed var(--line); }
-.atk-bonus { font-family: var(--font-num); font-weight: 700; text-align: center; }
+.atk-bonus { font-family: var(--font-num); font-weight: 700; display: flex; align-items: baseline; justify-content: center; gap: 3px; }
 .atk-weapon-name { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 4px 2px; }
-.atk-dmg { font-family: var(--font-num); font-size: 1rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.atk-dmg { font-family: var(--font-num); font-size: 1rem; min-width: 0; display: flex; align-items: baseline; gap: 4px; }
+.atk-dmg-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Badge VERT « +N » : un Choix de capacité (ex. Style de combat) modifie ce champ. Réutilise
+   --green (déjà employé par .opt-btn.active / .mini-btn.applied). Ne réduit aucune cible cliquable. */
+.feat-badge { color: var(--green); font-weight: 800; font-size: .82rem; white-space: nowrap; flex: 0 0 auto; }
 .shield-hand { display: inline-flex; align-items: center; gap: 6px; }
 /* Case a cocher « Bouclier (+2) » : grosse cible (doublee ~2x la taille native). */
 .shield-chk { cursor: pointer; }
@@ -969,6 +973,40 @@ if (typeof window !== "undefined") window.dmHash = dmHash;
 // =============================================================================
 //  SECTION 1 — FONCTIONS DE CALCUL PURES (testables, sans DOM)
 // =============================================================================
+
+// --- Effets des Choix de capacité sur les champs de la feuille (carte « Choix ») -------------
+// Clé = index de l'OPTION choisie (la valeur stockée dans state.featureChoices[parent]).
+// Un effet = { field, filter, delta, label, cond } :
+//   field  : 'attack' | 'damage' | 'ac'  (champ influencé)
+//   filter : contexte requis — { ranged:true } arme à distance · { melee:true } arme de mêlée
+//            · { oneHanded:true } arme non « à deux mains » · { armored:true } une armure est portée
+//   delta  : bonus numérique appliqué (ex. 2)
+//   label  : nom montré dans le badge vert (survol)
+//   cond   : condition non auto-détectable, expliquée au survol (ex. « rien dans l'autre main »)
+// NB : table À PART (jamais dans data/srd-2014.js qui est généré). Ajouts futurs = nouvelles clés.
+const FEATURE_EFFECTS = {
+  "fighter-fighting-style-archery": [{ field:"attack", filter:{ ranged:true }, delta:2, label:"Archerie" }],
+  "ranger-fighting-style-archery":  [{ field:"attack", filter:{ ranged:true }, delta:2, label:"Archerie" }],
+  "fighter-fighting-style-defense": [{ field:"ac", filter:{ armored:true }, delta:1, label:"Défense" }],
+  "ranger-fighting-style-defense":  [{ field:"ac", filter:{ armored:true }, delta:1, label:"Défense" }],
+  "paladin-fighting-style-defense": [{ field:"ac", filter:{ armored:true }, delta:1, label:"Défense" }],
+  "fighter-fighting-style-dueling": [{ field:"damage", filter:{ melee:true, oneHanded:true }, delta:2, label:"Duel", cond:"une arme de mêlée à une main et rien dans l'autre main" }],
+  "ranger-fighting-style-dueling":  [{ field:"damage", filter:{ melee:true, oneHanded:true }, delta:2, label:"Duel", cond:"une arme de mêlée à une main et rien dans l'autre main" }],
+  "paladin-fighting-style-dueling": [{ field:"damage", filter:{ melee:true, oneHanded:true }, delta:2, label:"Duel", cond:"une arme de mêlée à une main et rien dans l'autre main" }]
+};
+
+// Options de Choix fournies « à la main » quand les données générées n'en ont pas. Cas Paladin :
+// data/srd-2014.js ne contient AUCUNE clé paladin-fighting-style-* → sans ceci, aucun sélecteur.
+// Descriptions = reformulations originales (les mécaniques sont des faits ; cf. CLAUDE.md §9).
+const SHARED_FEATURE_OPTIONS = {
+  "paladin-fighting-style": [
+    { key:"paladin-fighting-style-defense", name:"Style de combat : Défense", desc:"Tant que tu portes une armure, tu reçois un bonus de +1 à la CA." },
+    { key:"paladin-fighting-style-dueling", name:"Style de combat : Duel", desc:"Quand tu manies une arme de mêlée à une main et rien dans l'autre main, tu reçois un bonus de +2 aux dégâts avec cette arme." },
+    { key:"paladin-fighting-style-great-weapon-fighting", name:"Style de combat : Arme à deux mains", desc:"Avec une arme de mêlée à deux mains, tu peux relancer un 1 ou un 2 obtenu sur un dé de dégâts ; tu dois garder le nouveau résultat." },
+    { key:"paladin-fighting-style-protection", name:"Style de combat : Protection", desc:"Muni d'un bouclier, quand une créature attaque une cible autre que toi à 1,5 m ou moins de toi, tu peux utiliser ta réaction pour imposer le désavantage à ce jet d'attaque." }
+  ]
+};
+
 const Calc = {
   mod: (score) => Math.floor((Number(score || 0) - 10) / 2),
   fmt: (n) => (n >= 0 ? "+" + n : "" + n),
@@ -1003,6 +1041,45 @@ const Calc = {
     let sum = 0;
     (state.dmModifiers || []).forEach(m => { if (m.target === target) sum += Number(m.value || 0); });
     return sum;
+  },
+
+  // --- Effets des Choix de capacité (pendant classe de dmMod) --------------------------------
+  // Renvoie la liste des effets ACTIFS pour un champ donné, filtrés par le contexte (arme, armure).
+  // Les effets sont DÉRIVÉS de state.featureChoices : décocher un Choix les retire, changer de
+  // classe (qui vide featureChoices) les remet à zéro — rien à « défaire » manuellement.
+  featureEffects(state, field, ctx) {
+    const out = [];
+    const fc = state.featureChoices || {};
+    for (const parent in fc) {
+      const effs = FEATURE_EFFECTS[fc[parent]];
+      if (!effs) continue;
+      for (let i = 0; i < effs.length; i++) {
+        const e = effs[i];
+        if (e.field !== field) continue;
+        if (!this._effectMatches(e.filter, ctx)) continue;
+        out.push(e);
+      }
+    }
+    return out;
+  },
+  // Somme numérique des effets actifs pour ce champ (le +N appliqué au calcul).
+  featureEffectSum(state, field, ctx) {
+    return this.featureEffects(state, field, ctx)
+      .reduce((s, e) => s + (typeof e.delta === "number" ? e.delta : 0), 0);
+  },
+  // Le contexte (arme atk / armure portée) satisfait-il le filtre de l'effet ?
+  _effectMatches(filter, ctx) {
+    if (!filter) return true;
+    ctx = ctx || {};
+    const w = ctx.w;
+    if (filter.ranged != null) { if (!w || !!w.ranged !== filter.ranged) return false; }
+    if (filter.melee)     { if (!w || w.ranged) return false; }
+    if (filter.oneHanded) {
+      const props = ((w && w.properties) || []).join(" ").toLowerCase();
+      if (!w || props.indexOf("deux mains") !== -1) return false;   // exclut « à deux mains »
+    }
+    if (filter.armored)   { if (!ctx.armored) return false; }
+    return true;
   },
 
   classOf(state) { return SRD.classes[state.identity.class] || null; },
@@ -1086,7 +1163,7 @@ const Calc = {
       let d = 0;
       if (a.addDex) d = (a.maxDex != null) ? Math.min(dex, a.maxDex) : dex;
       ac = a.baseAC + d;
-      if (this.hasDefenseStyle(state)) ac += 1;   // Style de combat « Défense » : +1 en armure
+      ac += this.featureEffectSum(state, "ac", { armored:true });   // Styles de combat en armure (« Défense » : +1 CA)
     } else {
       // Sans armure : defenses speciales de classe / capacités
       const cls = state.identity.class;
@@ -1185,7 +1262,7 @@ const Calc = {
     const r = resolveAtkWeapon(state, atk); const w = r.w;
     const ab = atk.abilityOverride || this.weaponAbility(state, w);
     const pb = (w && this.isWeaponProficient(state, w)) ? this.profBonus(state.identity.level) : (w ? 0 : this.profBonus(state.identity.level));
-    return this.mod(this.abilityTotal(state, ab)) + pb + (r.bonus || 0) + this.dmMod(state, "attack.all");
+    return this.mod(this.abilityTotal(state, ab)) + pb + (r.bonus || 0) + this.dmMod(state, "attack.all") + this.featureEffectSum(state, "attack", { w:w });
   },
 
   damageString(state, atk) {
@@ -1193,7 +1270,7 @@ const Calc = {
     const r = resolveAtkWeapon(state, atk); const w = r.w;
     if (!w) return "—";
     const ab = atk.abilityOverride || this.weaponAbility(state, w);
-    const m = this.mod(this.abilityTotal(state, ab)) + (r.bonus || 0);
+    const m = this.mod(this.abilityTotal(state, ab)) + (r.bonus || 0) + this.featureEffectSum(state, "damage", { w:w });
     const dice = w.damageDice || "";
     return dice + (m ? " " + this.fmt(m) : "") + (w.damageType ? " " + w.damageType : "");
   },
@@ -1346,6 +1423,20 @@ function el(tag, attrs, kids) {
   }
   (kids || []).forEach(k => { if (k == null) return; e.appendChild(typeof k === "string" ? document.createTextNode(k) : k); });
   return e;
+}
+// Badge VERT « +N » signalant qu'un Choix de capacité modifie ce champ. Rendu seulement si un
+// effet est actif. Survol = nom(s) du/des Choix + la condition éventuelle. opts.showLabel ajoute
+// le nom au texte (utile là où il y a la place, ex. à côté de la CA).
+function featBadge(field, ctx, opts) {
+  opts = opts || {};
+  const effs = Calc.featureEffects(state, field, ctx);
+  if (!effs.length) return null;
+  const sum = effs.reduce((s, e) => s + (typeof e.delta === "number" ? e.delta : 0), 0);
+  const labels = effs.map(e => e.label).join(" · ");
+  const conds = effs.map(e => e.cond).filter(Boolean).join(" · ");
+  const title = labels + (conds ? " — s'applique si : " + conds : "");
+  const txt = Calc.fmt(sum) + (opts.showLabel ? " " + labels : "");
+  return el("span", { class:"feat-badge", title: title, text: txt });
 }
 function glow(target) {
   if (!CFG.fx.clickGlow) return;
@@ -2980,7 +3071,7 @@ function renderIdentity() {
   const g = subclassGrants(state);
   const grid = el("div", { class:"person-grid" }, [
     field("Nom du personnage", textInput(()=>state.identity.charName, v=>state.identity.charName=v), "pf-name"),
-    field("Classe", select(()=>state.identity.class, v=>{ state.identity.class=v; state.identity.archetype=""; }, classOpts, "Choisir…"), "pf-class"),
+    field("Classe", select(()=>state.identity.class, v=>{ state.identity.class=v; state.identity.archetype=""; state.featureChoices={}; }, classOpts, "Choisir…"), "pf-class"),
     archetypeField(),
     (g && g.needsTerrain) ? field("Terrain (cercle)", select(()=>((state.featureChoices||{})["land-terrain"]||""), v=>{ state.featureChoices=state.featureChoices||{}; state.featureChoices["land-terrain"]=v; }, TERRAINS, "Choisir…"), "pf-arch") : el("span"),
     field("Niveau", levelControl(), "pf-lvl"),
@@ -3625,6 +3716,9 @@ function renderCombat() {
   // le panneau « Modificateurs du MJ » agit toujours via Calc.dmMod, present dans les deux.
   const acTop = Calc.armorClassUnarmored(state);
   const acBot = Calc.armorClass(state);
+  // Badge vert « +1 · Défense » : la CA (bas) inclut déjà le bonus ; on montre juste sa source.
+  const acArmored = !!(state.armor && state.armor.equipped && SRD.armor[state.armor.equipped]);
+  const acBadge = featBadge("ac", { armored: acArmored }, { showLabel:true });
   const evTop = etatCA(acTop, { caMin: CFG.house.caMin, caMax: CFG.house.caMax });
   const evBot = etatCA(acBot, { caMin: CFG.house.caMin, caMax: CFG.house.caMax });
   const acStyle = "--ca-fill-top:"+evTop.fill+";--ca-sheen-top:"+evTop.sheen+";--ca-halo-top:"+evTop.halo
@@ -3638,7 +3732,7 @@ function renderCombat() {
         el("span", { class:"shape-val ca-num ca-num-top", title:"CA sans armure", text:String(acTop) }),
         el("span", { class:"shape-val ca-num ca-num-bot", title:"CA avec l'armure choisie", text:String(acBot) })
       ]),
-      el("div", { class:"combat-side" }, [ armorPicker() ])
+      el("div", { class:"combat-side" }, [ armorPicker(), acBadge ])
     ])
   ]);
 
@@ -3910,16 +4004,19 @@ function renderAttacks() {
 
   const rows = (state.attacks||[]).map((atk, i) => {
     const isManual = (atk.weaponIndex||"").indexOf("magic:") === 0;   // arme magique inventée
+    const atkW = resolveAtkWeapon(state, atk).w;   // arme résolue (pour filtrer les Choix : distance/mêlée…)
     const attCell = isManual
       ? el("input", { class:"txt mini-i", type:"text", value: atk.bonusOverride||"", placeholder:"+ ?",
           title:"Bonus d'attaque (à saisir : arme magique inventée, sans calcul auto)",
           onchange:(e)=>{ atk.bonusOverride=e.target.value; save(); } })
-      : el("span", { class:"atk-bonus" }, [ lockable("attack."+i, ()=>Calc.attackBonus(state, atk), Calc.fmt) ]);
+      : el("span", { class:"atk-bonus" }, [ lockable("attack."+i, ()=>Calc.attackBonus(state, atk), Calc.fmt),
+          featBadge("attack", { w:atkW }) ]);
     const dmgCell = isManual
       ? el("input", { class:"txt grow", type:"text", value: atk.damageOverride||"", placeholder:"ex. 1d8+3 tranchant",
           title:"Dégâts (à saisir pour une arme magique inventée)",
           onchange:(e)=>{ atk.damageOverride=e.target.value; save(); } })
-      : el("span", { class:"atk-dmg", text: Calc.damageString(state, atk) });
+      : el("span", { class:"atk-dmg" }, [ el("span", { class:"atk-dmg-txt", text: Calc.damageString(state, atk) }),
+          featBadge("damage", { w:atkW }) ]);
     // Une fois une arme choisie, la cellule ARME devient un texte fixe (plus de menu déroulant).
     const wi = atk.weaponIndex || "";
     const armeCell = wi
@@ -4087,8 +4184,13 @@ function withFeatureOptions(index, desc) {
 function featureOptionsNode(index) {
   const keys = Object.keys(SRD.features)
     .filter(k => k.indexOf(index + "-") === 0 && !/-improvement(-\d+)?$/.test(k));
-  const opts = keys.map(k => ({ key:k, f:SRD.features[k] })).filter(o => o.f);
+  let opts = keys.map(k => ({ key:k, f:SRD.features[k] })).filter(o => o.f);
+  // Repli : options fournies à la main quand les données générées n'en ont pas (ex. Paladin).
+  if (opts.length < 2 && SHARED_FEATURE_OPTIONS[index]) {
+    opts = SHARED_FEATURE_OPTIONS[index].map(o => ({ key:o.key, f:{ name:o.name, desc:o.desc } }));
+  }
   if (opts.length < 2) return null;   // besoin d'au moins deux options pour un choix
+  const byKey = {}; opts.forEach(o => { byKey[o.key] = o.f; });
   const cur = (state.featureChoices || {})[index] || "";
   const wrap = el("div", { class:"feat-options" }, [
     el("div", { class:"feat-opt-lbl", text: cur ? "Choix :" : "À choisir :" })
@@ -4103,7 +4205,7 @@ function featureOptionsNode(index) {
     }, [ el("span", { class:"opt-name", text: o.f.name }) ]));
   });
   wrap.appendChild(btnRow);
-  const chosen = cur ? SRD.features[cur] : null;
+  const chosen = cur ? (SRD.features[cur] || byKey[cur]) : null;
   if (chosen && chosen.desc) wrap.appendChild(el("div", { class:"opt-desc", text: chosen.desc }));
   return wrap;
 }
