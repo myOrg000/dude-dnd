@@ -424,12 +424,6 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .combat-body { display: flex; align-items: center; gap: 12px; }
 .combat-side { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .hp-heart { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-/* Emoji d'état : aligné sur le CENTRE du cœur (align-self flex-start + hauteur du cœur),
-   pas sur le centre de la colonne cœur+boutons. min-width réserve la place du cas le plus
-   large (« 😵 💀💀 » = 3 glyphes) → le bloc Combat ne saute pas quand l'emoji change. */
-.hp-etat { align-self: flex-start; height: 96px; min-width: 5rem;
-  display: inline-flex; align-items: center; justify-content: flex-start;
-  font-size: 1.9rem; line-height: 1; white-space: nowrap; user-select: none; }
 .combat-row > .stat-shape { width: auto; }
 .stat-shape { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; }
 .stat-lbl { font-family: var(--font-display); font-weight: 800; font-size: 1.22rem;
@@ -440,21 +434,29 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 
 .shape.hexagon { width: 104px; height: 78px;
   background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 90'><polygon points='30,4 90,4 116,45 90,86 30,86 4,45' fill='%23fbf6ea' stroke='%232b2620' stroke-width='3'/></svg>"); }
-.shape.shield { width: 92px; height: 100px; padding-bottom: 14px; position: relative; }
-/* Bouclier en trois couches (même principe que le cœur) : ::before = remplissage CA
-   (beige cuir → blanc acier) masqué + reflet spéculaire (haut) + halo froid ; .shape-val
-   = la valeur, au milieu ; ::after = le contour, par-dessus. STATIQUE (aucune animation). */
-.shape.shield::before, .shape.shield::after { content: ""; position: absolute; inset: 0;
-  background-repeat: no-repeat; background-position: center; background-size: contain; }
-.shape.shield::before { z-index: 0;
-  background: linear-gradient(to bottom, rgb(255 255 255 / var(--ca-sheen, 0)) 0%, transparent 55%), var(--ca-fill, var(--paper));
-  filter: drop-shadow(0 0 7px rgb(205 222 255 / var(--ca-halo, 0)));
+.shape.shield { width: 168px; height: 186px; position: relative; }
+/* Grand bouclier a DEUX teintes, coupe en deux par une ligne mediane :
+   .ca-top / .ca-bot = deux remplissages CA (beige cuir → acier) masques a la silhouette
+   du bouclier puis decoupes (moitie haute / moitie basse) ; .ca-num = les deux valeurs
+   (haut = CA sans armure, bas = CA avec armure) ; ::after = le contour + la ligne mediane,
+   par-dessus. STATIQUE (aucune animation). */
+.shape.shield .ca-half { content: ""; position: absolute; inset: 0; z-index: 0;
   -webkit-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 110'><path d='M10,8 L90,8 L90,52 C90,86 64,100 50,104 C36,100 10,86 10,52 Z' fill='%23fff'/></svg>") no-repeat center / contain;
           mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 110'><path d='M10,8 L90,8 L90,52 C90,86 64,100 50,104 C36,100 10,86 10,52 Z' fill='%23fff'/></svg>") no-repeat center / contain; }
-.shape.shield::after { z-index: 2; pointer-events: none;
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 110'><path d='M10,8 L90,8 L90,52 C90,86 64,100 50,104 C36,100 10,86 10,52 Z' fill='none' stroke='%232b2620' stroke-width='3'/></svg>"); }
-.shape.shield .shape-val { position: relative; z-index: 1; }
-.shape.heart { width: 104px; height: 96px; padding-bottom: 10px; position: relative; }
+.shape.shield .ca-top { clip-path: inset(0 0 50% 0);
+  background: linear-gradient(to bottom, rgb(255 255 255 / var(--ca-sheen-top, 0)) 0%, transparent 60%), var(--ca-fill-top, var(--paper));
+  filter: drop-shadow(0 0 7px rgb(205 222 255 / var(--ca-halo-top, 0))); }
+.shape.shield .ca-bot { clip-path: inset(50% 0 0 0);
+  background: var(--ca-fill-bot, var(--paper));
+  filter: drop-shadow(0 0 7px rgb(205 222 255 / var(--ca-halo-bot, 0))); }
+.shape.shield::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background-repeat: no-repeat; background-position: center; background-size: contain;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 110'><path d='M10,8 L90,8 L90,52 C90,86 64,100 50,104 C36,100 10,86 10,52 Z' fill='none' stroke='%232b2620' stroke-width='3'/><line x1='12' y1='55' x2='88' y2='55' stroke='%232b2620' stroke-width='3'/></svg>"); }
+.shape.shield .ca-num { position: absolute; left: 0; right: 0; z-index: 1; text-align: center;
+  font-size: 1.9rem; line-height: 1; }
+.shape.shield .ca-num-top { top: 20%; }
+.shape.shield .ca-num-bot { top: 55%; }
+.shape.heart { width: 130px; height: 120px; padding-bottom: 12px; position: relative; }
 /* Cœur en trois couches : ::before = remplissage coloré (état PV) masqué à la silhouette ;
    .hp-current (le nombre) au milieu ; ::after = le contour, par-dessus. Le masque rend
    --pv-fill colorable/animable — impossible via le fill codé en dur d'un background-image.
@@ -481,7 +483,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .shape.rounded { width: 96px; min-height: 72px; border: 2.5px solid var(--ink);
   border-radius: 14px; background: var(--paper); padding: 6px; }
 
-.hp-current { width: 64px; text-align: center; font-family: var(--font-num); font-size: 1.6rem;
+.hp-current { width: 80px; text-align: center; font-family: var(--font-num); font-size: 2rem;
   font-weight: 700; border: none; background: transparent; color: var(--pv-ink, var(--ink)); padding: 0;
   position: relative; z-index: 1; }
 .hp-extra { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 2px; }
@@ -545,7 +547,10 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .hand-emoji:hover:not([disabled]) { transform: scale(1.15); background: var(--paper); }
 .hand-emoji[disabled] { cursor: default; opacity: .2; }
 .attack-row.inactive > *:not(.hand-cell):not(.del) { opacity: .5; }
-.shield-hand { display: inline-flex; align-items: center; gap: 4px; }
+.shield-hand { display: inline-flex; align-items: center; gap: 6px; }
+/* Case a cocher « Bouclier (+2) » : grosse cible (doublee ~2x la taille native). */
+.shield-chk { cursor: pointer; }
+.shield-box { width: 30px; height: 30px; flex: none; cursor: pointer; accent-color: var(--red-deep); }
 /* Attaques : 2/3 table · 1/3 dés (3 + 3, avec « Lancer un dé » dessous) */
 .atk-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
 .atk-dice { border-left: 1px dashed var(--line); padding-left: 14px; }
@@ -698,7 +703,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 /* --- Toggle méthode PV (au dé / par formule) ------------------------------ */
 .hp-method { display: inline-flex; align-items: center; gap: 5px; font-size: 1rem; flex-wrap: wrap;
   justify-content: center; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; cursor: pointer; margin-top: 3px; }
-.hp-method input { width: 15px; height: 15px; accent-color: var(--red); cursor: pointer; }
+.hp-method input { width: 30px; height: 30px; accent-color: var(--red); cursor: pointer; flex: none; }
 .hp-mini-i.auto { background: var(--paper); border-style: dashed; color: var(--ink-soft);
   display: inline-flex; align-items: center; justify-content: center; min-width: 54px; min-height: 30px; }
 .hp-mini-i.boosted { border-color: var(--gold) !important; box-shadow: 0 0 0 1px var(--gold); color: var(--ink); }
@@ -1099,6 +1104,20 @@ const Calc = {
       else if (this.hasDraconicResilience(state)) ac = 13 + dex;   // Résilience draconique
       else ac = 10 + dex;
     }
+    return ac + shield + this.dmMod(state, "ac");
+  },
+
+  // CA "sans armure" : ignore l'armure equipee (chiffre du HAUT du bouclier). Memes
+  // defenses speciales que la branche sans armure de armorClass ; + bouclier + mod MJ.
+  armorClassUnarmored(state) {
+    const dex = this.mod(this.abilityTotal(state, "dex"));
+    const shield = state.armor && state.armor.shield ? 2 : 0;
+    const cls = state.identity.class;
+    let ac;
+    if (cls === "barbarian") ac = 10 + dex + this.mod(this.abilityTotal(state, "con"));
+    else if (cls === "monk")  ac = 10 + dex + this.mod(this.abilityTotal(state, "wis"));
+    else if (this.hasDraconicResilience(state)) ac = 13 + dex;   // Resilience draconique
+    else ac = 10 + dex;
     return ac + shield + this.dmMod(state, "ac");
   },
 
@@ -3570,8 +3589,8 @@ function etatPV(pvActuel, pvMax, opts) {
 }
 
 // CA. Bouclier : cuir bouilli (beige) → acier poli (blanc). STATIQUE (aucune anim).
-//   En Mode MJ, lockable("ac") peut rendre une CHAÎNE libre ("18 (bénédiction)", "")
-//   → garde : tout non-nombre = couleur neutre (--paper), jamais de NaN peint.
+//   Recoit un nombre (CA calculee, haut ou bas du bouclier) ; garde defensive :
+//   tout non-nombre = couleur neutre (--paper), jamais de NaN peint.
 function etatCA(ca, opts) {
   opts = opts || {};
   const caMin = isFinite(opts.caMin) ? Number(opts.caMin) : 10;
@@ -3608,16 +3627,26 @@ function renderCombat() {
   if (state.hp.current < hpFloor) state.hp.current = hpFloor;
 
   // --- Classe d'armure : bouclier + (menu d'armure / case bouclier) à droite ---
-  // État visuel du bouclier : remplissage CA (--ca-fill), reflet (--ca-sheen) et halo
-  // (--ca-halo), posés inline sur .shape.shield. On calcule la MÊME valeur que lockable
-  // affiche (surcharge MJ si présente, sinon CA calculée) ; chaîne libre gérée par etatCA.
-  const acAuto = Calc.armorClass(state);
-  const acVal = (state.overrides.ac != null && state.overrides.ac !== "") ? state.overrides.ac : acAuto;
-  const evCA = etatCA(acVal, { caMin: CFG.house.caMin, caMax: CFG.house.caMax });
+  // Deux chiffres dans le grand bouclier, chacun sa teinte (etatCA calcule separement) :
+  //  - HAUT = CA sans armure (Calc.armorClassUnarmored) — independant du menu d'armure
+  //  - BAS  = CA avec l'armure choisie (Calc.armorClass) — suit le menu
+  // Les deux recoivent le bouclier (+2) et le mod MJ. Pas de cadenas ici (choix design) ;
+  // le panneau « Modificateurs du MJ » agit toujours via Calc.dmMod, present dans les deux.
+  const acTop = Calc.armorClassUnarmored(state);
+  const acBot = Calc.armorClass(state);
+  const evTop = etatCA(acTop, { caMin: CFG.house.caMin, caMax: CFG.house.caMax });
+  const evBot = etatCA(acBot, { caMin: CFG.house.caMin, caMax: CFG.house.caMax });
+  const acStyle = "--ca-fill-top:"+evTop.fill+";--ca-sheen-top:"+evTop.sheen+";--ca-halo-top:"+evTop.halo
+    + ";--ca-fill-bot:"+evBot.fill+";--ca-sheen-bot:"+evBot.sheen+";--ca-halo-bot:"+evBot.halo;
   const acGroup = el("div", { class:"combat-group" }, [
-    el("div", { class:"stat-lbl", title:"Classe d'armure (CA) : difficulté pour vous toucher au combat. Plus c'est élevé, mieux c'est.", text:"Classe d'armure" }),
+    el("div", { class:"stat-lbl", title:"Classe d'armure (CA) : difficulté pour vous toucher au combat. Plus c'est élevé, mieux c'est. Haut = sans armure · bas = avec l'armure choisie.", text:"Classe d'armure" }),
     el("div", { class:"combat-body" }, [
-      el("div", { class:"shape shield", style:"--ca-fill:"+evCA.fill+";--ca-sheen:"+evCA.sheen+";--ca-halo:"+evCA.halo }, [ el("span",{class:"shape-val"},[ lockable("ac", ()=>Calc.armorClass(state)) ]) ]),
+      el("div", { class:"shape shield", style: acStyle }, [
+        el("div", { class:"ca-half ca-top" }),
+        el("div", { class:"ca-half ca-bot" }),
+        el("span", { class:"shape-val ca-num ca-num-top", title:"CA sans armure", text:String(acTop) }),
+        el("span", { class:"shape-val ca-num ca-num-bot", title:"CA avec l'armure choisie", text:String(acBot) })
+      ]),
       el("div", { class:"combat-side" }, [ armorPicker() ])
     ])
   ]);
@@ -3645,16 +3674,15 @@ function renderCombat() {
   const styleCoeur = "--pv-fill:" + evPV.fill + ";--pv-ink:" + evPV.ink
     + ";--pv-pulse-vers:" + (evPV.pulseVers || evPV.fill) + ";--pv-pulse-amp:" + evPV.amplitude
     + ";--pv-lueur:" + lueurCoeur + ";--pv-anim:" + animCoeur;
-  // Emoji d'état à droite du cœur : redondance sémantique de la couleur (a11y).
-  // role=img + aria-label = le libellé (lecteur d'écran/clavier l'annonce, pas « emoji »).
-  const etatEmoji = el("div", { class:"hp-etat",
-    role: evPV.emoji ? "img" : null, "aria-label": evPV.libelle || null,
-    title: evPV.libelle || null, text: evPV.emoji });
+  // L'emoji de visage a été retiré de l'UI (demande de Serge). L'état reste porté par la
+  // COULEUR du cœur ; son libellé (evPV.libelle) est déplacé en title (survol) sur le cœur.
+  // Pas de role="img"/aria-label ici : le cœur CONTIENT l'input PV, et role=img masquerait
+  // ce champ à l'arbre d'accessibilité. title est sûr (n'altère pas l'arbre).
   const pvGroup = el("div", { class:"combat-group" }, [
     el("div", { class:"stat-lbl", title:"Points de vie : à 0, vous tombez inconscient. Les boutons − / + appliquent dégâts et soins.", text:"Points de vie" }),
     el("div", { class:"combat-body" }, [
       el("div", { class:"hp-heart" }, [
-        el("div", { class:"shape heart", style: styleCoeur }, [
+        el("div", { class:"shape heart", style: styleCoeur, title: evPV.libelle || null }, [
           el("input",{class:"hp-current",type:"number",value:state.hp.current,title:"PV actuels",
             onchange:(e)=>{ const b=state.hp.current; state.hp.current=Number(e.target.value||0);
               if (state.hp.current>b) Audio.heal(); else if (state.hp.current<b) Audio.damage(); save(); render(); }})
@@ -3666,7 +3694,6 @@ function renderCombat() {
             onclick:()=>{ state.hp.current++; Audio.heal(); save(); render(); }})
         ])
       ]),
-      etatEmoji,
       el("div", { class:"combat-side" }, [
         el("label",{class:"hp-mini-f"},[ el("span",{class:"lbl-maj",text:"Max"}), maxField ]),
         el("label",{class:"hp-method",
@@ -3730,18 +3757,17 @@ function armorPicker() {
     .sort((a,b)=>a.label.localeCompare(b.label));
   const box = el("div", { class:"armor-pick" }, [
     select(()=>state.armor.equipped, v=>state.armor.equipped=v, opts, "Sans armure"),
-    el("div", { class:"shield-hand" }, [
-      el("button", { class:"hand-emoji"+(state.armor.shield?" active":""),
-        title: state.armor.shield ? "Bouclier en main (+2 CA) — cliquer pour lâcher" : "Prendre le bouclier en main (+2 CA)",
-        onclick:()=>{
+    el("label", { class:"shield-hand shield-chk",
+      title: state.armor.shield ? "Bouclier en main (+2 CA) — décocher pour lâcher" : "Prendre le bouclier en main (+2 CA)" }, [
+      el("input", { type:"checkbox", class:"shield-box", checked: state.armor.shield?"checked":null,
+        onchange:(e)=>{
           if (state.armor.shield) { state.armor.shield=false; }
           else {
-            if (!hasShieldItem(state)) { Audio.click();
+            if (!hasShieldItem(state)) { Audio.click(); e.target.checked=false;
               alert("Vous n'avez pas de bouclier. Ajoutez un « Bouclier » à votre équipement (ou un objet magique bouclier) avant de l'équiper."); return; }
             state.armor.shieldSeq = grabHands(state, 1); state.armor.shield = true;   // libère une main au besoin
           }
-          Audio.click(); save(); render(); } },
-        [ el("span",{text:"✋"}) ]),
+          Audio.click(); save(); render(); } }),
       el("span", { class:"lbl-maj", text:" Bouclier (+2)" })
     ])
   ]);
@@ -5354,10 +5380,12 @@ function render() {
   const root = app(); if (!root) return;
   root.innerHTML = "";
   const order = [
-    ["identity", renderIdentity], ["combat", renderCombat], ["attacks", renderAttacks],
-    ["saves", renderSaves], ["skills", renderSkills], ["spells", renderSpells],
-    ["features", renderFeatures], ["abilities", renderAbilities], ["inventory", renderInventory],
-    ["magicItems", renderMagicItems], ["money", renderMoney], ["proficiencies", renderProficiencies],
+    ["combat", renderCombat], ["attacks", renderAttacks],
+    ["saves", renderSaves], ["skills", renderSkills],
+    ["money", renderMoney], ["spells", renderSpells],
+    ["abilities", renderAbilities], ["features", renderFeatures],
+    ["inventory", renderInventory], ["magicItems", renderMagicItems],
+    ["proficiencies", renderProficiencies], ["identity", renderIdentity],
     ["appearance", renderAttributes], ["notes", renderNotes]
   ];
   const dmPanel = renderDMPanel(); if (dmPanel) root.appendChild(dmPanel);
