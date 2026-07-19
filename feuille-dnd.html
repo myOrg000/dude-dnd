@@ -533,11 +533,11 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .attack-row { padding: 3px 0; min-width: 0; }
 .attack-row .sel { width: 100%; min-width: 0; }
 .attack-row.magic { background: rgba(184,144,47,.08); border-radius: 8px; }
-.atk-note { font-size: .82rem; line-height: 1.45; margin-top: 8px; padding-top: 8px;
+.atk-note { font-size: 1rem; line-height: 1.45; margin-top: 8px; padding-top: 8px;
   border-top: 1px dashed var(--line); }
 .atk-bonus { font-family: var(--font-num); font-weight: 700; text-align: center; }
 .atk-weapon-name { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 4px 2px; }
-.atk-dmg { font-family: var(--font-num); font-size: .82rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.atk-dmg { font-family: var(--font-num); font-size: 1rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .shield-hand { display: inline-flex; align-items: center; gap: 6px; }
 /* Case a cocher « Bouclier (+2) » : grosse cible (doublee ~2x la taille native). */
 .shield-chk { cursor: pointer; }
@@ -3611,11 +3611,11 @@ function renderCombat() {
       ? state.hp.maxOverride : suggested;
   }
   if (state.hp.current > state.hp.max) state.hp.current = state.hp.max;
-  // Plancher des PV : 0 en regles officielles ; -PVmax si le MJ autorise le negatif
-  // (options.pvNegatifs). Applique au rendu -> couvre boutons, saisie, vieilles saves
-  // et un flag repasse a false (une valeur negative sauvegardee s'auto-corrige ici).
-  const hpFloor = CFG.options.pvNegatifs ? -state.hp.max : 0;
-  if (state.hp.current < hpFloor) state.hp.current = hpFloor;
+  // Plancher des PV : aucun par defaut -> le bouton - descend librement en negatif.
+  // -PVmax seulement si le MJ active l'option maison pvNegatifs (qui ajoute alors les
+  // visuels d'agonie via etatPV). Sans l'option, le coeur garde son look mourant calme.
+  const hpFloor = CFG.options.pvNegatifs ? -state.hp.max : null;
+  if (hpFloor != null && state.hp.current < hpFloor) state.hp.current = hpFloor;
 
   // --- Classe d'armure : bouclier + (menu d'armure / case bouclier) à droite ---
   // Deux chiffres dans le grand bouclier, chacun sa teinte (etatCA calcule separement) :
