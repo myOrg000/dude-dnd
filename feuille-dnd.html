@@ -527,7 +527,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 
 /* --- Attaques (ARME | ATT | DÉGÂTS | ✕ dedans) ----------------------------- */
 .attack-head, .attack-row { display: grid;
-  grid-template-columns: 44px minmax(0,1fr) 60px minmax(0,1.25fr) 32px; gap: 8px; align-items: center; }
+  grid-template-columns: minmax(0,1fr) 60px minmax(0,1.25fr) 32px; gap: 8px; align-items: center; }
 .attack-head { font-size: .66rem; text-transform: uppercase; color: var(--ink-soft);
   font-weight: 700; padding: 0 2px 4px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
 .attack-row { padding: 3px 0; min-width: 0; }
@@ -538,15 +538,6 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .atk-bonus { font-family: var(--font-num); font-weight: 700; text-align: center; }
 .atk-weapon-name { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 4px 2px; }
 .atk-dmg { font-family: var(--font-num); font-size: .82rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-/* Colonne EN MAIN : emoji main (grisé = inactif, couleur = actif) + budget de 2 mains */
-.hands-count { font-family: var(--font-display); font-weight: 700; color: var(--red-deep); margin-bottom: 6px; }
-.hand-cell { display: flex; justify-content: center; }
-.hand-emoji { background: none; border: none; cursor: pointer; font-size: 1.5rem; line-height: 1; padding: 2px 4px;
-  border-radius: 6px; filter: grayscale(1); opacity: .4; transition: transform .1s, opacity .12s, filter .12s; }
-.hand-emoji.active { filter: none; opacity: 1; }
-.hand-emoji:hover:not([disabled]) { transform: scale(1.15); background: var(--paper); }
-.hand-emoji[disabled] { cursor: default; opacity: .2; }
-.attack-row.inactive > *:not(.hand-cell):not(.del) { opacity: .5; }
 .shield-hand { display: inline-flex; align-items: center; gap: 6px; }
 /* Case a cocher « Bouclier (+2) » : grosse cible (doublee ~2x la taille native). */
 .shield-chk { cursor: pointer; }
@@ -3765,7 +3756,7 @@ function armorPicker() {
           else {
             if (!hasShieldItem(state)) { Audio.click(); e.target.checked=false;
               alert("Vous n'avez pas de bouclier. Ajoutez un « Bouclier » à votre équipement (ou un objet magique bouclier) avant de l'équiper."); return; }
-            state.armor.shieldSeq = grabHands(state, 1); state.armor.shield = true;   // libère une main au besoin
+            state.armor.shield = true;
           }
           Audio.click(); save(); render(); } }),
       el("span", { class:"lbl-maj", text:" Bouclier (+2)" })
@@ -3912,7 +3903,7 @@ function renderAttacks() {
     }
     s.value = atk.weaponIndex || "";
     s.addEventListener("change", () => {
-      atk.weaponIndex = s.value; atk.active = false;   // changer d'arme la retire de la main (coût recalculé au ré-clic)
+      atk.weaponIndex = s.value;
       Audio.click(); save(); render(); });
     return s;
   }
@@ -3929,27 +3920,13 @@ function renderAttacks() {
           title:"Dégâts (à saisir pour une arme magique inventée)",
           onchange:(e)=>{ atk.damageOverride=e.target.value; save(); } })
       : el("span", { class:"atk-dmg", text: Calc.damageString(state, atk) });
-    const w = resolveAtkWeapon(state, atk).w;
-    const hasWeapon = !!(w || isManual);
-    const twoH = weaponIsTwoHanded(w);
-    const handBtn = el("button", {
-      class:"hand-emoji"+(atk.active?" active":""),
-      disabled: hasWeapon?null:"disabled",
-      title: hasWeapon ? (atk.active?"En main — cliquer pour lâcher":(twoH?"Arme à deux mains — cliquer pour la prendre":"Cliquer pour la prendre en main")) : "Choisissez d'abord une arme",
-      onclick: hasWeapon ? ()=>{
-        if (atk.active) atk.active=false;
-        else { atk.hseq = grabHands(state, handCostOf(state,atk)); atk.active=true; }
-        Audio.click(); save(); render();
-      } : null
-    }, [ el("span",{text: twoH?"🤲":"✋"}) ]);
     // Une fois une arme choisie, la cellule ARME devient un texte fixe (plus de menu déroulant).
     const wi = atk.weaponIndex || "";
     const armeCell = wi
       ? el("span", { class:"atk-weapon-name", title:"Arme fixée — supprimez l'attaque (✕) pour en choisir une autre",
           text: wi.indexOf("mw:")===0 ? wi.slice(3) : (wi.indexOf("magic:")===0 ? wi.slice(6) : (SRD.weapons[wi] ? SRD.weapons[wi].name : wi)) })
       : weaponSelect(atk);
-    return el("div", { class:"attack-row"+(atk.active?"":" inactive")+(isManual?" magic":((atk.weaponIndex||"").indexOf("mw:")===0?" magic":"")) }, [
-      el("div",{class:"hand-cell"},[handBtn]),
+    return el("div", { class:"attack-row"+(isManual?" magic":((atk.weaponIndex||"").indexOf("mw:")===0?" magic":"")) }, [
       armeCell, attCell, dmgCell,
       el("button", { class:"icon-btn del", text:"✕", title:"Retirer cette attaque",
         onclick:()=>{ state.attacks.splice(i,1); save(); render(); } })
@@ -3966,12 +3943,8 @@ function renderAttacks() {
       onchange:(e)=>{ state.showDice = e.target.checked; save(); render(); } }),
     el("span", { text:" Afficher le lanceur de dés" })
   ]) : null;
-  const handsCount = el("div", { class:"hands-count",
-    title:"Mains occupées (max 2). Une arme à deux mains occupe les 2 mains ; un bouclier en occupe 1." },
-    [ el("span",{text:"✋ Mains : "+usedHands(state)+" / 2"}) ]);
   const atkMain = el("div", { class:"atk-main" }, [
-    handsCount,
-    el("div",{class:"attack-head"},[el("span",{text:"MAIN"}),el("span",{text:"ARME"}),el("span",{text:"ATT."}),el("span",{text:"DÉGÂTS"}),el("span",{text:""})]),
+    el("div",{class:"attack-head"},[el("span",{text:"ARME"}),el("span",{text:"ATT."}),el("span",{text:"DÉGÂTS"}),el("span",{text:""})]),
     ...rows, add, note ]);
   if (state.showDice || dmMode) {
     return card("Attaques", el("div", { class:"atk-layout" }, [
@@ -5225,12 +5198,6 @@ function resolveAtkWeapon(state, atk) {
   return { w: wi ? SRD.weapons[wi] : null, bonus: 0 };
 }
 
-// --- Contrainte des mains : une arme à deux mains (y compris arcs et arbalète lourde)
-//     et un bouclier ne peuvent pas coexister (le bouclier occupe une main). ---
-function weaponIsTwoHanded(w){ return !!(w && (w.properties||[]).some(p=>/deux\s*mains/i.test(p))); }
-function hasTwoHandedEquipped(state){
-  return (state.attacks||[]).some(a => weaponIsTwoHanded(resolveAtkWeapon(state, a).w));
-}
 // Un bouclier « présent » = objet d'inventaire nommé « …bouclier… » OU objet magique bouclier.
 function hasShieldItem(state){
   const inv = (state.inventory||[]).some(i => /bouclier/i.test(i.name||""));
@@ -5242,23 +5209,6 @@ function armorOwned(state, name){
   const nm = (name||"").toLowerCase();
   return (state.inventory||[]).some(i => (i.name||"").toLowerCase() === nm)
       || (state.magicItems||[]).some(m => (m.name||"").toLowerCase() === nm);
-}
-// --- Système de « mains » (budget 2) : tenir une arme 1 main / un bouclier = 1 ; une arme 2 mains = 2. ---
-function handCostOf(state, atk){ return weaponIsTwoHanded(resolveAtkWeapon(state, atk).w) ? 2 : 1; }
-function handItems(state){
-  const arr = [];
-  (state.attacks||[]).forEach(a => { if (a.active) arr.push({ seq:a.hseq||0, cost:handCostOf(state,a), off:()=>{ a.active=false; } }); });
-  if (state.armor && state.armor.shield) arr.push({ seq:state.armor.shieldSeq||0, cost:1, off:()=>{ state.armor.shield=false; } });
-  return arr;
-}
-function usedHands(state){ return handItems(state).reduce((n,x)=>n+x.cost,0); }
-// Libère la place pour « cost » mains en désactivant les plus anciens tenus, puis renvoie le nouvel ordre d'activation.
-function grabHands(state, cost){
-  const items = handItems(state).sort((a,b)=>a.seq-b.seq);
-  let used = items.reduce((n,x)=>n+x.cost,0), k=0;
-  while (used + cost > 2 && k < items.length){ items[k].off(); used -= items[k].cost; k++; }
-  state.handSeq = (state.handSeq||0) + 1;
-  return state.handSeq;
 }
 
 function renderMagicItems() {
