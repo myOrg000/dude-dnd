@@ -541,7 +541,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .atk-dmg-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Badge VERT « +N » : un Choix de capacité (ex. Style de combat) modifie ce champ. Réutilise
    --green (déjà employé par .opt-btn.active / .mini-btn.applied). Ne réduit aucune cible cliquable. */
-.feat-badge { color: var(--green); font-weight: 800; font-size: .82rem; white-space: nowrap; flex: 0 0 auto; }
+.feat-badge { color: var(--green); font-weight: 800; font-size: 1em; white-space: nowrap; flex: 0 0 auto; }
 .shield-hand { display: inline-flex; align-items: center; gap: 6px; }
 /* Case a cocher « Bouclier (+2) » : grosse cible (doublee ~2x la taille native). */
 .shield-chk { cursor: pointer; }
@@ -1594,13 +1594,13 @@ const ARCHETYPES = {
           },
           {
             "level": 6,
-            "name": "Rage inébranlable",
-            "desc": "Pendant que vous êtes en rage, vous ne pouvez pas être charmé ni effrayé. Si vous étiez déjà charmé ou effrayé au moment d'entrer en rage, cet effet est suspendu le temps de la rage, puis reprend ensuite s'il n'a pas expiré. C'est un avantage passif, sans action à dépenser."
+            "name": "Rage aveugle",
+            "desc": "Pendant votre rage, vous ne pouvez être ni charmé ni effrayé. Si vous l'étiez déjà en entrant en rage, l'effet reste suspendu tant que la rage dure. C'est un avantage passif, sans action à dépenser."
           },
           {
             "level": 10,
             "name": "Présence intimidante",
-            "desc": "Par une action, vous fixez une créature située à 9 mètres ou moins de vous et cherchez à la terrifier. Elle doit réussir un jet de sauvegarde de Sagesse contre votre DD (8 + votre bonus de maîtrise + votre modificateur de Charisme), sinon elle est effrayée par vous jusqu'à la fin de votre prochain tour. À chacun de vos tours suivants, vous pouvez prolonger l'effet en action, tant que la cible reste à portée et visible ; elle refait alors le jet."
+            "desc": "Par une action, vous fixez une créature à 9 mètres ou moins pour la terrifier : elle rate un jet de sauvegarde de Sagesse (DD = 8 + votre bonus de maîtrise + votre modificateur de Charisme) et se retrouve effrayée jusqu'à la fin de votre prochain tour. Aux tours suivants, vous pouvez redépenser votre action pour prolonger l'effet d'un tour, sans nouveau jet. Il cesse si la cible termine son tour hors de votre vue ou à plus de 18 mètres. Si elle réussit son premier jet, vous ne pouvez plus l'y soumettre pendant 24 heures."
           },
           {
             "level": 14,
@@ -1636,8 +1636,8 @@ const ARCHETYPES = {
           },
           {
             "level": 14,
-            "name": "Harmonie totémique",
-            "desc": "Vous gagnez un pouvoir puissant lié à un animal totem. Ours : pendant votre rage, tout ennemi à 1,50 mètre de vous subit un désavantage sur ses jets d'attaque contre vos alliés (attaquer quelqu'un d'autre que vous devient risqué pour lui). Aigle : pendant votre rage, vous pouvez voler à votre vitesse au sol pendant votre tour, mais vous tombez à la fin du tour si vous êtes encore en l'air. Loup : pendant votre rage, quand vous abattez une créature en mêlée, vous pouvez utiliser une action bonus pour faire tomber à terre une créature de taille G ou moins située à 1,50 mètre de vous."
+            "name": "Lien totémique",
+            "desc": "Vous recevez un pouvoir magique lié à un animal totem. Ours : pendant votre rage, tout ennemi à 1,50 mètre de vous subit un désavantage à ses attaques contre une autre cible que vous - sauf s'il ne peut ni vous voir ni vous entendre, ou s'il ne peut pas être effrayé. Aigle : pendant votre rage, vous pouvez voler à votre vitesse au sol le temps de votre tour, mais vous chutez si vous le finissez en l'air. Loup : pendant votre rage, quand vous touchez d'une attaque de mêlée une créature de taille G ou moins, vous pouvez, en action bonus, la jeter à terre."
           }
         ]
       }
@@ -1660,7 +1660,7 @@ const ARCHETYPES = {
           {
             "level": 3,
             "name": "Mots cuisants",
-            "desc": "À partir du niveau 3, en réaction, quand une créature située à 18 mètres ou moins de vous que vous pouvez entendre réussit un jet d'attaque, un test de caractéristique ou un jet de dégâts, vous pouvez dépenser une utilisation d'Inspiration bardique. Lancez le dé d'Inspiration et soustrayez le résultat du jet de la créature. Cela peut transformer une réussite en échec ou réduire ses dégâts. La créature doit être en mesure de vous entendre pour être affectée."
+            "desc": "Quand une créature que vous voyez à 18 mètres ou moins réussit un jet d'attaque, un test de caractéristique ou un jet de dégâts, vous pouvez, en réaction, dépenser une Inspiration bardique : lancez le dé et soustrayez-le du jet de la créature, ce qui peut changer sa réussite en échec ou réduire ses dégâts. Vous décidez après son jet, mais avant que le MJ n'annonce le résultat (ou avant que les dégâts ne tombent). Sans effet sur une créature qui ne peut pas vous entendre ou que le charme n'atteint pas."
           },
           {
             "level": 6,
@@ -1669,8 +1669,8 @@ const ARCHETYPES = {
           },
           {
             "level": 14,
-            "name": "Polyvalence sans pareille",
-            "desc": "Au niveau 14, quand vous faites un test de caractéristique, vous pouvez dépenser une utilisation d'Inspiration bardique : lancez le dé d'Inspiration et ajoutez le résultat à votre test. Vous pouvez décider de le faire après avoir lancé le dé du test, mais avant que le MJ ne dise si c'est réussi ou raté. Cela vous aide à décrocher les tests importants."
+            "name": "Compétence hors-pair",
+            "desc": "Quand vous faites un test de caractéristique, vous pouvez dépenser une Inspiration bardique : lancez le dé et ajoutez-le à votre test. Vous décidez après avoir lancé, mais avant que le MJ ne dise si c'est réussi ou raté - de quoi décrocher les tests qui comptent."
           }
         ]
       },
@@ -1734,7 +1734,7 @@ const ARCHETYPES = {
           },
           {
             "level": 8,
-            "name": "Pouvoir divin",
+            "name": "Incantation puissante",
             "desc": "Passif. Vous ajoutez votre modificateur de Sagesse aux dégâts de n'importe lequel de vos cantrips (sortilèges mineurs) de clerc. C'est un effet permanent, sans limite d'utilisation."
           },
           {
@@ -1772,12 +1772,12 @@ const ARCHETYPES = {
           {
             "level": 6,
             "name": "Soigneur béni",
-            "desc": "Passif. Une fois par tour, quand vous touchez une créature avec une attaque d'arme, vous ajoutez 1d8 de dégâts radiants. Il n'y a pas de limite d'utilisation. À partir du niveau 14, ces dégâts supplémentaires passent à 2d8."
+            "desc": "Vos soins rejaillissent sur vous. Quand vous lancez un sort de niveau 1 ou plus pour rendre des points de vie à une autre créature que vous, vous en récupérez vous-même 2, plus le niveau du sort employé."
           },
           {
             "level": 8,
-            "name": "Pouvoir divin",
-            "desc": "Passif. Une fois par tour, quand vous touchez une créature avec une attaque d'arme, vous pouvez y ajouter 1d8 de dégâts radiants. Utilisable un nombre de fois égal à votre modificateur de Sagesse (au moins 1), récupéré sur un repos long."
+            "name": "Frappe divine",
+            "desc": "Une fois par tour, quand vous touchez une créature d'une attaque d'arme, vous pouvez lui infliger 1d8 dégâts radiants supplémentaires. À partir du niveau 14 de clerc, ces dégâts passent à 2d8."
           },
           {
             "level": 17,
@@ -1813,18 +1813,18 @@ const ARCHETYPES = {
           },
           {
             "level": 6,
-            "name": "Lumière inspirante",
-            "desc": "Passif. Quand vous lancez un sort de niveau 1 ou plus qui inflige des dégâts de feu ou radiants, vous pouvez donner des points de vie temporaires à un nombre de créatures égal à votre modificateur de Sagesse (au moins 1), visibles à 9 mètres. Chacune reçoit un nombre de points temporaires égal au niveau du sort."
+            "name": "Illumination améliorée",
+            "desc": "Votre Halo protecteur ne vous protège plus seulement : vous pouvez aussi le déclencher quand une créature que vous voyez à 9 mètres ou moins est attaquée par une autre, et non plus uniquement quand vous êtes visé."
           },
           {
             "level": 8,
-            "name": "Pouvoir divin",
+            "name": "Incantation puissante",
             "desc": "Passif. Vous ajoutez votre modificateur de Sagesse aux dégâts de n'importe lequel de vos cantrips (sortilèges mineurs) de clerc. C'est un effet permanent, sans limite d'utilisation."
           },
           {
             "level": 17,
-            "name": "Couronne de lumière",
-            "desc": "Action. Pendant 1 minute, une lumière rayonne autour de vous. Quand vous ou une créature à 9 mètres de vous êtes ciblés par une attaque, vous pouvez utiliser votre réaction pour infliger un désavantage à ce jet. De plus, tant que la lumière dure, vous et vos alliés à 9 mètres avez un avantage aux jets de sauvegarde contre les sorts et effets qui infligent des dégâts de feu ou radiants. Utilisable une fois, récupéré sur un repos long."
+            "name": "Halo de lumière",
+            "desc": "Par une action, vous déployez pendant 1 minute une aura de lumière solaire (que vous pouvez interrompre par une action) : lumière vive sur 18 mètres, puis faible sur 9 mètres de plus. Vos ennemis pris dans la lumière vive subissent un désavantage aux jets de sauvegarde contre tout sort infligeant des dégâts de feu ou radiants. Utilisable une fois, puis à récupérer après un repos long."
           }
         ]
       },
@@ -1855,8 +1855,8 @@ const ARCHETYPES = {
           },
           {
             "level": 6,
-            "name": "Intervention de Dame Nature",
-            "desc": "Réaction, quand vous ou une créature visible à 9 mètres subit des dégâts d'acide, de froid, de feu, de foudre ou de tonnerre. Vous accordez à cette créature une résistance à cette instance de dégâts. Utilisable un nombre de fois égal à votre modificateur de Sagesse (au moins 1), récupéré sur un repos long."
+            "name": "Atténuation des éléments",
+            "desc": "En réaction, quand vous ou une créature à 9 mètres ou moins subit des dégâts d'acide, de froid, de feu, de foudre ou de tonnerre, vous accordez à cette créature la résistance à ce type de dégâts. Utilisable un nombre de fois égal à votre modificateur de Sagesse (au moins une), à récupérer après un repos long."
           },
           {
             "level": 8,
@@ -1930,7 +1930,7 @@ const ARCHETYPES = {
           {
             "level": 2,
             "name": "Conduit divin : invocation de la duperie",
-            "desc": "Action, Conduit divin (Invocation de la duperie). Vous créez une copie illusoire parfaite de vous-même, qui dure 1 minute. Elle apparaît dans un espace visible à 9 mètres, ne peut ni bouger ni agir, mais vous pouvez la déplacer par une action bonus (jusqu'à 9 mètres, sans jamais dépasser 36 mètres de vous). Pendant la durée, vous pouvez lancer vos sorts comme si vous vous trouviez à la position du double, en utilisant vos propres sens."
+            "desc": "Par une action (Conduit divin), vous projetez une copie illusoire parfaite de vous-même, dans un espace libre visible à 9 mètres, pendant 1 minute ou jusqu'à ce que votre concentration cesse. En action bonus, vous la déplacez jusqu'à 9 mètres, sans jamais l'éloigner de plus de 36 mètres de vous. Vous pouvez lancer vos sorts depuis sa position (mais avec vos propres sens). Et quand vous et l'illusion encadrez une même créature (toutes deux à 1,50 mètre ou moins d'elle), vous avez l'avantage à vos attaques contre elle."
           },
           {
             "level": 6,
@@ -2019,18 +2019,18 @@ const ARCHETYPES = {
           },
           {
             "level": 6,
-            "name": "Foulée terrestre",
-            "desc": "Le terrain difficile d'origine naturelle et non magique ne vous ralentit plus : vous vous y déplacez normalement. De plus, vous pouvez traverser les plantes non magiques sans être gêné ni blessé par leurs épines et leurs ronces. Enfin, vous avez l'avantage aux jets de sauvegarde contre les plantes créées ou manipulées par magie pour entraver un déplacement (comme le sort Enchevêtrement)."
+            "name": "Foulée tellurique",
+            "desc": "Le terrain difficile d'origine naturelle ne vous ralentit plus, et vous traversez sans peine ni blessure les plantes non magiques (ronces, épines...). Vous avez de plus l'avantage aux jets de sauvegarde contre les plantes façonnées par magie pour entraver, comme celles du sort Enchevêtrement."
           },
           {
             "level": 10,
-            "name": "Communion nature",
-            "desc": "Vous ne pouvez plus être empoisonné ni tomber malade : vous êtes immunisé contre le poison et les maladies. De plus, vous êtes immunisé contre les effets de charme et d'effroi provoqués par des créatures élémentaires ou féeriques."
+            "name": "Protégé de dame Nature",
+            "desc": "Vous ne pouvez plus être empoisonné ni tomber malade. De plus, les créatures élémentaires et féeriques ne peuvent ni vous charmer ni vous effrayer."
           },
           {
             "level": 14,
-            "name": "Sanctuaire naturel",
-            "desc": "Les bêtes et les plantes ont du mal à vous attaquer. Quand une telle créature vous prend pour cible d'une attaque, elle doit d'abord réussir un jet de sauvegarde de Sagesse (DD égal à votre DD de sauvegarde des sorts de druide). En cas d'échec, elle doit choisir une autre cible, sinon son attaque a le désavantage contre vous. Si elle réussit, elle est immunisée contre cet effet pendant 24 heures. La créature sait qu'elle subit cet effet avant de choisir de vous attaquer."
+            "name": "Sanctuaire de dame Nature",
+            "desc": "Bêtes et plantes hésitent à vous attaquer. Quand l'une d'elles vous prend pour cible, elle doit d'abord réussir un jet de sauvegarde de Sagesse (DD égal à celui de vos sorts de druide) ; si elle échoue, elle doit choisir une autre cible, faute de quoi son attaque échoue automatiquement. Si elle réussit, elle devient insensible à cet effet pendant 24 heures. La créature sait ce qui l'attend avant de décider de vous attaquer."
           }
         ]
       },
@@ -2062,7 +2062,7 @@ const ARCHETYPES = {
           {
             "level": 14,
             "name": "Mille formes",
-            "desc": "Vous pouvez lancer le sort Modification de soi (Alter Self) à volonté, sans dépenser d'emplacement de sort. Ce sort ne vise que vous-même, et vous pouvez l'utiliser autant de fois que vous le voulez pour changer subtilement votre apparence ou votre corps."
+            "desc": "Vous lancez le sort modification d'apparence à volonté, sans dépenser d'emplacement. Il ne s'applique qu'à vous et vous laisse retoucher votre allure ou votre forme autant de fois que vous le voulez."
           }
         ]
       }
@@ -2211,18 +2211,18 @@ const ARCHETYPES = {
           },
           {
             "level": 6,
-            "name": "Quiétude totale",
-            "desc": "Par une action, vous dépensez 1 point de ki pour vous soigner. Vous récupérez un nombre de points de vie égal à trois fois votre niveau de moine (par exemple 18 PV au niveau 6). Vous ne pouvez le faire qu'une seule fois entre deux repos longs."
+            "name": "Plénitude physique",
+            "desc": "Par une action, vous vous soignez d'un nombre de points de vie égal à trois fois votre niveau de moine (par exemple 18 au niveau 6). Cette guérison ne coûte aucun ki, mais vous devez terminer un repos long avant de vous en resservir."
           },
           {
             "level": 11,
             "name": "Tranquillité",
-            "desc": "Au terme d'un repos long, vous baignez dans un calme profond qui reproduit l'effet du sort apaisement des émotions, sans coût. Toute créature qui veut vous attaquer doit d'abord réussir un jet de sauvegarde de Sagesse (DD de votre ki) ; en cas d'échec, elle doit choisir une autre cible ou son attaque échoue. Cet état prend fin si vous attaquez, lancez un sort qui inflige des dégâts, ou blessez une créature."
+            "desc": "Au terme d'un repos long, vous vous enveloppez d'un calme profond qui reproduit le sort sanctuaire jusqu'à votre prochain repos long, sans dépenser de ki. Toute créature qui veut vous attaquer ou vous viser d'un sort néfaste doit d'abord réussir un jet de sauvegarde de Sagesse (DD = 8 + votre modificateur de Sagesse + votre bonus de maîtrise) ; sinon elle doit choisir une autre cible, ou son action est perdue. L'effet cesse dès que vous attaquez, lancez un sort néfaste, ou infligez des dégâts."
           },
           {
             "level": 17,
-            "name": "Paume tremblante",
-            "desc": "En touchant une créature avec une attaque à mains nues, vous dépensez 3 points de ki pour poser en elle des vibrations mortelles qui durent un certain nombre de jours (égal à votre niveau de moine). Ensuite, à tout moment, vous pouvez déclencher ces vibrations par une action, sans coût. La créature subit alors 10d10 dégâts nécrotiques, ou la moitié si elle réussit un jet de sauvegarde de Constitution (DD de votre ki). Vous ne pouvez avoir ces vibrations posées que sur une seule créature à la fois."
+            "name": "Paume frémissante",
+            "desc": "En touchant une créature d'une attaque à mains nues, vous pouvez dépenser 3 points de ki pour installer en elle des vibrations mortelles, qui persistent un nombre de jours égal à votre niveau de moine. Tant que vous êtes sur le même plan qu'elle, vous pouvez, par une action et sans coût, les déclencher : elle fait un jet de sauvegarde de Constitution (DD de votre ki). En cas d'échec, elle tombe aussitôt à 0 point de vie ; en cas de réussite, elle subit tout de même 10d10 dégâts nécrotiques. Vous ne pouvez viser qu'une créature à la fois, et vous pouvez mettre fin aux vibrations sans danger, sans action."
           }
         ]
       },
@@ -2234,21 +2234,21 @@ const ARCHETYPES = {
           {
             "level": 3,
             "name": "Arts de l'ombre",
-            "desc": "Par une action, vous dépensez 2 points de ki pour lancer l'un de ces sorts sans en avoir besoin des composantes : ténèbres, vision dans le noir, passage sans trace ou silence. De plus, vous voyez déjà comme un être doté de vision dans le noir : gratuitement, sans dépenser de ki, votre sens perçoit dans l'obscurité comme si c'était de la pénombre."
+            "desc": "Par une action, vous dépensez 2 points de ki pour lancer, sans composante matérielle, l'un de ces sorts : ténèbres, vision dans le noir, passage sans trace ou silence. De plus, vous connaissez le tour de magie illusion mineure s'il ne vous était pas déjà acquis."
           },
           {
             "level": 6,
-            "name": "Pas de l'ombre",
+            "name": "Foulée d'ombre",
             "desc": "Quand vous vous trouvez dans une zone de pénombre ou d'obscurité, vous pouvez par une action bonus vous téléporter jusqu'à 18 mètres vers un autre emplacement plongé lui aussi dans la pénombre ou l'obscurité que vous voyez. Après cette téléportation, vous avez l'avantage à votre première attaque de mêlée effectuée avant la fin de ce tour."
           },
           {
             "level": 11,
-            "name": "Cape d'ombre",
+            "name": "Linceul d'ombre",
             "desc": "Tant que vous êtes dans une zone de pénombre ou d'obscurité, vous pouvez par une action devenir invisible. Vous restez invisible jusqu'à ce que vous fassiez une attaque, lanciez un sort, ou vous retrouviez dans une zone de lumière vive."
           },
           {
             "level": 17,
-            "name": "Frappe de l'ombre",
+            "name": "Opportuniste",
             "desc": "Quand une créature située à 1,50 mètre de vous est touchée par une attaque venant d'une autre personne que vous, vous pouvez utiliser votre réaction pour faire une attaque à mains nues contre cette créature."
           }
         ]
@@ -2261,12 +2261,12 @@ const ARCHETYPES = {
           {
             "level": 3,
             "name": "Disciple des éléments",
-            "desc": "Vous canalisez les éléments à travers votre ki. Vous connaissez la discipline Harmonie élémentaire et un certain nombre de disciplines élémentaires de votre choix (deux au niveau 3). Beaucoup reproduisent des sorts élémentaires que vous lancez en dépensant des points de ki, sans composantes matérielles. Vous pouvez dépenser des points de ki supplémentaires pour lancer certaines disciplines à un niveau de sort plus élevé, dans la limite de votre ki disponible."
+            "desc": "Vous canalisez les éléments par votre ki. Vous connaissez la discipline Lien élémentaire ainsi qu'une autre discipline élémentaire de votre choix (soit deux disciplines au niveau 3). Beaucoup de disciplines reproduisent des sorts élémentaires, que vous lancez en dépensant du ki, sans composante matérielle. À partir du niveau 5, vous pouvez dépenser du ki supplémentaire pour lancer certaines à un niveau de sort supérieur, sans dépasser le maximum de ki par sort permis à votre niveau."
           },
           {
             "level": 6,
             "name": "Discipline supplémentaire",
-            "desc": "Vous apprenez une discipline élémentaire supplémentaire de votre choix. À chaque fois que vous gagnez un niveau de moine, vous pouvez aussi remplacer une discipline connue par une autre."
+            "desc": "Vous apprenez une discipline élémentaire de plus. Par ailleurs, chaque fois que vous apprenez une nouvelle discipline élémentaire (aux niveaux 6, 11 et 17), vous pouvez remplacer une discipline que vous connaissez déjà par une autre."
           },
           {
             "level": 11,
@@ -2517,18 +2517,18 @@ const ARCHETYPES = {
           },
           {
             "level": 9,
-            "name": "Imposteur",
-            "desc": "Aptitude passive, à partir du niveau 9. Après avoir observé et étudié une personne assez longtemps, vous pouvez prendre son identité de façon très convaincante : sa voix, sa démarche, ses manières et son apparence. Vous avez l'avantage sur les tests pour convaincre les autres que vous êtes bien cette personne."
+            "name": "Expert en infiltration",
+            "desc": "Vous savez vous forger de fausses identités convaincantes. En y consacrant sept jours de préparation et 25 po, vous établissez le passé, le métier et les relations d'un personnage inventé - jamais celui d'une personne réelle existante : faux papiers, lettres de recommandation, tenue crédible. Ensuite, tant que vous portez ce déguisement, on vous prend pour cette personne jusqu'à ce qu'un indice sérieux éveille les soupçons."
           },
           {
             "level": 13,
-            "name": "Frappe mortelle",
-            "desc": "Aptitude passive, à partir du niveau 13. Quand vous touchez une créature prise par surprise avec une attaque, elle doit réussir un jet de sauvegarde de Constitution (DD = 8 + votre modificateur de Dextérité + votre bonus de maîtrise). En cas d'échec, tous les dégâts de cette attaque contre la cible sont doublés (pas seulement ceux de l'Attaque sournoise)."
+            "name": "Imposteur",
+            "desc": "Vous imitez à la perfection la voix, l'écriture et les manières d'autrui. Il vous faut d'abord l'étudier au moins trois heures en tout - l'écouter parler, examiner ses écrits, observer sa gestuelle. Un observateur ordinaire n'y voit que du feu ; si quelqu'un doute, vous avez l'avantage à vos tests de Charisme (Tromperie) pour ne pas être démasqué."
           },
           {
             "level": 17,
-            "name": "Mort apparente",
-            "desc": "Aptitude passive, à partir du niveau 17. Quand une créature vous touche avec une attaque, vous pouvez utiliser votre réaction pour lancer un dé et feindre la mort : vous tombez à terre et faites le mort de façon convaincante. Vous restez ainsi jusqu'à la fin de votre prochain tour, et vos attaques restent des critiques contre toute cible surprise, ce qui vous laisse le temps de préparer un coup mortel."
+            "name": "Frappe meurtrière",
+            "desc": "Vous êtes passé maître dans l'art de tuer d'un coup. Quand vous touchez d'une attaque une créature prise par surprise, elle tente un jet de sauvegarde de Constitution dont le DD vaut 8 + votre modificateur de Dextérité + votre bonus de maîtrise. En cas d'échec, tous les dégâts de cette attaque contre elle sont doublés."
           }
         ]
       },
@@ -2588,7 +2588,7 @@ const ARCHETYPES = {
           {
             "level": 6,
             "name": "Affinite elementaire",
-            "desc": "À partir du niveau 6. Passif : quand vous lancez un sort qui inflige des dégâts du type lié à votre dragon, vous ajoutez votre modificateur de Charisme à ces dégâts. En plus, par une action, vous pouvez dépenser 1 point de sorcellerie pour obtenir une résistance à ce type de dégâts pendant 1 heure."
+            "desc": "Quand vous lancez un sort infligeant le type de dégâts de votre dragon, ajoutez votre modificateur de Charisme à l'un de ses jets de dégâts. Dans le même élan, vous pouvez dépenser 1 point de sorcellerie pour gagner la résistance à ce type de dégâts pendant 1 heure - sans action, l'effet naît du lancement du sort."
           },
           {
             "level": 14,
@@ -2598,7 +2598,7 @@ const ARCHETYPES = {
           {
             "level": 18,
             "name": "Presence draconique",
-            "desc": "À partir du niveau 18. Par une action, vous dépensez 5 points de sorcellerie pour dégager pendant 1 minute une aura terrifiante ou fascinante sur 18 mètres autour de vous. Chaque créature qui commence son tour dans l'aura, ou y entre pour la première fois, doit réussir un jet de sauvegarde de Sagesse (DD basé sur votre Charisme) ou être charmée (si vous avez choisi la fascination) ou effrayée (si vous avez choisi la terreur) par vous jusqu'à la fin de l'effet. Une créature qui réussit son jet est immunisée contre votre aura pendant 24 heures."
+            "desc": "Par une action, vous dépensez 5 points de sorcellerie pour déployer sur 18 mètres une aura de fascination ou d'effroi (à votre choix), pendant 1 minute ou jusqu'à ce que votre concentration cesse. Chaque créature hostile qui commence son tour dans l'aura doit réussir un jet de sauvegarde de Sagesse (DD basé sur votre Charisme), sinon elle est charmée (fascination) ou effrayée (effroi) le temps de l'effet. Qui réussit ce jet devient insensible à votre aura pendant 24 heures."
           }
         ]
       },
@@ -2610,7 +2610,7 @@ const ARCHETYPES = {
           {
             "level": 1,
             "name": "Sursaut de magie sauvage",
-            "desc": "Passif. Votre magie est instable. Chaque fois que vous lancez un sort d'ensorceleur de niveau 1 ou plus, le MJ peut vous demander de lancer un d20. Sur un 1, vous lancez sur la table des effets de magie sauvage et l'effet obtenu se produit aussitôt."
+            "desc": "Passif. Votre magie est instable. Une fois par tour, juste après que vous ayez lancé un sort d'ensorceleur de niveau 1 ou plus, le MJ peut vous faire lancer un d20 : sur un 1, vous tirez aussitôt un effet sur la table de magie sauvage."
           },
           {
             "level": 1,
@@ -2620,7 +2620,7 @@ const ARCHETYPES = {
           {
             "level": 6,
             "name": "Flexion du hasard",
-            "desc": "À partir du niveau 6. Quand une créature que vous voyez à 18 mètres fait un jet d'attaque, de caractéristique ou de sauvegarde, vous pouvez utiliser votre réaction et dépenser 2 points de sorcellerie pour lancer 1d4 : vous ajoutez ou retirez le résultat à son jet. Vous pouvez décider après avoir vu le dé, mais avant de connaître l'effet."
+            "desc": "Quand une créature que vous voyez fait un jet d'attaque, de caractéristique ou de sauvegarde, vous pouvez, en réaction, dépenser 2 points de sorcellerie pour lancer 1d4 et l'ajouter ou le retrancher (à votre choix) de son jet. Vous décidez après avoir vu son dé, mais avant d'en connaître l'effet."
           },
           {
             "level": 14,
@@ -2652,18 +2652,18 @@ const ARCHETYPES = {
           },
           {
             "level": 6,
-            "name": "Résistance fielleuse",
-            "desc": "Au terme d'un repos court ou long, choisissez un type de dégâts parmi contondant, perforant ou tranchant. Jusqu'à votre prochain repos, vous avez la résistance à ce type de dégâts (vous n'en subissez que la moitié). La résistance ne s'applique pas si les dégâts proviennent d'une arme magique."
+            "name": "Chance du ténébreux",
+            "desc": "Vous pouvez implorer la faveur de votre patron. Quand vous faites un test de caractéristique ou un jet de sauvegarde, vous pouvez y ajouter 1d10 ; vous décidez après avoir vu le dé, mais avant de connaître le résultat. Utilisable une fois, puis à récupérer après un repos court ou long."
           },
           {
             "level": 10,
-            "name": "Marchandage d'âmes",
-            "desc": "Quand vous devriez tomber à 0 point de vie à cause de dégâts, vous pouvez à la place tomber à 1 point de vie et rester debout. Cela ne fonctionne pas si les dégâts vous tueraient sur le coup (dommages massifs suffisants pour vous réduire bien en dessous de 0). Utilisable une fois, puis vous devez terminer un repos long pour vous en resservir."
+            "name": "Résistance fiélonne",
+            "desc": "À chaque fin de repos court ou long, choisissez un type de dégâts : vous n'en subissez plus que la moitié jusqu'à ce que vous en désigniez un autre de la même façon. Cette résistance ne joue pas contre les armes magiques ni les armes en argent."
           },
           {
             "level": 14,
-            "name": "Précipitation infernale",
-            "desc": "Quand vous touchez une créature avec une attaque, vous pouvez utiliser cette aptitude pour la précipiter instantanément à travers les Plans inférieurs. Il n'y a pas de jet de sauvegarde : la cible disparaît et endure un voyage cauchemardesque, puis réapparaît à l'endroit qu'elle occupait (ou l'emplacement libre le plus proche) à la fin de votre prochain tour, en subissant 10d10 dégâts psychiques. Utilisable une fois, puis vous devez terminer un repos long pour vous en resservir."
+            "name": "Traversée des enfers",
+            "desc": "Quand vous touchez une créature d'une attaque, vous pouvez la précipiter à travers les Plans inférieurs. Sans jet de sauvegarde, elle disparaît dans un cauchemar et réapparaît à la fin de votre prochain tour là où elle était (ou au plus proche espace libre). Si ce n'est pas un fiélon, elle subit 10d10 dégâts psychiques à son retour. Utilisable une fois, puis à récupérer après un repos long."
           }
         ]
       },
@@ -2675,7 +2675,7 @@ const ARCHETYPES = {
           {
             "level": 1,
             "name": "Présence féerique",
-            "desc": "Par une action, vous forcez chaque créature dans un rayon de 3 mètres autour de vous à faire un jet de sauvegarde de Sagesse. Choisissez au préalable si l'effet charme ou effraie. Sur un échec, la créature est charmée ou effrayée par vous jusqu'à la fin de votre prochain tour. Utilisable une fois, puis récupérée après un repos court ou long."
+            "desc": "Par une action, toutes les créatures dans un cube de 3 mètres d'arête partant de vous doivent réussir un jet de sauvegarde de Sagesse contre le DD de vos sorts. Décidez d'avance si vous cherchez à charmer ou à effrayer : sur un échec, la créature est charmée ou effrayée (selon votre choix) jusqu'à la fin de votre prochain tour. Utilisable une fois, puis à récupérer après un repos court ou long."
           },
           {
             "level": 6,
@@ -2684,13 +2684,13 @@ const ARCHETYPES = {
           },
           {
             "level": 10,
-            "name": "Défense séduisante",
-            "desc": "Vous ne pouvez plus être charmé, et vous en êtes libéré si vous l'étiez déjà. De plus, quand une créature tente de vous charmer, vous pouvez utiliser votre réaction pour retourner le charme contre elle : elle doit réussir un jet de sauvegarde de Sagesse, sinon elle est effrayée par vous pendant 1 minute."
+            "name": "Défenses captivantes",
+            "desc": "Le charme n'a plus prise sur vous : vous ne pouvez plus être charmé et vous vous libérez aussitôt si vous l'étiez. Mieux, quand une créature tente de vous charmer, vous pouvez, en réaction, retourner ce charme contre elle : elle rate un jet de sauvegarde de Sagesse contre le DD de vos sorts et se retrouve charmée par vous pendant 1 minute, ou jusqu'à ce qu'elle subisse des dégâts."
           },
           {
             "level": 14,
-            "name": "Cercle des fées",
-            "desc": "Par une action, désignez une créature que vous voyez à moins de 18 mètres. Elle doit réussir un jet de sauvegarde de Sagesse, sinon, au choix, elle est charmée ou effrayée par vous pendant 1 minute (ou jusqu'à ce que votre concentration cesse). Tant que l'effet dure, elle est neutralisée et perçoit un monde illusoire à la place de la réalité. Utilisable une fois, puis récupérée après un repos court ou long."
+            "name": "Sombre délire",
+            "desc": "Par une action, désignez une créature que vous voyez à 18 mètres ou moins : sur un jet de sauvegarde de Sagesse raté (DD de vos sorts), elle est charmée ou effrayée (à votre choix) pendant 1 minute, tant que vous restez concentré, ou jusqu'à ce qu'elle subisse des dégâts. Le temps de l'effet, elle se croit égarée dans un royaume brumeux dont vous fixez l'aspect, et ne perçoit qu'elle-même, vous et cette illusion. Utilisable une fois, puis à récupérer après un repos court ou long."
           }
         ]
       },
@@ -2701,18 +2701,18 @@ const ARCHETYPES = {
         "features": [
           {
             "level": 1,
-            "name": "Esprit indicible",
-            "desc": "Vous pouvez communiquer par télépathie avec n'importe quelle créature située à moins de 9 mètres que vous voyez. Il faut que vous partagiez au moins une langue, ou qu'elle comprenne déjà au moins une langue. La créature n'a pas besoin de vous répondre par télépathie, mais si elle le fait, vous percevez sa réponse. Ce lien est passif et ne coûte aucune action."
+            "name": "Esprit éveillé",
+            "desc": "Vous pouvez parler en pensée à toute créature que vous voyez à 9 mètres ou moins. Nul besoin d'une langue commune, mais elle doit comprendre au moins une langue. Elle n'est pas tenue de répondre ; si elle le fait par la pensée, vous la percevez. Ce lien est passif et ne coûte aucune action."
           },
           {
             "level": 6,
-            "name": "Bouclier de la pensée",
-            "desc": "Vous avez en permanence la résistance aux dégâts psychiques (vous n'en subissez que la moitié). De plus, quand une créature vous inflige des dégâts psychiques, elle subit en retour le même nombre de dégâts psychiques que vous avez reçus. Cet effet est passif et automatique."
+            "name": "Protection entropique",
+            "desc": "Quand une créature vous vise d'une attaque, vous pouvez, en réaction, lui imposer un désavantage à ce jet. Si l'attaque échoue à cause de ce désavantage, votre prochaine attaque contre cette même créature bénéficie de l'avantage, à condition de la porter avant la fin de votre prochain tour. Utilisable une fois, puis à récupérer après un repos court ou long."
           },
           {
             "level": 10,
-            "name": "Esclaves indésirés",
-            "desc": "Cette aptitude renforce votre protection mentale : vous ne pouvez plus être charmé ni effrayé pendant que vous êtes conscient, et votre esprit résiste à l'intrusion. Elle remplace la version de niveau 6 en cas de variante utilisée à table ; référez-vous à votre patron pour la forme exacte, mais l'idée reste une immunité mentale accrue avec renvoi de l'effet vers son lanceur une fois par repos long."
+            "name": "Bouclier mental",
+            "desc": "Vos pensées deviennent illisibles : nulle télépathie ni aucun moyen ne peut les sonder sans votre accord. De plus, vous ne subissez que la moitié des dégâts psychiques, et toute créature qui vous en inflige en subit autant en retour."
           },
           {
             "level": 14,
@@ -2739,8 +2739,8 @@ const ARCHETYPES = {
           },
           {
             "level": 2,
-            "name": "Gardien arcanique",
-            "desc": "À partir du niveau 6, tant que votre gardien arcanique est actif, vous pouvez le faire protéger un allié. En réaction, quand une créature que vous voyez à moins de 9 mètres subit des dégâts, la réserve de points de vie du gardien absorbe ces dégâts à sa place (comme elle le ferait pour vous)."
+            "name": "Protection arcanique",
+            "desc": "Quand vous lancez un sort d'abjuration de niveau 1 ou plus, vous pouvez, dans le même geste, dresser autour de vous un sceau protecteur. Ce sceau a un réservoir de points de vie égal à deux fois votre niveau de magicien plus votre modificateur d'Intelligence ; tant qu'il en a, c'est lui qui encaisse les dégâts que vous subiriez, et vous ne prenez que le surplus une fois le sceau à zéro. Même vidé, il tient : chaque sort d'abjuration de niveau 1 ou plus que vous lancez ensuite lui rend deux fois le niveau du sort en points de vie. Un seul sceau à la fois ; il dure jusqu'à votre prochain repos long, après quoi vous pouvez en dresser un nouveau."
           },
           {
             "level": 6,
@@ -2749,13 +2749,13 @@ const ARCHETYPES = {
           },
           {
             "level": 10,
-            "name": "Résistance magique avancée",
-            "desc": "Aptitude passive à partir du niveau 10. Vous avez l'avantage à tous vos jets de sauvegarde contre les sorts et les autres effets magiques."
+            "name": "Abjuration améliorée",
+            "desc": "Vos sorts défensifs frappent plus juste. Quand un sort d'abjuration vous demande un jet de caractéristique - par exemple pour contrer ou dissiper une magie - ajoutez votre bonus de maîtrise à ce jet."
           },
           {
             "level": 14,
-            "name": "Imposer la dissipation",
-            "desc": "À partir du niveau 14, votre dissipation devient offensive. Quand vous réussissez à dissiper un sort sur une créature avec dissipation de la magie, cette créature subit des dégâts de force : 1d8 par niveau du sort dissipé. Elle fait un jet de sauvegarde de Constitution pour réduire ces dégâts de moitié."
+            "name": "Résistance aux sorts",
+            "desc": "La magie a de moins en moins de prise sur vous : vous faites vos jets de sauvegarde contre les sorts avec avantage, et vous ne subissez que la moitié des dégâts infligés par les sorts."
           }
         ]
       },
@@ -2786,8 +2786,8 @@ const ARCHETYPES = {
           },
           {
             "level": 14,
-            "name": "Invocation durable",
-            "desc": "À partir du niveau 14, les créatures que vous invoquez ou créez avec un sort d'invocation ont l'avantage aux jets de sauvegarde contre l'effet de dissipation de la magie tant qu'elles sont à moins de 9 mètres de vous."
+            "name": "Convocations coriaces",
+            "desc": "Les créatures que vous faites apparaître tiennent bien mieux au combat : chaque créature que vous invoquez ou créez par un sort d'invocation reçoit 30 points de vie temporaires dès son arrivée."
           }
         ]
       },
@@ -2808,8 +2808,8 @@ const ARCHETYPES = {
           },
           {
             "level": 6,
-            "name": "Savoir expert",
-            "desc": "À partir du niveau 6, vous pouvez lancer le sort divination ou contact avec l'au-delà sans dépenser d'emplacement ni de composante matérielle, et sans risque d'effet néfaste. Une fois cette aptitude utilisée, vous devez terminer un repos court ou long avant de vous en resservir."
+            "name": "Divination experte",
+            "desc": "Vos sorts de prescience s'entretiennent d'eux-mêmes. Lorsque vous dépensez un emplacement pour lancer un sort de divination de niveau 2 ou plus, vous récupérez aussitôt un emplacement dépensé, d'un niveau inférieur à celui du sort lancé et jamais supérieur au niveau 5."
           },
           {
             "level": 10,
@@ -2840,8 +2840,8 @@ const ARCHETYPES = {
           },
           {
             "level": 6,
-            "name": "Détourner l'enchantement",
-            "desc": "À partir du niveau 6, en réaction quand une créature que vous voyez à moins de 9 mètres vous vise (ou vise un allié à portée) avec un effet de charme ou de peur, vous pouvez renvoyer cet effet sur la créature qui l'a lancé plutôt que de le subir."
+            "name": "Charme instinctif",
+            "desc": "Quand une créature que vous voyez à 9 mètres ou moins vous attaque, vous pouvez, en réaction, dévier son coup - à condition qu'une autre cible soit à sa portée. L'assaillant tente un jet de sauvegarde de Sagesse contre le DD de vos sorts ; s'il échoue, il doit reporter son attaque sur la créature la plus proche de lui, vous et lui exceptés. Vous choisissez d'agir avant de savoir si le coup vous aurait touché. En cas de sauvegarde réussie, vous ne pouvez plus détourner ainsi les attaques de cette créature avant un repos long. Une créature insensible au charme ne se laisse pas berner."
           },
           {
             "level": 10,
@@ -2867,18 +2867,18 @@ const ARCHETYPES = {
           },
           {
             "level": 2,
-            "name": "Façonner les sorts",
-            "desc": "Aptitude passive à partir du niveau 6. Quand une créature réussit son jet de sauvegarde contre l'un de vos sorts mineurs (cantrips) d'évocation, elle subit tout de même la moitié des dégâts du sort (au lieu de rien), sans en subir les autres effets."
+            "name": "Façonneur de sorts",
+            "desc": "Vous savez épargner vos alliés du souffle de vos propres sorts. Quand vous lancez un sort d'évocation qui atteint plusieurs créatures, désignez-en jusqu'à un nombre égal à 1 plus le niveau du sort : ces créatures réussissent d'office leur sauvegarde et ne subissent aucun dégât, là même où elles n'auraient dû en éviter que la moitié."
           },
           {
             "level": 6,
-            "name": "Sorts mineurs renforcés",
-            "desc": "Aptitude passive à partir du niveau 6. Quand un de vos sorts mineurs (cantrips) d'évocation qui vise une créature rate son jet d'attaque, cette créature subit tout de même des dégâts égaux à votre modificateur d'Intelligence (du type de dégâts du sort)."
+            "name": "Sort mineur puissant",
+            "desc": "Vos tours de magie mordent même les cibles vigilantes. Quand une créature réussit sa sauvegarde contre l'un de vos sorts mineurs, elle en subit tout de même la moitié des dégâts - mais aucun de ses autres effets."
           },
           {
             "level": 10,
-            "name": "Évocateur acharné",
-            "desc": "Aptitude passive à partir du niveau 10. Quand vous lancez un sort d'évocation qui impose un jet de sauvegarde pour subir la moitié des dégâts, une créature qui réussit ne subit aucun dégât, et une créature qui échoue subit les dégâts normaux (sans changement). Autrement dit, vos sorts d'évocation à sauvegarde infligent toujours au moins la moitié des dégâts, même quand la cible réussit son jet."
+            "name": "Évocation améliorée",
+            "desc": "Quand vous lancez un sort de magicien de l'école d'évocation, vous pouvez ajouter votre modificateur d'Intelligence à l'un de ses jets de dégâts."
           },
           {
             "level": 14,
@@ -2947,7 +2947,7 @@ const ARCHETYPES = {
           {
             "level": 14,
             "name": "Commandement des morts-vivants",
-            "desc": "À partir du niveau 14, par une action, vous ciblez un mort-vivant que vous voyez à moins de 18 mètres. Il fait un jet de sauvegarde de Charisme contre le DD de vos sorts : en cas d'échec, il vous obéit pendant 24 heures, ou de façon permanente s'il a un facteur de puissance égal ou inférieur à votre niveau de magicien divisé par trois. Vous pouvez ainsi contrôler un seul mort-vivant à la fois de manière permanente ; en dominer un autre libère le précédent."
+            "desc": "Par une action, désignez un mort-vivant à 18 mètres ou moins que vous voyez : il tente une sauvegarde de Charisme contre le DD de vos sorts. Réussie, il vous échappe à jamais pour ce pouvoir. Ratée, il vous devient loyal et obéit à vos ordres jusqu'à ce que vous employiez ce pouvoir sur un autre. Les mort-vivants intelligents résistent mieux : à 8 d'Intelligence ou plus, ils ont l'avantage à la sauvegarde ; à 12 ou plus, un échec leur laisse une nouvelle tentative au bout de chaque heure, jusqu'à se libérer."
           }
         ]
       },
@@ -2973,13 +2973,13 @@ const ARCHETYPES = {
           },
           {
             "level": 10,
-            "name": "Don de l'alchimiste",
-            "desc": "À partir du niveau 10, tant que vous avez votre pierre du transmutateur, vous pouvez y puiser un effet magique unique. Par une action, choisissez l'un de ces effets : lancer transformation générale (polymorph) sur vous-même sans dépenser d'emplacement ; vous octroyer une vitesse de nage égale à votre vitesse et la respiration aquatique pendant 1 heure ; obtenir une vitesse de vol égale à votre vitesse pendant 10 minutes ; ou vous soigner de 3d8 points de vie et neutraliser tout poison ou maladie qui vous affecte. Une fois un effet utilisé, il faut recréer la pierre lors d'un repos court avant de réutiliser cette aptitude."
+            "name": "Métamorphe",
+            "desc": "Vous inscrivez le sort métamorphose à votre grimoire s'il n'y figure pas encore. Vous pouvez le lancer sans dépenser d'emplacement, mais seulement sur vous-même et pour prendre la forme d'une bête de facteur de puissance 1 au plus ; après quoi il vous faut un repos court ou long avant de recommencer (rien ne vous empêche de le lancer normalement en y mettant un emplacement)."
           },
           {
             "level": 14,
             "name": "Maître transmutateur",
-            "desc": "À partir du niveau 14, vous pouvez consumer votre pierre du transmutateur pour lancer, sans emplacement ni composante, l'un de ces sorts : transformation de pierre en chair, transformation générale (polymorph), soins de groupe (mass polymorph selon interprétation), ou rajeunissement partiel. Concrètement, vous choisissez un effet majeur (transmuter une matière, soigner et purger tous les maux d'une créature, ou modifier la forme d'une créature consentante). La pierre est détruite après usage et doit être recréée."
+            "desc": "Par une action, vous consumez la magie amassée dans votre pierre du transmutateur : choisissez l'un de ces quatre effets, après quoi la pierre se brise et ne peut renaître avant un repos long. Jouvence - au contact de la pierre, une créature consentante paraît rajeunir de 3d10 ans (sans descendre sous 13 ans, et sans allonger sa vie). Panacée - la créature touchée est lavée de toute maladie, malédiction et poison, et retrouve tous ses points de vie. Restitution de vie - vous lancez rappel à la vie sur la créature touchée, sans emplacement ni besoin de connaître le sort. Transformation majeure - vous changez un objet non magique (au plus un cube de 1,50 m) en un autre objet non magique de taille, masse et valeur comparables, au terme de 10 minutes de façonnage."
           }
         ]
       }
