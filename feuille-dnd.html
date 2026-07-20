@@ -2085,7 +2085,7 @@ const ARCHETYPES = {
           {
             "level": 7,
             "name": "Athlète remarquable",
-            "desc": "Aptitude passive. Pour tout test de caractéristique de Force, de Dextérité ou de Constitution où vous n'êtes pas déjà maîtrisé, ajoutez la moitié de votre bonus de maîtrise (arrondi à l'entier supérieur). De plus, quand vous faites un saut en longueur ou en hauteur avec élan, la distance franchie augmente de votre modificateur de Force (au minimum 30 cm)."
+            "desc": "Pour tout test de Force, de Dextérité ou de Constitution où vous n'êtes pas déjà maître, ajoutez la moitié de votre bonus de maîtrise (arrondie au supérieur). De plus, quand vous faites un saut en longueur avec élan, la distance franchie augmente d'une valeur égale à votre modificateur de Force multiplié par 30 cm."
           },
           {
             "level": 10,
@@ -2132,7 +2132,7 @@ const ARCHETYPES = {
           {
             "level": 7,
             "name": "Dés supplémentaires",
-            "desc": "Aptitude passive. Vous disposez désormais de 5 dés de supériorité au lieu de 4, et leur taille passe du d8 au d10."
+            "desc": "Vous disposez d'un dé de supériorité de plus : cinq au lieu de quatre. Leur taille reste le d8 à ce niveau."
           },
           {
             "level": 10,
@@ -2140,9 +2140,14 @@ const ARCHETYPES = {
             "desc": "Vous apprenez 2 manœuvres supplémentaires de votre choix dans la liste du Maître de guerre, en plus de celles que vous connaissez déjà."
           },
           {
+            "level": 10,
+            "name": "Supériorité martiale améliorée",
+            "desc": "Vos dés de supériorité grandissent : ils deviennent des d10 au niveau 10, puis des d12 au niveau 18."
+          },
+          {
             "level": 15,
-            "name": "Dés améliorés (d12)",
-            "desc": "Aptitude passive. La taille de vos dés de supériorité passe au d12, et vous en disposez de 6 au lieu de 5."
+            "name": "Dés de supériorité supplémentaires",
+            "desc": "Vous disposez d'un dé de supériorité de plus : six au lieu de cinq. Leur taille reste le d10 à ce niveau ; ils ne deviendront des d12 qu'au niveau 18."
           },
           {
             "level": 15,
@@ -2150,7 +2155,7 @@ const ARCHETYPES = {
             "desc": "Vous apprenez 2 manœuvres supplémentaires de votre choix dans la liste du Maître de guerre."
           },
           {
-            "level": 18,
+            "level": 15,
             "name": "Implacable",
             "desc": "Aptitude passive. Quand vous lancez l'initiative au début d'un combat sans aucun dé de supériorité disponible, vous en récupérez un automatiquement."
           }
@@ -2173,22 +2178,22 @@ const ARCHETYPES = {
           },
           {
             "level": 7,
-            "name": "Frappe martiale",
+            "name": "Magie de guerre",
             "desc": "Aptitude passive. Lorsque vous utilisez votre action pour lancer un tour de magie (cantrip), vous pouvez faire une attaque d'arme en action bonus dans le même tour."
           },
           {
             "level": 10,
-            "name": "Charge occulte",
-            "desc": "Quand vous utilisez votre Fougue (Action Surge), vous pouvez vous téléporter jusqu'à 9 mètres vers un espace inoccupé que vous voyez. Vous pouvez vous téléporter avant ou après l'action supplémentaire de la Fougue."
-          },
-          {
-            "level": 15,
             "name": "Frappe occulte",
             "desc": "Aptitude passive. Quand vous touchez une créature avec une attaque d'arme, elle subit un désavantage au prochain jet de sauvegarde qu'elle effectue contre un de vos sorts, jusqu'à la fin de votre prochain tour."
           },
           {
+            "level": 15,
+            "name": "Charge arcanique",
+            "desc": "Quand vous utilisez votre Fougue (Action Surge), vous pouvez vous téléporter jusqu'à 9 mètres vers un espace inoccupé que vous voyez. Vous pouvez vous téléporter avant ou après l'action supplémentaire de la Fougue."
+          },
+          {
             "level": 18,
-            "name": "Charge occulte améliorée",
+            "name": "Magie de guerre améliorée",
             "desc": "Aptitude passive. Désormais, quand vous utilisez votre action pour lancer un sort (et plus seulement un tour de magie), vous pouvez faire une attaque d'arme en action bonus dans le même tour."
           }
         ]
@@ -2303,8 +2308,8 @@ const ARCHETYPES = {
           },
           {
             "level": 3,
-            "name": "Conduit divin : repousser l'impie",
-            "desc": "Par une action, vous brandissez votre symbole sacré pour repousser les créatures maléfiques. Chaque mort-vivant et fiélon situé à 9 mètres ou moins qui peut vous voir doit réussir un jet de sauvegarde de Sagesse, sinon il est terrorisé pendant 1 minute. Une créature terrorisée doit s'éloigner de vous et ne peut pas s'en approcher volontairement ; elle refait le jet si elle subit des dégâts, mettant fin à l'effet en cas de réussite. Cela consomme un usage de votre Conduit divin."
+            "name": "Conduit divin : renvoi des impies",
+            "desc": "Par une action (Conduit divin), vous brandissez votre symbole sacré en priant. Chaque mort-vivant et chaque fiélon à 9 mètres ou moins qui vous voit ou vous entend doit réussir un jet de sauvegarde de Sagesse, sinon il est renvoyé pendant 1 minute (ou jusqu'à ce qu'il subisse des dégâts). Une créature renvoyée s'éloigne de vous autant qu'elle peut, ne peut pas s'approcher volontairement à moins de 9 mètres, ne fait aucune réaction, et ne peut que Foncer, tenter de se libérer d'une entrave, ou Esquiver si elle est coincée."
           },
           {
             "level": 7,
@@ -2314,11 +2319,11 @@ const ARCHETYPES = {
           {
             "level": 15,
             "name": "Pureté de l'esprit",
-            "desc": "Effet passif et permanent : vous avez l'avantage à tous vos jets de sauvegarde pour résister au fait d'être charmé et pour résister à la métamorphose (transformation forcée de votre forme)."
+            "desc": "En permanence, vous bénéficiez de l'effet du sort protection contre le mal et le bien. Aberrations, célestes, élémentaires, fées, fiélons et morts-vivants vous attaquent donc avec un désavantage, et ne peuvent ni vous charmer, ni vous effrayer, ni vous posséder."
           },
           {
             "level": 20,
-            "name": "Avatar sacré",
+            "name": "Nimbe sacré",
             "desc": "Par une action, vous émettez une aura de lumière solaire pendant 1 minute : lumière vive sur 9 mètres et lumière faible sur 9 mètres de plus. Tout ennemi qui commence son tour dans la lumière vive subit 10 points de dégâts radiants. De plus, vous avez l'avantage à vos jets de sauvegarde contre les sorts lancés par des fiélons ou des morts-vivants. Utilisable une fois, puis il faut finir un repos long."
           }
         ]
@@ -2336,12 +2341,12 @@ const ARCHETYPES = {
           {
             "level": 3,
             "name": "Conduit divin : courroux de la nature",
-            "desc": "Par une action (Conduit divin), des lianes spectrales jaillissent vers une créature de votre choix, à 3 mètres ou moins, que vous voyez. Elle doit réussir un jet de sauvegarde de Force ou de Dextérité (au choix de la créature) ou être entravée pendant 1 minute. Une créature entravée peut retenter le jet à la fin de chacun de ses tours pour se libérer."
+            "desc": "Par une action (Conduit divin), des lianes spectrales fusent vers une créature à 3 mètres ou moins que vous voyez. Elle rate un jet de sauvegarde de Force ou de Dextérité (à son choix) et se retrouve entravée. À la fin de chacun de ses tours, elle peut refaire ce jet ; en cas de réussite, elle se libère et les lianes se dissipent."
           },
           {
             "level": 3,
-            "name": "Conduit divin : réprimande des indomptés",
-            "desc": "Par une action (Conduit divin), vous brandissez votre symbole sacré. Chaque fée et chaque fiélon à 9 mètres ou moins doit réussir un jet de sauvegarde de Sagesse, sinon la créature est neutralisée et cherche à fuir pendant 1 minute. Une créature déguisée par magie révèle en plus sa vraie forme si elle échoue."
+            "name": "Conduit divin : renvoi des infidèles",
+            "desc": "Par une action (Conduit divin), vous prononcez des paroles anciennes qui blessent fées et fiélons, symbole sacré en main. Chaque fée et chaque fiélon à 9 mètres ou moins qui vous entend doit réussir un jet de sauvegarde de Sagesse, sinon il est renvoyé pendant 1 minute (ou jusqu'à ce qu'il subisse des dégâts) : il s'éloigne de vous autant qu'il peut et ne peut pas s'approcher volontairement à moins de 9 mètres. Si une illusion ou un déguisement magique masquait sa vraie forme, celle-ci se montre le temps du renvoi."
           },
           {
             "level": 7,
@@ -2350,12 +2355,12 @@ const ARCHETYPES = {
           },
           {
             "level": 15,
-            "name": "Âme intemporelle",
+            "name": "Sentinelle immortelle",
             "desc": "Passif. Vous ne vieillissez plus et ne pouvez pas être vieilli par magie. De plus, quand vous devriez tomber à 0 point de vie sans être tué sur le coup, vous pouvez choisir de tomber à 1 point de vie à la place. Utilisable une fois, puis il faut finir un repos long."
           },
           {
             "level": 20,
-            "name": "Champion des anciens",
+            "name": "Champion antique",
             "desc": "Par une action, vous prenez une apparence radieuse pendant 1 minute. Pendant ce temps : vous récupérez 10 points de vie au début de chacun de vos tours ; les sorts de paladin qui vous coûtent une action peuvent être lancés en action bonus ; et les ennemis à 3 mètres ou moins ont un désavantage à leurs jets de sauvegarde contre vos sorts et votre Conduit divin. Utilisable une fois par repos long."
           }
         ]
@@ -2372,28 +2377,28 @@ const ARCHETYPES = {
           },
           {
             "level": 3,
-            "name": "Conduit divin : serment d'inimitié",
+            "name": "Conduit divin : vœu d'hostilité",
             "desc": "Par une action bonus (Conduit divin), vous désignez une créature à 3 mètres ou moins comme votre ennemi juré. Pendant 1 minute, vous avez l'avantage à vos jets d'attaque contre elle. L'effet prend fin plus tôt si la cible tombe à 0 point de vie ou inconsciente."
           },
           {
             "level": 3,
-            "name": "Conduit divin : repousser l'impie",
-            "desc": "Par une action (Conduit divin), vous désignez une créature à 18 mètres ou moins que vous voyez. Elle doit réussir un jet de sauvegarde de Sagesse, sinon elle est effrayée et sa vitesse tombe à 0 pendant 1 minute. L'effet cesse si elle subit des dégâts. Les fiélons et les morts-vivants passent ce jet avec un désavantage."
+            "name": "Conduit divin : conspuer l'ennemi",
+            "desc": "Par une action (Conduit divin), symbole sacré en main, vous clouez au pilori une créature à 18 mètres ou moins que vous voyez. Sauf si elle est insensible à la peur, elle fait un jet de sauvegarde de Sagesse (avec un désavantage si c'est un fiélon ou un mort-vivant). Sur un échec, elle est effrayée pendant 1 minute (ou jusqu'à ce qu'elle subisse des dégâts) et sa vitesse tombe à 0 ; même sur une réussite, sa vitesse est réduite de moitié pendant 1 minute (ou jusqu'à ce qu'elle subisse des dégâts)."
           },
           {
             "level": 7,
-            "name": "Implacable poursuivant",
+            "name": "Vengeur implacable",
             "desc": "Quand vous touchez une créature avec une attaque d'opportunité, vous pouvez aussitôt vous déplacer jusqu'à la moitié de votre vitesse sans provoquer d'attaque d'opportunité. Cela vous permet de coller à un ennemi qui tente de fuir."
           },
           {
             "level": 15,
-            "name": "Âme de vengeance",
-            "desc": "Quand une créature sous l'effet de votre Serment d'inimitié porte une attaque, vous pouvez utiliser votre réaction pour lui porter une attaque de mêlée, si elle est à portée."
+            "name": "Âme vengeresse",
+            "desc": "Quand une créature sous le coup de votre Vœu d'hostilité porte une attaque, vous pouvez, en réaction, riposter d'une attaque de mêlée contre elle, si elle est à votre portée."
           },
           {
             "level": 20,
-            "name": "Ange vengeur",
-            "desc": "Par une action, il vous pousse des ailes spectrales et vous prenez une forme ailée pendant 1 heure : vous gagnez une vitesse de vol de 18 mètres. De plus, au moment de la transformation, les ennemis à 9 mètres ou moins qui vous voient doivent réussir un jet de sauvegarde de Sagesse ou être effrayés pendant 1 minute. Utilisable une fois par repos long."
+            "name": "Ange de la vengeance",
+            "desc": "Par une action, vous vous métamorphosez pendant 1 heure : des ailes vous poussent et vous confèrent une vitesse de vol de 18 mètres, et vous dégagez une aura de menace sur 9 mètres de rayon. La première fois qu'une créature entre dans l'aura, ou si elle y commence son tour en plein combat, elle doit réussir un jet de sauvegarde de Sagesse, sinon elle est effrayée pendant 1 minute (ou jusqu'à ce qu'elle subisse des dégâts). Les attaques contre une créature ainsi effrayée ont l'avantage. Utilisable une fois, puis à récupérer après un repos long."
           }
         ]
       }
@@ -2416,17 +2421,17 @@ const ARCHETYPES = {
           {
             "level": 7,
             "name": "Tactiques défensives",
-            "desc": "Aptitude passive obtenue au niveau 7. Vous choisissez une option défensive permanente. « Échapper à la horde » : les attaques d'opportunité contre vous sont faites avec désavantage. « Défense multiple » : quand une créature vous touche, vous gagnez +4 à votre classe d'armure contre les autres attaques de cette même créature jusqu'à la fin de votre prochain tour. « Volonté d'acier » : vous avez l'avantage aux jets de sauvegarde contre l'état terrorisé (effrayé). Vous ne choisissez qu'une seule de ces options."
+            "desc": "Au niveau 7, vous adoptez une tactique défensive permanente, à choisir : « Échapper à la horde » - les attaques d'opportunité contre vous se font avec un désavantage. « Défense contre les attaques multiples » - quand une créature vous touche, vous gagnez +4 à la CA contre toutes ses autres attaques pour le reste du tour. « Volonté d'acier » - vous avez l'avantage aux jets de sauvegarde contre l'état effrayé. Vous ne choisissez qu'une seule de ces options."
           },
           {
             "level": 11,
             "name": "Attaques multiples",
-            "desc": "Aptitude obtenue au niveau 11 qui améliore votre attaque. Vous choisissez une option permanente. « Salve » : par une action, vous dépensez une munition pour toucher toutes les créatures de votre choix dans une zone de 3 m de rayon à portée de votre arme à distance ; chacune fait un jet de sauvegarde de Dextérité (DD basé sur votre Sagesse) et subit les dégâts de l'arme en cas d'échec. « Tourbillon d'acier » : par une action, vous frappez toutes les créatures situées à moins de 1,50 m de vous avec une arme de corps à corps ; chacune fait un jet de sauvegarde de Dextérité (même DD) et subit les dégâts de l'arme en cas d'échec. Vous ne choisissez qu'une seule de ces options."
+            "desc": "Au niveau 11, vous gagnez une option d'attaque permanente, à choisir : « Volée » - par une action, tirez sur autant de créatures que vous voulez, chacune à 3 mètres ou moins d'un point que vous voyez et à portée de votre arme à distance ; il vous faut une munition par cible et vous faites un jet d'attaque séparé contre chacune. « Attaque tourbillonnante » - par une action, portez une attaque de corps à corps contre toutes les créatures à 1,50 mètre ou moins de vous, avec un jet d'attaque séparé contre chacune. Vous ne choisissez qu'une seule de ces options."
           },
           {
             "level": 15,
             "name": "Défense supérieure",
-            "desc": "Aptitude obtenue au niveau 15. Vous choisissez une dernière option défensive permanente. « Esquive extraordinaire » : par une réaction, quand une créature que vous voyez vous attaque et vous touche, vous divisez par deux les dégâts de cette attaque. « Tenir bon » : quand une créature hostile rate une attaque de corps à corps contre vous, vous pouvez utiliser votre réaction pour l'obliger à répéter cette même attaque contre une autre créature de votre choix (autre qu'elle-même). Vous ne choisissez qu'une seule de ces options."
+            "desc": "Au niveau 15, vous gagnez une dernière option défensive permanente, à choisir : « Esquive totale » - face à un effet permettant un jet de sauvegarde de Dextérité pour ne subir que la moitié des dégâts, vous n'en subissez aucun en cas de réussite, et seulement la moitié en cas d'échec. « Retour de bâton » - quand une créature hostile rate une attaque de corps à corps contre vous, vous pouvez, en réaction, la forcer à recommencer cette attaque contre une autre créature de votre choix (autre qu'elle-même). « Esquive instinctive » - quand un attaquant que vous voyez vous touche, vous pouvez, en réaction, réduire de moitié les dégâts de cette attaque. Vous ne choisissez qu'une seule de ces options."
           }
         ]
       },
@@ -2443,7 +2448,7 @@ const ARCHETYPES = {
           {
             "level": 3,
             "name": "Compagnon aguerri",
-            "desc": "Aptitude passive obtenue au niveau 3 qui renforce votre compagnon. La bête utilise votre bonus de maîtrise à la place du sien : il s'ajoute à sa classe d'armure, à ses jets d'attaque, à ses jets de dégâts et à ses jets de sauvegarde, et elle maîtrise toutes les compétences et sauvegardes qu'elle avait déjà. Son maximum de points de vie devient le plus élevé entre sa valeur normale et 4 fois votre niveau de rôdeur. Quand vous lui appliquez un sort de soin, elle récupère un nombre minimal de points de vie égal à 2 fois votre niveau de rôdeur."
+            "desc": "Au niveau 3, votre compagnon devient redoutable. La bête utilise votre bonus de maîtrise à la place du sien : il s'ajoute à sa CA, à ses jets d'attaque, à ses jets de dégâts, ainsi qu'à ses jets de sauvegarde et aux compétences qu'elle maîtrise déjà. Son maximum de points de vie devient la plus élevée de deux valeurs : sa valeur normale, ou quatre fois votre niveau de rôdeur. Comme toute créature, elle peut dépenser des dés de vie pour se soigner pendant un repos court."
           },
           {
             "level": 7,
