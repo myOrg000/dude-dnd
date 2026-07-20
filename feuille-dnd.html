@@ -1049,6 +1049,7 @@ const SHARED_FEATURE_OPTIONS = {
 // Corrections de features de BASE (data/srd-2014.js est généré, §9 : on ne l'édite pas ;
 // on surcharge nom/desc au rendu). Choix « fantômes » explicités + textes tronqués complétés.
 const FEATURE_OVERRIDES = {
+  "eldritch-invocations": { desc: "Vous exhumez des fragments de savoir interdit. Cochez ci-dessous vos manifestations occultes : deux au niveau 2, puis une de plus aux niveaux 5, 7, 9, 12, 15 et 18. Certaines ont un prérequis (niveau ou pacte) précisé dans le Manuel." },
   "metamagic-1": { desc: "Vous apprenez à modeler vos sorts. Cochez ci-dessous vos options de métamagie (deux au niveau 3, une de plus au niveau 10 et une autre au niveau 17). Chaque option se paie en points de sorcellerie à l'usage, et une seule s'applique par sort (sauf mention contraire)." },
   "metamagic-2": { desc: "Au niveau 10, vous apprenez une option de métamagie de plus (à cocher dans la liste du niveau 3)." },
   "metamagic-3": { desc: "Au niveau 17, vous apprenez une dernière option de métamagie (à cocher dans la liste du niveau 3)." },
@@ -1091,6 +1092,77 @@ const EXTRA_CLASS_FEATURES = {
 // Choix MULTIPLES (cochez-en plusieurs, dans la limite du palier de niveau). cap = [[niveau, nombre], …].
 // Réutilisable : Métamagie, Manœuvres (Maître de guerre), Manifestations occultes, Disciplines élémentaires.
 const MULTI_CHOICES = {
+  "eldritch-invocations": { cap: [[2,2], [5,3], [7,4], [9,5], [12,6], [15,7], [18,8]], options: [
+    { key:"agonizing-blast", name:"Décharge déchirante", desc:"Quand vous lancez décharge occulte, vous ajoutez votre modificateur de Charisme aux dégâts qu’elle inflige quand elle touche." },
+    { key:"armor-of-shadows", name:"Armure d’ombres", desc:"Vous pouvez lancer armure du mage sur vous-même à volonté, sans dépenser d’emplacement de sort ni de composantes matérielles." },
+    { key:"ascendant-step", name:"Pas aérien", desc:"Vous pouvez lancer lévitation sur vous-même à volonté, sans dépenser d’emplacement de sort ni de composantes matérielles." },
+    { key:"beast-speech", name:"Langage animal", desc:"Vous pouvez lancer communication avec les animaux à volonté, sans dépenser d’emplacement de sort." },
+    { key:"beguiling-influence", name:"Présence captivante", desc:"Vous recevez la maîtrise des compétences Persuasion et Tromperie." },
+    { key:"bewitching-whispers", name:"Murmures impérieux", desc:"Vous pouvez lancer compulsion une fois sans dépenser d’emplacement de sort d’occultiste. Vous devez terminer un repos long avant de pouvoir le relancer ainsi." },
+    { key:"book-of-ancient-secrets", name:"Livre des secrets anciens", desc:"Vous pouvez désormais inscrire des rituels magiques dans votre Codex des Ombres. Choisissez deux sorts du 1er niveau portant la mention « rituel » dans la liste de sorts de n’importe quelle classe (les deux n’appartiennent pas nécessairement à la même liste). Les sorts qui figurent dans le codex ne sont pas décomptés de vos sorts connus. Votre Codex des Ombres en main, vous pouvez lancer les sorts choisis comme rituels. Vous ne pouvez lancer ces sorts que comme rituels, à moins que vous ne les ayez appris par d’autres biais. Vous pouvez aussi lancer comme rituel un sort d’occultiste que vous connaissez si ce sort porte la mention « rituel ».\nAu fil de vos aventures, vous pouvez ajouter d’autres sorts de rituel à votre Codex des Ombres. Lorsque vous trouvez un tel sort, vous pouvez l’ajouter au livre à condition que le niveau du sort soit inférieur ou égal à la moitié de votre niveau d’occultiste (arrondi au supérieur) et que vous preniez le temps de retranscrire ce sort. Cette opération nécessite 2 heures et 50 po par niveau du sort en raison des encres rares nécessaires à sa recopie." },
+    { key:"chains-of-carceri", name:"Chaînes des Carcères", desc:"Vous pouvez lancer immobilisation de monstre à volonté si la cible est un céleste, un fiélon ou un élémentaire, sans dépenser d’emplacement de sort ni de composantes matérielles. Vous devez terminer un repos long avant de pouvoir réutiliser cette manifestation sur une même créature." },
+    { key:"devils-sight", name:"Vision du diable", desc:"Vous voyez normalement dans les ténèbres magiques et ordinaires, dans un rayon de 36 m." },
+    { key:"dreadful-word", name:"Mot d’effroi", desc:"Vous pouvez lancer confusion une fois en dépensant un emplacement de sort d’occultiste. Vous devez terminer un repos long avant de pouvoir le relancer ainsi." },
+    { key:"eldritch-sight", name:"Vision occulte", desc:"Vous pouvez lancer détection de la magie à volonté, sans dépenser d’emplacement de sort." },
+    { key:"eldritch-spear", name:"Lance occulte", desc:"Lorsque vous lancez décharge occulte, sa portée est de 90 m." },
+    { key:"eyes-of-the-rune-keeper", name:"Œil du gardien des runes", desc:"Vous pouvez lire tous les écrits." },
+    { key:"fiendish-vigor", name:"Vigueur fiélonne", desc:"Vous pouvez lancer simulacre de vie sur vous-même à volonté en tant que sort du 1er niveau, sans dépenser d’emplacement de sort ni de composantes matérielles." },
+    { key:"gaze-of-two-minds", name:"Perception transférée", desc:"Vous pouvez consacrer votre action à entrer en contact avec un humanoïde consentant afin de percevoir à travers ses sens jusqu’à la fin de votre tour suivant. Lors des tours suivants et tant que cette créature se trouve sur le même plan d’existence que vous, vous pouvez consacrer votre action à maintenir cette connexion sensorielle, ce qui prolonge la durée de l’effet jusqu’à la fin de votre tour suivant. Tout en percevant à travers les sens de l’autre créature, vous bénéficiez de tous les sens spéciaux qu’elle possède et vous êtes aveuglé et assourdi vis-à-vis de votre propre environnement." },
+    { key:"lifedrinker", name:"Buveuse de vie", desc:"Lorsque vous touchez une créature avec votre arme de pacte, cette créature subit des dégâts nécrotiques supplémentaires égaux à votre modificateur de Charisme (minimum 1)." },
+    { key:"mask-of-many-faces", name:"Mille visages", desc:"Vous pouvez lancer déguisement à volonté, sans dépenser d’emplacement de sort." },
+    { key:"master-of-myriad-forms", name:"Maître des formes", desc:"Vous pouvez lancer modification d’apparence à volonté, sans dépenser d’emplacement de sort." },
+    { key:"minions-of-chaos", name:"Sbires du chaos", desc:"Vous pouvez lancer invocation d’élémentaire une fois en dépensant un emplacement de sort d’occultiste. Vous devez terminer un repos long avant de pouvoir le relancer ainsi." },
+    { key:"mire-the-mind", name:"Avachissement", desc:"Vous pouvez lancer lenteur une fois en dépensant un emplacement de sort d’occultiste. Vous devez terminer un repos long avant de pouvoir le relancer ainsi." },
+    { key:"misty-visions", name:"Visions embrumées", desc:"Vous pouvez lancer image silencieuse à volonté, sans dépenser d’emplacement de sort ni de composantes matérielles." },
+    { key:"one-with-shadows", name:"Maître des ombres", desc:"Quand vous vous trouvez dans une zone de lumière faible ou de ténèbres, vous pouvez consacrer votre action à devenir invisible jusqu’à ce que vous vous déplaciez, entrepreniez une action ou jouiez votre réaction." },
+    { key:"otherworldly-leap", name:"Saut d’outre-monde", desc:"Vous pouvez lancer saut sur vous-même à volonté, sans dépenser d’emplaceme." },
+    { key:"repelling-blast", name:"Décharge répulsive", desc:"Quand vous touchez une créature avec décharge occulte, vous pouvez la repousser en ligne droite d’un maximum de 3 m." },
+    { key:"sculptor-of-flesh", name:"Sculpteur de chair", desc:"Vous pouvez lancer métamorphose une fois en dépensant un emplacement de sort d’occultiste. Vous devez terminer un repos long avant de pouvoir le relancer ainsi." },
+    { key:"sign-of-ill-omen", name:"Sombre présage", desc:"Vous pouvez lancer malédiction une fois en dépensant un emplacement de sort d’occultiste. Vous devez terminer un repos long avant de pouvoir le relancer ainsi." },
+    { key:"thief-of-five-fates", name:"Voleur des cinq destinées", desc:"Vous pouvez lancer imprécation une fois en dépensant un emplacement de sort d’occultiste. Vous devez terminer un repos long avant de pouvoir le relancer ainsi." },
+    { key:"thirsting-blade", name:"Lame assoiffée", desc:"Vous pouvez attaquer deux fois au lieu d’une avec votre arme de pacte lorsque vous entreprenez l’action Attaquer à votre tour." },
+    { key:"visions-of-distant-realms", name:"Royaumes lointains", desc:"Vous pouvez lancer œil du mage à volonté, sans dépenser d’emplacement de sort." },
+    { key:"voice-of-the-chain-master", name:"Voix du maître des chaînes", desc:"Vous pouvez communiquer par télépathie avec votre familier et percevoir à travers ses sens à condition de vous trouver sur le même plan d’existence. De plus, tout en percevant à travers les sens de votre familier, vous pouvez parler à voix haute par la bouche de celui-ci, même si votre familier est normalement incapable de parler." },
+    { key:"whispers-of-the-grave", name:"Murmures de la tombe", desc:"Vous pouvez lancer communication avec les morts à volonté, sans dépenser d’emplacement de sort." },
+    { key:"witch-sight", name:"Vision sorcière", desc:"Vous discernez la forme véritable des métamorphes ou des créatures dissimulées derrière une magie d’illusion ou de transmutation dans un rayon de 9 m, à condition qu’ils soient dans votre champ de vision." }
+  ] },
+  "battlemaster:Manœuvres": { cap: [[3,3], [7,5], [10,7], [15,9]], options: [
+    { key:"attaque-menacante", name:"Attaque menaçante", desc:"Quand vous touchez une créature avec une arme, dépensez un dé de supériorité : ajoutez-le aux dégâts, puis la cible fait une sauvegarde de Sagesse. Si elle échoue, elle est effrayée jusqu'à la fin de votre prochain tour." },
+    { key:"attaque-precise", name:"Attaque précise", desc:"Quand vous faites une attaque avec une arme, dépensez un dé de supériorité et ajoutez son résultat au jet d'attaque. Vous pouvez le faire avant ou après avoir lancé le dé d'attaque, mais avant que le moindre effet de l'attaque ne s'applique." },
+    { key:"balayage", name:"Balayage", desc:"Quand vous touchez une créature avec une arme de corps à corps, dépensez un dé de supériorité pour atteindre une seconde créature. Choisissez une autre créature à moins de 1,50 m de la première et à votre portée : si votre jet d'attaque touche aussi cette seconde cible, elle subit les dégâts du dé de supériorité, du même type que ceux de l'attaque." },
+    { key:"croc-en-jambe", name:"Croc-en-jambe", desc:"Quand vous touchez une créature avec une arme, dépensez un dé de supériorité : ajoutez-le aux dégâts, puis si la cible est de taille G ou plus petite, elle fait une sauvegarde de Force. En cas d'échec, elle tombe à terre." },
+    { key:"desarmement", name:"Désarmement", desc:"Quand vous touchez une créature avec une arme, dépensez un dé de supériorité pour tenter de lui faire lâcher un objet qu'elle tient : ajoutez le dé aux dégâts, puis la cible fait une sauvegarde de Force. En cas d'échec, elle lâche l'objet que vous avez désigné, qui tombe à ses pieds." },
+    { key:"diversion", name:"Diversion", desc:"Quand vous touchez une créature avec une arme, dépensez un dé de supériorité pour la distraire : ajoutez-le aux dégâts. La prochaine attaque faite contre cette cible par quelqu'un d'autre que vous bénéficie de l'avantage, à condition qu'elle ait lieu avant le début de votre prochain tour." },
+    { key:"feinte", name:"Feinte", desc:"Avec une action bonus à votre tour, dépensez un dé de supériorité pour feinter contre une créature à moins de 1,50 m de vous. Vous avez l'avantage à votre prochain jet d'attaque contre elle ce tour-ci ; si cette attaque touche, ajoutez le dé de supériorité aux dégâts. L'avantage est perdu si vous ne l'utilisez pas durant ce tour." },
+    { key:"fente", name:"Fente", desc:"Quand vous faites une attaque avec une arme de corps à corps à votre tour, dépensez un dé de supériorité pour allonger votre portée de 1,50 m pour cette attaque. Si vous touchez, ajoutez le dé de supériorité aux dégâts." },
+    { key:"instruction", name:"Instruction", desc:"Quand vous faites l'action Attaquer à votre tour, vous pouvez renoncer à une de vos attaques et utiliser une action bonus pour guider un allié. Choisissez une créature amicale qui vous voit ou vous entend et dépensez un dé de supériorité : elle peut aussitôt utiliser sa réaction pour attaquer avec une arme, en ajoutant le dé de supériorité aux dégâts." },
+    { key:"jeu-de-jambes-defensif", name:"Jeu de jambes défensif", desc:"Quand vous vous déplacez, dépensez un dé de supériorité, lancez-le et ajoutez le résultat à votre CA jusqu'à la fin de ce déplacement." },
+    { key:"manoeuvre-tactique", name:"Manœuvre tactique", desc:"Quand vous touchez une créature avec une arme, dépensez un dé de supériorité pour repositionner un allié : ajoutez-le aux dégâts, puis choisissez une créature amicale qui vous voit ou vous entend. Elle peut utiliser sa réaction pour se déplacer de la moitié de sa vitesse sans provoquer d'attaque d'opportunité de la cible de votre attaque." },
+    { key:"parade", name:"Parade", desc:"Quand une créature vous touche avec une attaque de corps à corps, utilisez votre réaction et dépensez un dé de supériorité pour réduire les dégâts subis d'un montant égal au résultat du dé plus votre modificateur de Dextérité." },
+    { key:"provocation", name:"Provocation", desc:"Quand vous touchez une créature avec une arme, dépensez un dé de supériorité pour l'inciter à s'en prendre à vous : ajoutez-le aux dégâts, puis la cible fait une sauvegarde de Sagesse. En cas d'échec, elle a le désavantage à toutes ses attaques contre une autre cible que vous, jusqu'à la fin de votre prochain tour." },
+    { key:"regain", name:"Regain", desc:"Avec une action bonus à votre tour, dépensez un dé de supériorité pour raffermir la volonté d'un allié. Choisissez une créature amicale qui vous voit ou vous entend : elle gagne des points de vie temporaires égaux au résultat du dé plus votre modificateur de Charisme." },
+    { key:"repousser", name:"Repousser", desc:"Quand vous touchez une créature avec une arme, dépensez un dé de supériorité pour la repousser : ajoutez-le aux dégâts, puis si la cible est de taille G ou plus petite, elle fait une sauvegarde de Force. En cas d'échec, vous la repoussez à 4,50 m de vous." },
+    { key:"riposte", name:"Riposte", desc:"Quand une créature vous rate avec une attaque de corps à corps, utilisez votre réaction et dépensez un dé de supériorité pour l'attaquer en retour avec une arme de corps à corps. Si vous touchez, ajoutez le dé de supériorité aux dégâts." }
+  ] },
+  "four-elements:Disciple des éléments": { cap: [[3,2], [6,3], [11,4], [17,5]], options: [
+    { key:"crochets-serpent-feu", name:"Crochets du serpent de feu", desc:"Quand vous entreprenez l'action Attaquer, dépensez 1 point de ki : des lianes de flammes prolongent vos poings et vos pieds. Votre allonge à mains nues gagne 3 mètres pour cette action et jusqu'à la fin du tour. Un coup porté inflige alors des dégâts de feu au lieu de contondants ; et si vous dépensez 1 point de ki de plus au moment où l'attaque touche, elle ajoute 1d10 dégâts de feu." },
+    { key:"defense-montagne-eternelle", name:"Défense de la montagne éternelle", desc:"Dépensez 5 points de ki pour lancer sur vous-même le sort peau de pierre. Prérequis : niveau 17." },
+    { key:"destrier-des-vents", name:"Destrier des vents", desc:"Dépensez 4 points de ki pour lancer le sort vol en vous prenant pour cible. Prérequis : niveau 11." },
+    { key:"etreinte-vent-du-nord", name:"Étreinte du vent du nord", desc:"Dépensez 3 points de ki pour lancer le sort immobilisation de personne. Prérequis : niveau 6." },
+    { key:"faconnage-de-la-riviere", name:"Façonnage de la rivière", desc:"Par une action, dépensez 1 point de ki et désignez une zone de glace ou d'eau, d'au plus 9 mètres de côté, située jusqu'à 36 mètres de vous. Vous pouvez transformer l'eau en glace et la glace en eau, et remodeler la glace à votre gré : monter ou abaisser son niveau, creuser ou combler une tranchée, dresser ou abattre un mur, ériger un pilier. Chaque changement ne peut dépasser la moitié de la plus grande dimension de la zone. Vous ne pouvez pas façonner la glace pour créer un piège ni pour emprisonner une créature dans la zone." },
+    { key:"flammes-du-phenix", name:"Flammes du phénix", desc:"Dépensez 4 points de ki pour lancer le sort boule de feu. Prérequis : niveau 11." },
+    { key:"fouet-de-l-onde", name:"Fouet de l'onde", desc:"Par une action, dépensez 2 points de ki pour créer un fouet d'eau qui bouscule et déséquilibre une créature. Choisissez une créature visible à 9 mètres ou moins : elle fait un jet de sauvegarde de Dextérité. En cas d'échec, elle subit 3d10 dégâts contondants (+1d10 par point de ki supplémentaire dépensé), et vous pouvez au choix la faire tomber à terre ou l'attirer de 7,50 mètres vers vous. En cas de réussite, elle ne subit que la moitié des dégâts et n'est ni déplacée ni renversée." },
+    { key:"frappe-de-cendres", name:"Frappe de cendres", desc:"Dépensez 2 points de ki pour lancer le sort mains brûlantes." },
+    { key:"gong-du-sommet", name:"Gong du sommet", desc:"Dépensez 3 points de ki pour lancer le sort fracassement. Prérequis : niveau 6." },
+    { key:"lien-elementaire", name:"Lien élémentaire", desc:"Par une action, vous contrôlez brièvement les forces élémentaires dans un rayon de 9 mètres autour de vous, en produisant l'un de ces effets au choix : créer un effet sensoriel inoffensif et instantané lié à l'air, la terre, le feu ou l'eau (gerbe d'étincelles, souffle d'air, jet de brume, léger frémissement de pierres) ; allumer ou éteindre sur-le-champ une bougie, une torche ou un petit feu de camp ; refroidir ou réchauffer jusqu'à 500 g de matière non vivante pendant 1 heure ; ou modeler du feu, de la terre, de l'eau ou de la brume (un volume tenant dans un cube de 30 cm) en une forme grossière de votre choix pendant 1 minute." },
+    { key:"poing-de-l-air", name:"Poing de l'air", desc:"Par une action, dépensez 2 points de ki et choisissez une créature dans les 9 mètres : elle forme un souffle d'air comprimé qui frappe comme un poing géant. La cible fait un jet de sauvegarde de Force. En cas d'échec, elle subit 3d10 dégâts contondants (+1d10 par point de ki supplémentaire dépensé), et vous pouvez la repousser de 6 mètres et la jeter à terre. En cas de réussite, elle ne subit que la moitié des dégâts et n'est ni repoussée ni renversée." },
+    { key:"poing-quatre-tonnerres", name:"Poing des quatre tonnerres", desc:"Dépensez 2 points de ki pour lancer le sort vague tonnante." },
+    { key:"posture-de-brume", name:"Posture de brume", desc:"Dépensez 4 points de ki pour lancer sur vous-même le sort forme gazeuse. Prérequis : niveau 11." },
+    { key:"ruee-esprits-du-vent", name:"Ruée des esprits du vent", desc:"Dépensez 2 points de ki pour lancer le sort bourrasque." },
+    { key:"souffle-de-l-hiver", name:"Souffle de l'hiver", desc:"Dépensez 6 points de ki pour lancer le sort cône de froid. Prérequis : niveau 17." },
+    { key:"torrent-flammes-voraces", name:"Torrent de flammes voraces", desc:"Dépensez 5 points de ki pour lancer le sort mur de feu. Prérequis : niveau 17." },
+    { key:"vague-de-terre-grondante", name:"Vague de terre grondante", desc:"Dépensez 6 points de ki pour lancer le sort mur de pierre. Prérequis : niveau 17." }
+  ] },
   "metamagic-1": { cap: [[3,2],[10,3],[17,4]], options: [
     { key:"accelere", name:"Sort accéléré", desc:"Lancez en action bonus un sort qui coûte normalement une action (2 points de sorcellerie)." },
     { key:"ample", name:"Sort ample", desc:"Doublez la portée d'un sort, ou portez à 9 mètres un sort au contact (1 point)." },
@@ -2208,7 +2280,7 @@ const ARCHETYPES = {
           {
             "level": 3,
             "name": "Manœuvres",
-            "desc": "Vous apprenez 3 manœuvres à choisir dans la liste du Maître de guerre (par exemple Attaque désarmante, Manœuvre de riposte, Attaque de diversion). Chaque manœuvre ajoute un effet tactique à vos attaques et n'est utilisable qu'en dépensant un dé de supériorité. Certaines manœuvres imposent à la cible un jet de sauvegarde dont le degré de difficulté vaut 8 + votre bonus de maîtrise + votre modificateur de Force ou de Dextérité."
+            "desc": "Vous apprenez des manœuvres qui ajoutent un effet à vos attaques, chacune payée par un dé de supériorité (une seule par attaque). Cochez-en trois au niveau 3, puis deux de plus aux niveaux 7, 10 et 15. DD de sauvegarde d'une manœuvre = 8 + votre bonus de maîtrise + votre modificateur de Force ou de Dextérité."
           },
           {
             "level": 3,
@@ -2233,7 +2305,7 @@ const ARCHETYPES = {
           {
             "level": 10,
             "name": "Manœuvres supplémentaires",
-            "desc": "Vous apprenez 2 manœuvres supplémentaires de votre choix dans la liste du Maître de guerre, en plus de celles que vous connaissez déjà."
+            "desc": "Au niveau 10, vous apprenez deux manœuvres de plus (à cocher dans la liste du niveau 3)."
           },
           {
             "level": 10,
@@ -2248,7 +2320,7 @@ const ARCHETYPES = {
           {
             "level": 15,
             "name": "Manœuvres (niv. 15)",
-            "desc": "Vous apprenez 2 manœuvres supplémentaires de votre choix dans la liste du Maître de guerre."
+            "desc": "Au niveau 15, vous apprenez deux dernières manœuvres (à cocher dans la liste du niveau 3)."
           },
           {
             "level": 15,
@@ -2362,22 +2434,22 @@ const ARCHETYPES = {
           {
             "level": 3,
             "name": "Disciple des éléments",
-            "desc": "Vous canalisez les éléments par votre ki. Vous connaissez la discipline Lien élémentaire ainsi qu'une autre discipline élémentaire de votre choix (soit deux disciplines au niveau 3). Beaucoup de disciplines reproduisent des sorts élémentaires, que vous lancez en dépensant du ki, sans composante matérielle. À partir du niveau 5, vous pouvez dépenser du ki supplémentaire pour lancer certaines à un niveau de sort supérieur, sans dépasser le maximum de ki par sort permis à votre niveau."
+            "desc": "Vous canalisez les éléments par votre ki. Cochez ci-dessous vos disciplines (deux au niveau 3 - dont Lien élémentaire -, puis une de plus aux niveaux 6, 11 et 17). La plupart reproduisent un sort lancé en dépensant du ki, sans composante ; dès le niveau 5, vous pouvez y mettre plus de ki pour un niveau de sort supérieur."
           },
           {
             "level": 6,
             "name": "Discipline supplémentaire",
-            "desc": "Vous apprenez une discipline élémentaire de plus. Par ailleurs, chaque fois que vous apprenez une nouvelle discipline élémentaire (aux niveaux 6, 11 et 17), vous pouvez remplacer une discipline que vous connaissez déjà par une autre."
+            "desc": "Vous apprenez une discipline de plus (à cocher dans la liste du niveau 3). Chaque fois que vous en apprenez une nouvelle (niveaux 6, 11 et 17), vous pouvez remplacer une discipline déjà connue par une autre."
           },
           {
             "level": 11,
             "name": "Discipline supplémentaire",
-            "desc": "Vous apprenez encore une discipline élémentaire de votre choix. Le nombre maximal de points de ki que vous pouvez consacrer à une même discipline augmente avec votre niveau, ce qui renforce vos effets élémentaires."
+            "desc": "Vous apprenez une discipline de plus (à cocher dans la liste du niveau 3). Le maximum de ki dépensable sur une même discipline augmente avec votre niveau."
           },
           {
             "level": 17,
             "name": "Discipline supplémentaire",
-            "desc": "Vous apprenez une dernière discipline élémentaire de votre choix, élargissant votre maîtrise du feu, de l'eau, de l'air et de la terre."
+            "desc": "Vous apprenez une dernière discipline (à cocher dans la liste du niveau 3)."
           }
         ]
       }
@@ -4262,14 +4334,19 @@ function renderFeatures() {
   }
   return card("Capacités", el("div",{},children), { span:12 });
 }
+// Mémorise quelles capacités sont dépliées, pour les rouvrir après un render()
+// (sinon cliquer un Choix referme la capacité — bug UX). Réinitialisé au rechargement.
+const openFeats = {};
 function featureItem(name, tag, desc, extraNode) {
+  const key = name + "|" + tag;
+  const wasOpen = !!openFeats[key];
   const head = el("button", { class:"feat-head",
-    onclick:(e)=>{ const b=e.currentTarget.nextSibling; b.classList.toggle("open"); } }, [
+    onclick:(e)=>{ const b=e.currentTarget.nextSibling; openFeats[key] = b.classList.toggle("open"); } }, [
     el("span",{class:"feat-name",text:name}),
     el("span",{class:"feat-tag",text:tag}),
     el("span",{class:"feat-caret",text:"▾"})
   ]);
-  const body = el("div", { class:"feat-body" }, [ el("p",{text:desc}) ]);
+  const body = el("div", { class:"feat-body"+(wasOpen?" open":"") }, [ el("p",{text:desc}) ]);
   if (extraNode) body.appendChild(extraNode);
   return el("div", { class:"feat-item" }, [head, body]);
 }
