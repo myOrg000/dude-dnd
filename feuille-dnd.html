@@ -36,6 +36,7 @@
   --role-saisie: #d3e4f5; --role-saisie-bd: #9fc2e2;
   --role-action: #e4d7f5; --role-action-bd: #bda6dd;
   --role-calc:   #d6ebd2; --role-calc-bd:   #a8cca1;
+  --role-fiche:  #f7e3ce; --role-fiche-bd:  #e3c39c;   /* fiches dépliables : sorts, capacités, objets magiques */
   /* --- État visuel PV / CA (indicateur cœur + bouclier) -----------------------
      Rampe perceptuellement régulière en oklch : l'urgence perçue suit la valeur,
      pas l'arithmétique sRGB. Ces L DOIVENT rester synchrones avec le calcul d'encre
@@ -545,7 +546,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .armor-pick { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 200px; }
 .armor-pick .sel { width: 100%; }
 .chk { display: inline-flex; align-items: center; gap: 5px; font-size: .82rem; cursor: pointer; }
-.chk input { width: 18px; height: 18px; accent-color: var(--red); cursor: pointer; }
+.chk input { width: 30px; height: 30px; accent-color: var(--red); cursor: pointer; }
 
 /* --- Sauvegardes (1 colonne verticale, pour laisser la place aux compétences) - */
 .saves-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px 14px; }
@@ -554,12 +555,12 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .save-val { min-width: 38px; flex: none; }
 .save-name { font-family: var(--font-display); flex: 1; min-width: 0; }
 /* Cases de sauvegarde bien visibles même en lecture seule (maîtrise fixée par la classe) */
-.save-row .chk input { appearance: none; -webkit-appearance: none; width: 18px; height: 18px;
+.save-row .chk input { appearance: none; -webkit-appearance: none; width: 30px; height: 30px;
   border: 2px solid var(--ink); border-radius: 4px; background: var(--paper); position: relative; opacity: 1; cursor: pointer; }
 .save-row .chk input:disabled { cursor: default; }
 .save-row .chk input:checked { background: var(--red); border-color: var(--red-deep); }
 .save-row .chk input:checked::after { content: "✓"; position: absolute; inset: 0; display: flex;
-  align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 900; line-height: 1; }
+  align-items: center; justify-content: center; color: #fff; font-size: 20px; font-weight: 900; line-height: 1; }
 
 /* --- Compétences (pas de débordement de la balise (DEX)/(INT)) -------------- */
 .skills-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 4px 16px; }
@@ -616,7 +617,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 
 /* --- Aptitudes ------------------------------------------------------------- */
 .features-list { display: flex; flex-direction: column; gap: 6px; }
-.feat-item { border: 1px solid var(--line); border-radius: 8px; background: var(--paper-2); overflow: hidden; }
+.feat-item { border: 1px solid var(--role-fiche-bd); border-radius: 8px; background: var(--role-fiche); overflow: hidden; }
 .feat-head { width: 100%; display: flex; align-items: center; gap: 8px; text-align: left;
   font: inherit; background: none; border: none; cursor: pointer; padding: 9px 12px; }
 .feat-head:hover { background: var(--paper); }
@@ -663,8 +664,8 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .subclass-spells { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); }
 .scs-row { display: grid; grid-template-columns: 72px 1fr; gap: 8px; padding: 3px 0; font-size: 1rem; line-height: 1.5; align-items: baseline; }
 .scs-lvl { font-family: var(--font-num); font-weight: 700; color: var(--red-deep); }
-.spell-item { border: 1px solid var(--line); border-left: 4px solid var(--line-strong);
-  border-radius: 8px; background: var(--paper-2); overflow: hidden; }
+.spell-item { border: 1px solid var(--role-fiche-bd); border-left: 4px solid var(--line-strong);
+  border-radius: 8px; background: var(--role-fiche); overflow: hidden; }
 .spell-name-btn { width: 100%; display: flex; align-items: center; gap: 8px; text-align: left;
   font: inherit; background: none; border: none; cursor: pointer; padding: 7px 10px; }
 .spell-name-btn:hover { background: var(--paper); }
@@ -725,17 +726,23 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .coin .coin-lbl { flex: none; }
 .coin .stepper { flex: 1; width: auto; }
 .coin-lbl { font-family: var(--font-display); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
-.coin-lbl::before { content: ""; width: 28px; height: 28px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,.25); }
-.coin-pp::before { background: #d9dde2; }
-.coin-gp::before { background: #e7c14a; }
-.coin-sp::before { background: #c2c7cc; }
-.coin-cp::before { background: #c08457; }
+/* Pastille = pièce avec épaisseur simulée : reflet radial (sheen) + ombre interne
+   basse (la tranche) + petite ombre portée. La TEINTE vient de background-color
+   (par type, ci-dessous) ; le reflet est un background-image, donc il ne l'efface pas. */
+.coin-lbl::before { content: ""; width: 28px; height: 28px; border-radius: 50%; display: inline-block;
+  background-image: radial-gradient(circle at 38% 30%, rgba(255,255,255,.75), rgba(255,255,255,0) 55%);
+  box-shadow: inset 0 -3px 3px rgba(0,0,0,.30), inset 0 2px 2px rgba(255,255,255,.45), 0 2px 3px rgba(0,0,0,.28);
+  border: 1px solid rgba(0,0,0,.30); }
+.coin-pp::before { background-color: #e3e9f0; }  /* platine — clair froid       */
+.coin-gp::before { background-color: #f1c232; }  /* or — jaune vif              */
+.coin-sp::before { background-color: #aab3bd; }  /* argent — gris moyen         */
+.coin-cp::before { background-color: #c17233; }  /* cuivre — orangé chaud       */
 .treasures { margin-top: 10px; }
 
 /* --- Objets magiques ------------------------------------------------------- */
 .mi-picker { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
 .mi-picker .add-sel { flex: 1; min-width: 200px; }
-.mi-row { border: 1px solid var(--line); border-radius: 8px; padding: 8px; margin-bottom: 8px; background: var(--paper-2); }
+.mi-row { border: 1px solid var(--role-fiche-bd); border-radius: 8px; padding: 8px; margin-bottom: 8px; background: var(--role-fiche); }
 .mi-line { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
 .mi-line .txt { flex: 1; min-width: 0; }
 .mi-name-btn { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; text-align: left;
@@ -775,7 +782,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .lang-opt { display: flex; align-items: center; gap: 6px; font-size: .84rem; cursor: pointer;
   padding: 2px 0; min-width: 0; }
 .lang-opt span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lang-opt input { width: 15px; height: 15px; accent-color: var(--red); cursor: pointer; flex: none; }
+.lang-opt input { width: 30px; height: 30px; accent-color: var(--red); cursor: pointer; flex: none; }
 .lang-opt.granted { color: var(--red-deep); }
 .lang-opt.at-limit { opacity: .5; }
 .lang-foot { margin-top: 6px; display: flex; justify-content: flex-end; }
@@ -815,6 +822,7 @@ body.high-contrast {
   --role-saisie: #ffffff; --role-saisie-bd: #555;
   --role-action: #ffffff; --role-action-bd: #000;
   --role-calc:   #ffffff; --role-calc-bd:   #000;
+  --role-fiche:  #ffffff; --role-fiche-bd:  #000;
 }
 body.high-contrast .card { border-width: 2px; box-shadow: none; }
 /* Cœur et bouclier exclus : leur couleur est sémantique (rampes PV/CA) — un contrast(1.4)
