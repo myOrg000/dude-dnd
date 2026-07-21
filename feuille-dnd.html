@@ -219,6 +219,7 @@ body.top-flat #sheet { margin-top: 8px; }
 .span-4 { grid-column: span 4; }
 .span-6 { grid-column: span 6; }
 .span-8 { grid-column: span 8; }
+.span-9 { grid-column: span 9; }
 .span-12 { grid-column: span 12; }
 /* Les champs (input/select) remplissent leur cellule et ne debordent jamais */
 .field { min-width: 0; }
@@ -549,7 +550,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .chk input { width: 30px; height: 30px; accent-color: var(--red); cursor: pointer; }
 
 /* --- Sauvegardes (1 colonne verticale, pour laisser la place aux compétences) - */
-.saves-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px 14px; }
+.saves-grid { display: grid; grid-template-columns: 1fr; gap: 6px 14px; }
 .save-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 7px; min-width: 0; }
 .save-row:hover { background: var(--paper-2); }
 .save-val { min-width: 38px; flex: none; }
@@ -596,7 +597,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .shield-chk { cursor: pointer; }
 .shield-box { width: 30px; height: 30px; flex: none; cursor: pointer; accent-color: var(--red-deep); }
 /* Attaques : 2/3 table · 1/3 dés (3 + 3, avec « Lancer un dé » dessous) */
-.atk-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
+.atk-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: center; }
 .atk-dice { border-left: 1px dashed var(--line); padding-left: 14px; }
 .atk-dice .dice-tray { margin-top: 0; border-top: none; padding-top: 0; }
 .atk-dice .dice-row { gap: 10px; }
@@ -610,9 +611,9 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .add-btn:hover { background: var(--paper-2); }
 
 /* --- Maîtrises ------------------------------------------------------------- */
-.prof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.prof-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
 .prof-bonus { font-family: var(--font-display); font-weight: 700; color: var(--red-deep);
-  font-size: 1rem; margin-bottom: 6px; }
+  font-size: 1rem; margin-bottom: 6px; white-space: nowrap; }
 .prof-auto { font-size: .86rem; line-height: 1.55; }
 
 /* --- Aptitudes ------------------------------------------------------------- */
@@ -777,8 +778,8 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 
 /* --- Langues : multi-sélection défilante ---------------------------------- */
 .lang-multi { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1px 12px;
-  max-height: 230px; overflow-y: auto; padding: 9px 10px; border: 1px solid var(--line);
-  border-radius: 8px; background: var(--paper-2); }
+  max-height: 230px; overflow-y: auto; padding: 9px 10px; border: 1px solid var(--role-saisie-bd);
+  border-radius: 8px; background: var(--role-saisie); }
 .lang-opt { display: flex; align-items: center; gap: 6px; font-size: .84rem; cursor: pointer;
   padding: 2px 0; min-width: 0; }
 .lang-opt span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -842,7 +843,7 @@ body.high-contrast .shape.hexagon {
 }
 @media (max-width: 620px) {
   #sheet { grid-template-columns: 1fr; gap: 12px; margin-top: 10px; }
-  .span-3, .span-4, .span-6, .span-8, .span-12, .dm-card { grid-column: 1 / -1; }
+  .span-3, .span-4, .span-6, .span-8, .span-9, .span-12, .dm-card { grid-column: 1 / -1; }
   .skills-grid, .prof-grid, .id-grid, .lang-multi { grid-template-columns: 1fr; }
   .person-grid .field, .attr-grid .field { width: 100%; }
   .atk-layout { grid-template-columns: 1fr; }
@@ -4182,7 +4183,7 @@ function renderSaves() {
     ]);
     grid.appendChild(row);
   });
-  return card("Jets de sauvegarde", grid, { span:4 });
+  return card("Jets de sauvegarde", grid, { span:3 });
 }
 
 // --- Competences ---
@@ -4225,7 +4226,7 @@ function renderSkills() {
   const skillMax = el("div", { class:"skill-limit",
     title:"Nombre de compétences que votre classe vous laisse choisir"+(dmMode?" — le MJ peut dépasser cette limite":"")+". (Les bonus d'historique ne sont pas gérés.)",
     text:"MAX COMPÉTENCES : "+usedSkills+" / "+maxSkills });
-  return card("Compétences", el("div", {}, [grid, el("div",{class:"skills-foot"},[passive, skillMax])]), { span:8 });
+  return card("Compétences", el("div", {}, [grid, el("div",{class:"skills-foot"},[passive, skillMax])]), { span:9 });
 }
 
 // --- Attaques ---
