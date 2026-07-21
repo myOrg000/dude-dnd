@@ -33,9 +33,9 @@
   /* Norme de couleur par RÔLE (pastel) — carte 4. Jetons ajustables ici même.
      saisie = champs qu'on remplit · action = boutons qu'on presse · calc = valeurs calculées.
      Neutralisés en fort contraste (voir body.high-contrast). */
-  --role-saisie: #e9f0f8; --role-saisie-bd: #b8cee2;
-  --role-action: #efe9f7; --role-action-bd: #c9bce0;
-  --role-calc:   #e8efe6; --role-calc-bd:   #c0d0bd;
+  --role-saisie: #d3e4f5; --role-saisie-bd: #9fc2e2;
+  --role-action: #e4d7f5; --role-action-bd: #bda6dd;
+  --role-calc:   #d6ebd2; --role-calc-bd:   #a8cca1;
   /* --- État visuel PV / CA (indicateur cœur + bouclier) -----------------------
      Rampe perceptuellement régulière en oklch : l'urgence perçue suit la valeur,
      pas l'arithmétique sRGB. Ces L DOIVENT rester synchrones avec le calcul d'encre
@@ -441,7 +441,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   width: 100%; max-width: 104px; aspect-ratio: 1; height: auto;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; position: relative;
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='30,2 70,2 98,30 98,70 70,98 30,98 2,70 2,30' fill='%23fbf6ea' stroke='%232b2620' stroke-width='2.5'/></svg>");
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='30,2 70,2 98,30 98,70 70,98 30,98 2,70 2,30' fill='%23d6ebd2' stroke='%232b2620' stroke-width='2.5'/></svg>");
   background-size: contain; background-repeat: no-repeat; background-position: center;
 }
 .ability-step {
@@ -460,7 +460,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .ability-mod.pentagon {
   width: 50px; height: 42px; margin-top: 4px; display: flex; align-items: center;
   justify-content: center; font-family: var(--font-num); font-weight: 700; font-size: 1rem;
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 90'><polygon points='8,6 92,6 92,50 50,86 8,50' fill='%23fbf6ea' stroke='%232b2620' stroke-width='3'/></svg>");
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 90'><polygon points='8,6 92,6 92,50 50,86 8,50' fill='%23d6ebd2' stroke='%232b2620' stroke-width='3'/></svg>");
   background-size: contain; background-repeat: no-repeat; background-position: center;
   padding-bottom: 8px;
 }
@@ -481,7 +481,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .shape-val, .big-val { font-family: var(--font-num); font-weight: 700; font-size: 1.4rem; }
 
 .shape.hexagon { width: 104px; height: 78px;
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 90'><polygon points='30,4 90,4 116,45 90,86 30,86 4,45' fill='%23fbf6ea' stroke='%232b2620' stroke-width='3'/></svg>"); }
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 90'><polygon points='30,4 90,4 116,45 90,86 30,86 4,45' fill='%23d6ebd2' stroke='%232b2620' stroke-width='3'/></svg>"); }
 .shape.shield { width: 168px; height: 186px; position: relative; }
 /* Grand bouclier a DEUX teintes, coupe en deux par une ligne mediane :
    .ca-top / .ca-bot = deux remplissages CA (beige cuir → acier) masques a la silhouette
@@ -529,7 +529,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   100% { background-color: var(--pv-fill); }
 }
 .shape.rounded { width: 96px; min-height: 72px; border: 2.5px solid var(--ink);
-  border-radius: 14px; background: var(--paper); padding: 6px; }
+  border-radius: 14px; background: var(--role-calc); padding: 6px; }
 
 .hp-current { width: 80px; text-align: center; font-family: var(--font-num); font-size: 2rem;
   font-weight: 700; border: none; background: transparent; color: var(--pv-ink, var(--ink)); padding: 0;
@@ -541,7 +541,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .hp-mini-f { display: flex; flex-direction: column; align-items: center; gap: 2px;
   font-size: 1rem; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; }
 .hp-mini-i { width: 54px; text-align: center; font-family: var(--font-num); padding: 5px;
-  border: 1px solid var(--line); border-radius: 6px; background: var(--paper-2); }
+  border: 1px solid var(--role-saisie-bd); border-radius: 6px; background: var(--role-saisie); }
 .armor-pick { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 200px; }
 .armor-pick .sel { width: 100%; }
 .chk { display: inline-flex; align-items: center; gap: 5px; font-size: .82rem; cursor: pointer; }
@@ -641,7 +641,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 
 /* --- Sorts ----------------------------------------------------------------- */
 .spell-head { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
-.spell-stat { background: var(--paper-2); border: 1px solid var(--line); border-radius: 8px;
+.spell-stat { background: var(--role-calc); border: 1px solid var(--role-calc-bd); border-radius: 8px;
   padding: 8px; text-align: center; }
 .ss-lbl { display: block; font-size: .62rem; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; }
 .ss-val { font-family: var(--font-num); font-weight: 700; font-size: 1.2rem; }
@@ -764,7 +764,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .hp-method { display: inline-flex; align-items: center; gap: 5px; font-size: 1rem; flex-wrap: wrap;
   justify-content: center; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; cursor: pointer; margin-top: 3px; }
 .hp-method input { width: 30px; height: 30px; accent-color: var(--red); cursor: pointer; flex: none; }
-.hp-mini-i.auto { background: var(--paper); border-style: dashed; color: var(--ink-soft);
+.hp-mini-i.auto { background: var(--role-calc); border-color: var(--role-calc-bd); border-style: dashed; color: var(--ink-soft);
   display: inline-flex; align-items: center; justify-content: center; min-width: 54px; min-height: 30px; }
 .hp-mini-i.boosted { border-color: var(--gold) !important; box-shadow: 0 0 0 1px var(--gold); color: var(--ink); }
 
