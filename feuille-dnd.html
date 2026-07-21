@@ -783,7 +783,16 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .lang-opt { display: flex; align-items: center; gap: 6px; font-size: .84rem; cursor: pointer;
   padding: 2px 0; min-width: 0; }
 .lang-opt span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lang-opt input { width: 30px; height: 30px; accent-color: var(--red); cursor: pointer; flex: none; }
+/* Cases de langue : apparence personnalisée pour rester PLEINEMENT visibles même
+   en lecture seule (langue acquise par la race = cochée + désactivée). Sinon le
+   navigateur rend la coche pâle et la règle globale :disabled { opacity:.5 } l'efface. */
+.lang-opt input { appearance: none; -webkit-appearance: none; width: 30px; height: 30px; flex: none;
+  border: 2px solid var(--ink); border-radius: 4px; background: var(--paper);
+  position: relative; opacity: 1; cursor: pointer; }
+.lang-opt input:disabled { cursor: default; }
+.lang-opt input:checked { background: var(--red); border-color: var(--red-deep); }
+.lang-opt input:checked::after { content: "✓"; position: absolute; inset: 0; display: flex;
+  align-items: center; justify-content: center; color: #fff; font-size: 20px; font-weight: 900; line-height: 1; }
 .lang-opt.granted { color: var(--red-deep); }
 .lang-opt.at-limit { opacity: .5; }
 .lang-foot { margin-top: 6px; display: flex; justify-content: flex-end; }
@@ -1347,8 +1356,15 @@ const Calc = {
     for (const k in fc) { if (/fighting-style-defense$/.test(fc[k] || "")) return true; }
     return false;
   },
-  // Nombre de langues SUPPLÉMENTAIRES au choix accordées par les capacités (trait « Langue supplémentaire »).
-  languageSlots(state) { return this.traitsOf(state).filter(t => t === "extra-language").length; },
+  // Nombre de langues SUPPLÉMENTAIRES au choix. Deux sources :
+  //  1) le trait "extra-language" (ex. Haut-elfe) ;
+  //  2) un fait SRD que les données générées n'encodent PAS en trait : l'Humain et le
+  //     Demi-elfe accordent « …et une langue de votre choix » (=+1). (Mécanique SRD = fait.)
+  languageSlots(state) {
+    const RACE_EXTRA = { human: 1, "half-elf": 1 };
+    const fromTraits = this.traitsOf(state).filter(t => t === "extra-language").length;
+    return fromTraits + (RACE_EXTRA[state.identity.race] || 0);
+  },
   // PV bonus par niveau donnés par des capacités toujours actives.
   bonusHPPerLevel(state) {
     let n = 0;
