@@ -30,6 +30,12 @@
   --radius: 10px;
   --shadow: 0 1px 3px rgba(60,45,20,.18), 0 4px 14px rgba(60,45,20,.10);
   --shape-stroke: %232b2620;
+  /* Norme de couleur par RÔLE (pastel) — carte 4. Jetons ajustables ici même.
+     saisie = champs qu'on remplit · action = boutons qu'on presse · calc = valeurs calculées.
+     Neutralisés en fort contraste (voir body.high-contrast). */
+  --role-saisie: #e9f0f8; --role-saisie-bd: #b8cee2;
+  --role-action: #efe9f7; --role-action-bd: #c9bce0;
+  --role-calc:   #e8efe6; --role-calc-bd:   #c0d0bd;
   /* --- État visuel PV / CA (indicateur cœur + bouclier) -----------------------
      Rampe perceptuellement régulière en oklch : l'urgence perçue suit la valeur,
      pas l'arithmétique sRGB. Ces L DOIVENT rester synchrones avec le calcul d'encre
@@ -258,8 +264,8 @@ body.top-flat #sheet { margin-top: 8px; }
 .mi-locked { margin-bottom: 8px; font-style: italic; }
 :disabled { opacity: .5; cursor: not-allowed; }
 .txt, .sel, .ta, .step-input, .lk-input {
-  font: inherit; color: var(--ink); background: var(--paper-2);
-  border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px;
+  font: inherit; color: var(--ink); background: var(--role-saisie);
+  border: 1px solid var(--role-saisie-bd); border-radius: 7px; padding: 7px 9px;
 }
 .txt:focus, .sel:focus, .ta:focus, .step-input:focus, .lk-input:focus,
 input:focus-visible, button:focus-visible, select:focus-visible {
@@ -277,10 +283,10 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 
 /* --- Stepper +/- ----------------------------------------------------------- */
 .stepper { display: inline-flex; align-items: stretch; border-radius: 8px; overflow: hidden;
-  border: 1px solid var(--line); background: var(--paper-2); }
+  border: 1px solid var(--role-saisie-bd); background: var(--role-saisie); }
 .step-btn {
   font: inherit; font-size: 1.1rem; line-height: 1; width: 34px; min-height: 36px;
-  border: none; background: var(--paper); color: var(--red-deep); cursor: pointer;
+  border: none; background: var(--role-action); color: var(--red-deep); cursor: pointer;
 }
 .step-btn:hover { background: var(--red); color: #fff; }
 .step-input { border: none; border-left: 1px solid var(--line); border-right: 1px solid var(--line);
@@ -439,7 +445,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   background-size: contain; background-repeat: no-repeat; background-position: center;
 }
 .ability-step {
-  width: 46px; height: 26px; border: 1px solid var(--line); background: var(--paper);
+  width: 46px; height: 26px; border: 1px solid var(--role-action-bd); background: var(--role-action);
   color: var(--red-deep); font-size: 1.15rem; line-height: 1; font-weight: 700;
   border-radius: 7px; cursor: pointer; padding: 0;
 }
@@ -598,7 +604,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   border-radius: 6px; cursor: pointer; min-height: 32px; min-width: 30px; }
 .icon-btn:hover { background: var(--paper); }
 .icon-btn.del:hover { background: var(--red); color: #fff; border-color: var(--red); }
-.add-btn { font: inherit; margin-top: 8px; background: none; border: 1px dashed var(--line-strong);
+.add-btn { font: inherit; margin-top: 8px; background: var(--role-action); border: 1px dashed var(--role-action-bd);
   color: var(--red-deep); border-radius: 8px; padding: 8px 12px; cursor: pointer; min-height: 38px; }
 .add-btn:hover { background: var(--paper-2); }
 
@@ -627,8 +633,8 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .feat-opt-lbl { font-size: .74rem; text-transform: uppercase; letter-spacing: .4px;
   color: var(--red-deep); font-weight: 700; margin-bottom: 6px; }
 .opt-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.opt-btn { font: inherit; font-weight: 700; background: var(--paper); color: var(--ink);
-  border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 12px; cursor: pointer; min-height: 38px; }
+.opt-btn { font: inherit; font-weight: 700; background: var(--role-action); color: var(--ink);
+  border: 1px solid var(--role-action-bd); border-radius: 8px; padding: 8px 12px; cursor: pointer; min-height: 38px; }
 .opt-btn:hover { background: var(--paper-2); }
 .opt-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
 .opt-desc { margin-top: 8px; font-size: 1rem; line-height: 1.5; white-space: pre-line; }
@@ -719,7 +725,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .coin .coin-lbl { flex: none; }
 .coin .stepper { flex: 1; width: auto; }
 .coin-lbl { font-family: var(--font-display); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
-.coin-lbl::before { content: ""; width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,.25); }
+.coin-lbl::before { content: ""; width: 28px; height: 28px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,.25); }
 .coin-pp::before { background: #d9dde2; }
 .coin-gp::before { background: #e7c14a; }
 .coin-sp::before { background: #c2c7cc; }
@@ -805,6 +811,10 @@ body.high-contrast {
   --bg-sheet: #ffffff; --paper: #ffffff; --paper-2: #f0f0f0;
   --ink: #000000; --ink-soft: #222; --line: #555; --line-strong: #000;
   --red: #b00000; --red-deep: #8a0000;
+  /* Norme pastel neutralisée : contraste maximal (fond blanc, bords francs). */
+  --role-saisie: #ffffff; --role-saisie-bd: #555;
+  --role-action: #ffffff; --role-action-bd: #000;
+  --role-calc:   #ffffff; --role-calc-bd:   #000;
 }
 body.high-contrast .card { border-width: 2px; box-shadow: none; }
 /* Cœur et bouclier exclus : leur couleur est sémantique (rampes PV/CA) — un contrast(1.4)
