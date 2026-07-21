@@ -135,6 +135,26 @@ body.has-bg-image #sheet, body.has-bg-image #topbar { backdrop-filter: blur(1px)
 .tb-contrast { min-width: 42px; justify-content: center; font-size: 1.5rem; line-height: 1; padding: 1px 9px; }
 .tb-contrast.active { background: var(--gold); color: #2b2620; border-color: var(--gold); }
 
+/* --- Barre du haut repliable (gagner de la hauteur sur écrans courts) ------ */
+.tb-flatten { min-width: 38px; justify-content: center; font-size: 1.1rem; line-height: 1; }
+/* Aplatie : la barre SORT du flux (fixed) pour ne réserver AUCUNE hauteur —
+   les boîtes remontent occuper l'espace. Seule la flèche toggle reste, flottante
+   en haut à gauche ; logo, titre, accueil et actions sont cachés. */
+body.top-flat #topbar {
+  position: fixed; top: 0; left: 0; width: auto;
+  padding: 4px; gap: 0; background: none; box-shadow: none;
+}
+body.top-flat #topbar .tb-right,
+body.top-flat #topbar .tb-title,
+body.top-flat #topbar .tb-home,
+body.top-flat #topbar .tb-logo { display: none; }
+/* Le toggle garde un fond solide : lisible et cliquable par-dessus le contenu. */
+body.top-flat .tb-flatten {
+  background: linear-gradient(180deg, #2b2620, #221e18);
+  border: 2px solid var(--gold); color: #f2e9d5; box-shadow: var(--shadow);
+}
+body.top-flat #sheet { margin-top: 8px; }
+
 /* --- Pavé de navigation boîte-à-boîte (accessibilité joystick) ------------- */
 /* Cible FIXE au milieu-droit : ne défile jamais, le curseur reste posé dessus.
    Grosses cibles rondes (56 px ≫ minimum WCAG 44 px) pour troubles moteurs. */
@@ -5843,6 +5863,11 @@ function applyUiPrefs() {
   if (p.highContrast != null) state.theme.highContrast = p.highContrast;
   if (p.sounds != null) state.fx.sounds = p.sounds;
 }
+// Barre du haut aplatie (préférence navigateur) : classe sur <body>, survit aux
+// reconstructions du topbar. Réappliquée à l'ouverture.
+function applyTopFlat() {
+  document.body.classList.toggle("top-flat", loadUiPrefs().topFlat === true);
+}
 function downloadCharacter() {
   const name = (state.identity.charName || "personnage").replace(/[^\w\-]+/g,"_");
   const blob = new Blob([JSON.stringify(state, null, 2)], { type:"application/json" });
@@ -5883,6 +5908,18 @@ function buildTopbar() {
   if (location.protocol !== "file:" && homeSeg && homeSeg !== "index.html") {
     left.insertBefore(el("a", { class:"tb-home", href:"index.html", title:"Accueil du site (les deux outils)", text:"🏠" }), left.firstChild);
   }
+  // Toggle « aplatir la barre du haut » : gagne de la hauteur verticale (écrans courts).
+  // Reste visible et de taille normale même quand la barre est repliée. État mémorisé navigateur.
+  const flat = loadUiPrefs().topFlat === true;
+  left.insertBefore(el("button", { class:"tb-btn tb-flatten", type:"button",
+    text: flat ? "▾" : "▴",
+    title: flat ? "Afficher la barre du haut" : "Réduire la barre du haut (gagner de la hauteur)",
+    "aria-label": flat ? "Afficher la barre du haut" : "Réduire la barre du haut",
+    onclick:(e)=>{ const now = !(loadUiPrefs().topFlat === true);
+      setUiPref("topFlat", now); applyTopFlat();
+      e.currentTarget.textContent = now ? "▾" : "▴";
+      const lbl = now ? "Afficher la barre du haut" : "Réduire la barre du haut (gagner de la hauteur)";
+      e.currentTarget.title = lbl; e.currentTarget.setAttribute("aria-label", lbl); } }), left.firstChild);
   const right = el("div", { class:"tb-right" });
 
   // ✚ Nouveau : tout au début de la zone d'actions, AVANT le groupe Lisibilité.
@@ -6043,6 +6080,7 @@ function init() {
   buildTopbar();
   render();
   mountPager();
+  applyTopFlat();
   // Sauvegarde automatique silencieuse toutes les 10 minutes (localStorage)
   setInterval(()=>{ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e){} }, 600000);
 }
