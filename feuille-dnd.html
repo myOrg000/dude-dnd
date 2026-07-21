@@ -135,6 +135,27 @@ body.has-bg-image #sheet, body.has-bg-image #topbar { backdrop-filter: blur(1px)
 .tb-contrast { min-width: 42px; justify-content: center; font-size: 1.5rem; line-height: 1; padding: 1px 9px; }
 .tb-contrast.active { background: var(--gold); color: #2b2620; border-color: var(--gold); }
 
+/* --- Pavé de navigation boîte-à-boîte (accessibilité joystick) ------------- */
+/* Cible FIXE au milieu-droit : ne défile jamais, le curseur reste posé dessus.
+   Grosses cibles rondes (56 px ≫ minimum WCAG 44 px) pour troubles moteurs. */
+.nav-pager {
+  position: fixed; right: 10px; top: 50%; transform: translateY(-50%);
+  z-index: 60; display: flex; flex-direction: column; gap: 8px;
+}
+.nav-pager-btn {
+  width: 56px; height: 56px; border-radius: 50%; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.7rem; line-height: 1; cursor: pointer; color: #f2e9d5;
+  background: linear-gradient(180deg, #2b2620, #221e18);
+  border: 2px solid var(--gold); box-shadow: var(--shadow);
+}
+.nav-pager-btn:hover { background: var(--red); }
+.nav-pager-btn:active { transform: translateY(1px); }
+@media (max-width: 620px) {
+  .nav-pager { right: 6px; gap: 6px; }
+  .nav-pager-btn { width: 48px; height: 48px; font-size: 1.5rem; }
+}
+
 /* Fenêtre de mot de passe (masqué) */
 .pw-modal { position: fixed; inset: 0; z-index: 250; display: flex; align-items: center;
   justify-content: center; background: rgba(20,15,8,.55); animation: diceFadeIn .15s ease-out; }
@@ -5974,6 +5995,44 @@ function loadBtn() {
 // =============================================================================
 //  SECTION 10 — INIT
 // =============================================================================
+// =============================================================================
+//  Pavé de navigation boîte-à-boîte (accessibilité : joystick / troubles moteurs)
+//  Cible FIXE au milieu-droit : le curseur ne bouge pas, on clique en rafale.
+//  Chaque clic aligne le haut de la boîte suivante / précédente juste sous le
+//  topbar sticky. Butée aux extrémités. Saut instantané si animations coupées.
+// =============================================================================
+function mountPager() {
+  if (document.getElementById("nav-pager")) return; // monté une seule fois (hors #sheet re-rendu)
+  const EPS = 6; // marge anti-rebond : évite de re-sélectionner la boîte déjà alignée
+  const go = (dir) => {
+    const bar = document.getElementById("topbar");
+    const off = (bar ? bar.getBoundingClientRect().height : 0) + 8; // dégagement sous le topbar
+    const cards = Array.from(document.querySelectorAll("#sheet > .card"));
+    if (!cards.length) return;
+    const tops = cards.map(c => c.getBoundingClientRect().top); // hauts relatifs au viewport
+    let target = null;
+    if (dir > 0) {            // suivante : 1re boîte dont le haut est nettement SOUS la ligne
+      for (const t of tops) { if (t > off + EPS) { target = t; break; } }
+    } else {                  // précédente : dernière boîte dont le haut est nettement AU-DESSUS
+      for (const t of tops) { if (t < off - EPS) target = t; else break; }
+    }
+    if (target == null) return; // butée : plus de boîte dans cette direction
+    const reduce = document.body.classList.contains("no-anim")
+      || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const dest = window.scrollY + target - off;
+    window.scrollTo({ top: dest, behavior: reduce ? "auto" : "smooth" });
+    if (state && state.fx && state.fx.sounds) Audio.click();
+  };
+  const pager = el("div", { id:"nav-pager", class:"nav-pager", role:"navigation",
+    "aria-label":"Aller à la boîte précédente ou suivante" }, [
+    el("button", { class:"nav-pager-btn", type:"button", text:"▲",
+      title:"Boîte précédente", "aria-label":"Boîte précédente", onclick:()=>go(-1) }),
+    el("button", { class:"nav-pager-btn", type:"button", text:"▼",
+      title:"Boîte suivante", "aria-label":"Boîte suivante", onclick:()=>go(1) })
+  ]);
+  document.body.appendChild(pager);
+}
+
 function init() {
   if (!SRD) { document.getElementById("sheet").innerHTML =
     "<div class='fatal'>Données SRD non chargées. Vérifiez que data/srd-2014.js est présent.</div>"; return; }
@@ -5983,6 +6042,7 @@ function init() {
   applyDisplay();
   buildTopbar();
   render();
+  mountPager();
   // Sauvegarde automatique silencieuse toutes les 10 minutes (localStorage)
   setInterval(()=>{ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e){} }, 600000);
 }
