@@ -653,6 +653,20 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .encum.over .encum-txt { color: var(--red-deep); font-weight: 700; }
 .food-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
 
+/* --- Montures -------------------------------------------------------------- */
+.mount-pick { max-width: 340px; margin-bottom: 12px; }
+.mount-table { width: 100%; border-collapse: collapse; }
+.mount-table th, .mount-table td { padding: 8px 10px; text-align: left;
+  border-bottom: 1px solid var(--line); }
+.mount-table thead th { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--red); font-weight: 700; border-bottom: 2px solid var(--line-strong); }
+.mount-table thead th:last-child, .mount-table tbody td:last-child { text-align: right; }
+.mount-table tbody td { font-size: .95rem; color: var(--ink); height: 1.4em; }
+.mount-table .mt-name { font-weight: 700; }
+.mount-table tbody td:nth-child(2), .mount-table tbody td:nth-child(3) { font-family: var(--font-num); }
+.mount-table tbody td:last-child { color: var(--red); font-weight: 700; }
+.mount-note { margin: 10px 0 0; font-size: .8rem; color: var(--ink-soft); }
+
 /* --- Monnaie --------------------------------------------------------------- */
 .money-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13em, 1fr)); gap: 10px; }
 .coin { display: flex; align-items: center; gap: 10px; min-width: 0;
@@ -864,7 +878,7 @@ window.RULES = {
   sections: {
     identity:true, abilities:true, combat:true, saves:true, skills:true,
     attacks:true, proficiencies:true, features:true, spells:"auto",
-    inventory:true, money:true, magicItems:true, appearance:true, notes:true
+    inventory:true, money:true, magicItems:true, appearance:true, mounts:true, notes:true
   },
 
   // --- Options de jeu ---------------------------------------------------------
@@ -913,7 +927,7 @@ const CFG = {
   sections: Object.assign({
     identity:true, abilities:true, combat:true, saves:true, skills:true,
     attacks:true, proficiencies:true, features:true, spells:"auto",
-    inventory:true, money:true, magicItems:true, appearance:true, notes:true
+    inventory:true, money:true, magicItems:true, appearance:true, mounts:true, notes:true
   }, RULES.sections || {}),
   options: Object.assign({
     autoLevelFromXP:false, trackEncumbrance:true, trackFood:false,
@@ -1490,6 +1504,7 @@ function blankCharacter() {
     spells: { known:[], prepared:[], slotsUsed:{} },
     money: { pp:0, gp:0, sp:0, cp:0 },
     treasures: "",
+    mount: "",                 // clé de la monture choisie ("" = aucune)
     languages: [],             // langues choisies (multi-select)
     languagesNote: "",
     profNote: "",
@@ -5599,6 +5614,41 @@ function renderMagicItems() {
 // --- Apparence ---
 // Apparence : ses champs vivent dans la carte « Attributs du personnage » (voir renderAttributes).
 
+// --- Montures ---
+// Valeurs SRD 5.1 (CC-BY-4.0). Attaque = bonus · dégâts · type.
+const MOUNTS = [
+  { key:"cheval-de-selle",  nom:"Cheval de selle",  ca:10, pv:13, atk:"+5 · 2d4+3 contondant", vit:"18 m", charge:"480 lb",  cout:"75 po" },
+  { key:"cheval-de-guerre", nom:"Cheval de guerre", ca:11, pv:19, atk:"+6 · 2d6+4 contondant", vit:"18 m", charge:"540 lb",  cout:"400 po" },
+  { key:"cheval-de-trait",  nom:"Cheval de trait",  ca:10, pv:19, atk:"+6 · 2d4+4 contondant", vit:"12 m", charge:"540 lb",  cout:"50 po" },
+  { key:"poney",            nom:"Poney",            ca:10, pv:11, atk:"+4 · 2d4+2 contondant", vit:"12 m", charge:"225 lb",  cout:"30 po" },
+  { key:"chameau",          nom:"Chameau",          ca:9,  pv:15, atk:"+5 · 1d4 contondant",   vit:"15 m", charge:"480 lb",  cout:"50 po" },
+  { key:"mulet-ane",        nom:"Mulet / Âne",      ca:10, pv:11, atk:"+2 · 1d4+2 contondant", vit:"12 m", charge:"420 lb",  cout:"8 po" },
+  { key:"mastiff",          nom:"Mastiff",          ca:12, pv:5,  atk:"+3 · 1d6+1 perforant",  vit:"12 m", charge:"195 lb",  cout:"25 po" },
+  { key:"elephant",         nom:"Éléphant",         ca:12, pv:76, atk:"+8 · 3d8+6 perforant",  vit:"12 m", charge:"1320 lb", cout:"200 po" }
+];
+function renderMounts() {
+  const chosen = MOUNTS.find(m => m.key === state.mount) || null;
+  const pick = field("Ma monture :",
+    select(()=>state.mount, v=>state.mount=v, MOUNTS.map(m=>({ value:m.key, label:m.nom })), "Aucune monture…"),
+    "fw-mount");
+  const cols = ["MONTURE","CA","PV","ATTAQUE","VITESSE","CHARGE","COÛT"];
+  const head = el("tr", {}, cols.map((c,i)=> el("th", { class: i===0?"mt-name":"", text:c })));
+  const vals = chosen
+    ? [chosen.nom, chosen.ca, chosen.pv, chosen.atk, chosen.vit, chosen.charge, chosen.cout]
+    : ["","","","","","",""];
+  const row = el("tr", {}, vals.map((v,i)=> el("td", { class: i===0?"mt-name":"", text: v===""?"":String(v) })));
+  const table = el("table", { class:"mount-table" }, [
+    el("thead", {}, [head]),
+    el("tbody", {}, [row])
+  ]);
+  const note = el("p", { class:"mount-note", text:"ⓘ Charge en livres (STR×15, doublée par catégorie de taille > M). Attaque = bonus · dégâts · type. Source : SRD 5.1 (CC-BY-4.0)." });
+  return card("Montures", el("div", { class:"mount-box" }, [
+    el("div", { class:"mount-pick" }, [pick]),
+    table,
+    note
+  ]), { span:12 });
+}
+
 // --- Notes ---
 function renderNotes() {
   return card("Notes", textArea(()=>state.notes, v=>state.notes=v,
@@ -5651,7 +5701,7 @@ function render() {
     ["abilities", renderAbilities], ["features", renderFeatures],
     ["inventory", renderInventory], ["magicItems", renderMagicItems],
     ["proficiencies", renderProficiencies], ["identity", renderIdentity],
-    ["appearance", renderAttributes], ["notes", renderNotes]
+    ["appearance", renderAttributes], ["mounts", renderMounts], ["notes", renderNotes]
   ];
   const dmPanel = renderDMPanel(); if (dmPanel) root.appendChild(dmPanel);
   order.forEach(([name, fn]) => {
