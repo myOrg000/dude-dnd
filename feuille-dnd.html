@@ -530,7 +530,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   grid-template-columns: minmax(0,1fr) 60px minmax(0,1.25fr) 32px; gap: 8px; align-items: center; }
 .attack-head { font-size: .66rem; text-transform: uppercase; color: var(--ink-soft);
   font-weight: 700; padding: 0 2px 4px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
-.attack-row { padding: 3px 0; min-width: 0; }
+.attack-row { padding: 7px 0; min-width: 0; border-bottom: 1px solid var(--line); }
 .attack-row .sel { width: 100%; min-width: 0; }
 .attack-row.magic { background: rgba(184,144,47,.08); border-radius: 8px; }
 .atk-note { font-size: 1rem; line-height: 1.45; margin-top: 8px; padding-top: 8px;
@@ -635,7 +635,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .inv-head, .inv-row { display: grid; grid-template-columns: 4fr 132px 1fr 64px; gap: 8px; align-items: center; }
 .inv-head { font-size: .66rem; text-transform: uppercase; color: var(--ink-soft);
   font-weight: 700; padding-bottom: 4px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
-.inv-row { padding: 3px 0; }
+.inv-row { padding: 7px 0; border-bottom: 1px solid var(--line); }
 .inv-name { padding: 7px 2px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center; }
 .inv-wt { padding: 7px 2px; font-family: var(--font-num); align-self: center; }
 .inv-actions { display: flex; gap: 4px; justify-content: flex-end; }
@@ -654,7 +654,10 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .food-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
 
 /* --- Montures -------------------------------------------------------------- */
-.mount-pick { max-width: 340px; margin-bottom: 12px; }
+.mount-pick { margin-bottom: 12px; }
+.fw-mount { flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fw-mount .field-lbl { flex: none; }
+.fw-mount .sel { width: auto; min-width: 220px; }
 .mount-table { width: 100%; border-collapse: collapse; }
 .mount-table th, .mount-table td { padding: 8px 10px; text-align: left;
   border-bottom: 1px solid var(--line); }
@@ -4066,10 +4069,11 @@ const SECTION_HELP = {
   "Maîtrises & langues":"Outils et instruments que vous savez utiliser, et langues que vous parlez.",
   "Capacités":"Les capacités spéciales de votre classe et de votre race. Cliquez sur une ligne pour voir le détail.",
   "Sorts":"Vos sorts connus / préparés et vos emplacements de sorts.",
-  "Équipement":"Ce que vous transportez. La charge totale est comparée à votre capacité de port.",
+  "Équipements":"Ce que vous transportez. La charge totale est comparée à votre capacité de port.",
   "Monnaie & trésors":"Votre argent (platine, or, argent, cuivre) et vos objets de valeur.",
   "Objets magiques":"Vos objets magiques et leurs propriétés.",
   "Attributs du personnage":"Race, alignement et description physique (sexe, âge, taille, cheveux…).",
+  "Monture":"Votre monture active. Choisissez-la dans la liste : sa fiche (CA, PV, attaque, vitesse, charge, coût) s'affiche.",
   "Notes":"Histoire, contacts, objectifs, liens avec les autres personnages."
 };
 const SKILL_HELP = {
@@ -4700,7 +4704,7 @@ function renderInventory() {
     foodNode = el("div",{class:"food-row"},[el("span",{class:"sub-lbl",text:"Rations"}),
       stepper(()=>state.food.rations, v=>state.food.rations=Math.max(0,v), {min:0})]);
   }
-  return card("Équipement", el("div",{},[
+  return card("Équipements", el("div",{},[
     el("div",{class:"inv-head"},[el("span",{text:"Objet"}),el("span",{text:"Qté"}),el("span",{text:"Poids"}),el("span",{text:""})]),
     ...rows,
     el("div",{class:"inv-add"},[addSel, add]),
@@ -5635,14 +5639,14 @@ function renderMounts() {
   const head = el("tr", {}, cols.map((c,i)=> el("th", { class: i===0?"mt-name":"", text:c })));
   const vals = chosen
     ? [chosen.nom, chosen.ca, chosen.pv, chosen.atk, chosen.vit, chosen.charge, chosen.cout]
-    : ["","","","","","",""];
+    : Array(7).fill("\u00A0");   // ligne vide : espace insécable → garde la hauteur d'une ligne pleine
   const row = el("tr", {}, vals.map((v,i)=> el("td", { class: i===0?"mt-name":"", text: v===""?"":String(v) })));
   const table = el("table", { class:"mount-table" }, [
     el("thead", {}, [head]),
     el("tbody", {}, [row])
   ]);
   const note = el("p", { class:"mount-note", text:"ⓘ Charge en livres (STR×15, doublée par catégorie de taille > M). Attaque = bonus · dégâts · type. Source : SRD 5.1 (CC-BY-4.0)." });
-  return card("Montures", el("div", { class:"mount-box" }, [
+  return card("Monture", el("div", { class:"mount-box" }, [
     el("div", { class:"mount-pick" }, [pick]),
     table,
     note
