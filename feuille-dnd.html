@@ -357,6 +357,23 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   transition: transform .12s ease; }
 .dice-btn:hover svg { transform: scale(1.1) rotate(-6deg); }
 .dice-btn:active svg { transform: scale(.95); }
+/* Boutons du plateau : VRAIS dés 3D miniatures (plus gros chiffre devant, droit).
+   L'échelle CSS ramène le dé natif (116 px, cube 72 px) à la taille du bouton. */
+.dice-btn .mini-die { position: relative; width: 100%; height: 100%; pointer-events: none;
+  transition: transform .12s ease; }
+.dice-btn:hover .mini-die { transform: scale(1.1) rotate(-6deg); }
+.dice-btn:active .mini-die { transform: scale(.95); }
+.mini-die-inner { position: absolute; top: 0; left: 0; width: 116px; height: 116px;
+  transform-origin: 0 0; transform: scale(0.7931); perspective: 600px; }        /* 92/116 */
+.mini-die-inner.mini-d6 { width: 72px; height: 72px;
+  transform: translate(20.1px, 20.1px) scale(0.7188); }  /* 92/72 × 0.5625 (d6 réduit 2× d'1/4), centré */
+.atk-dice .mini-die-inner { transform: scale(0.931); }                           /* 108/116 */
+.atk-dice .mini-die-inner.mini-d6 { transform: translate(23.6px, 23.6px) scale(0.8438); } /* 108/72 × 0.5625, centré */
+/* Chiffres des minis agrandis pour rester lisibles une fois réduits */
+.mini-die .solid-num { font-size: 2rem; }
+.mini-die .solid-die[data-sides="12"] .solid-num { font-size: 1.9rem; }
+.mini-die .solid-die[data-sides="10"] .solid-num { font-size: 1.7rem; }
+.mini-die .solid-die[data-sides="20"] .solid-num { font-size: 1.4rem; }
 .dice-color-pick { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; margin-top: 4px; font-size: .8rem; }
 .dice-color-pick input[type=color] { width: 28px; height: 28px; border: 1px solid var(--line);
   border-radius: 6px; padding: 0; cursor: pointer; background: none; }
@@ -404,8 +421,8 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   font-family: var(--font-num); font-weight: 800; font-size: 1.5rem; color: #ffd500;
   text-shadow: 0 2px 6px rgba(0,0,0,.6); user-select: none; -webkit-user-select: none; pointer-events: none;
 }
-/* Chiffres plus petits sur d10 et d20 (petites facettes) */
-.solid-die[data-sides="10"] .solid-num,
+/* Chiffres ajustés aux facettes : d10 agrandi (+50 %), d20 petit (facettes étroites) */
+.solid-die[data-sides="10"] .solid-num { font-size: 1.125rem; }
 .solid-die[data-sides="20"] .solid-num { font-size: 0.75rem; }
 .solid-num.fail { color: #ffd5d0; text-shadow: 0 0 14px #c0392b; }
 /* 6 et 9 : base du chiffre soulignée (lever l'ambiguïté, comme sur les vrais dés) */
@@ -3508,7 +3525,7 @@ function diceTray() {
   const row = el("div", { class:"dice-row" });
   [4,6,8,10,12,20].forEach(sides => {
     const btn = el("button", { class:"dice-btn", title:"Lancer un d"+sides, onclick:(e)=>rollDie(sides, e) });
-    btn.appendChild(dieShapeSVG(sides, color, sides));
+    btn.appendChild(miniDie3D(sides, color));
     row.appendChild(btn);
   });
   const children = [ row, el("div", { class:"dice-tray-lbl muted", text:"🎲 Lancer un dé" }) ];
@@ -3702,6 +3719,19 @@ function cubeFinalRotation(face) {
             2:"rotateX(0deg) rotateY(-90deg)", 5:"rotateX(0deg) rotateY(90deg)",
             3:"rotateX(-90deg) rotateY(0deg)", 4:"rotateX(90deg) rotateY(0deg)" })[face]
          || "rotateX(0deg) rotateY(0deg)";
+}
+// Miniature STATIQUE d'un vrai dé 3D pour le plateau : plus gros chiffre devant,
+// droit, aux couleurs du MJ (le plateau se re-rend quand le MJ change la couleur).
+// L'échelle et la perspective sont dans le CSS (.mini-die / .mini-die-inner).
+function miniDie3D(sides, color){
+  const die = sides===6 ? build3DCube(color) : buildSolidDie(sides, color);
+  if (sides===6) die.style.transform = cubeFinalRotation(6);
+  else die.style.transform = solidFinalRotation(sides, die._faces.findIndex(F=>F.val===sides));
+  const inner=_el('div','mini-die-inner'+(sides===6?' mini-d6':''));
+  inner.appendChild(die);
+  const wrap=_el('div','mini-die');
+  wrap.appendChild(inner);
+  return wrap;
 }
 // Dé non-cubique : silhouette ombrée + chiffre, qui culbute en 3D
 function buildPolyDie(sides, result, color, isFail) {
