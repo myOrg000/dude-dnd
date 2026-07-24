@@ -408,6 +408,8 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .solid-die[data-sides="10"] .solid-num,
 .solid-die[data-sides="20"] .solid-num { font-size: 0.75rem; }
 .solid-num.fail { color: #ffd5d0; text-shadow: 0 0 14px #c0392b; }
+/* 6 et 9 : base du chiffre soulignée (lever l'ambiguïté, comme sur les vrais dés) */
+.solid-num.num69, .cube-face.num69 { text-decoration: underline; text-decoration-thickness: 0.09em; text-underline-offset: 0.14em; }
 
 /* Arrêt + réussite / échec (d20 uniquement) */
 .die-stage.settled.crit { animation: critPulse 1s ease-out infinite; }
@@ -3528,9 +3530,13 @@ function diceTray() {
      d10 = trapezoedre pentagonal EQUITABLE (10 cerfs-volants congruents).
    Normale de face = Newell (plan reel). nrm(centroide) serait fausse d'environ
    39deg sur les kites du d10 -> placement, clip-path ET atterrissage fausses.
+   LE SCORE = LA FACE D'ARRET : les chiffres sont poses en permutation aleatoire
+   a la construction et n'en bougent plus ; a l'arret, settlePose lit la face
+   presentee a la camera, la met a plat et REDRESSE le chiffre (rotation z ecran).
+   Rien n'est echange ni impose : ce que le joueur lit pendant le roulement est
+   ce qui compte. Equite : permutation aleatoire des chiffres (+ orientation de
+   depart aleatoire pour le d6, dont les chiffres sont fixes, opposes = 7).
      FLAG 1 (TEXT_MIRROR) : si les CHIFFRES s'affichent en miroir -> true.
-     FLAG 2 : si le de atterrit sur la mauvaise face -> inverser le signe de
-              l'angle dans solidFinalRotation (commentaire FLAG 2).
    ============================================================================ */
 const DICE_GEOM = {
   4: { v:[[1.732051,1.732051,1.732051],[1.732051,-1.732051,-1.732051],[-1.732051,1.732051,-1.732051],[-1.732051,-1.732051,1.732051]], f:[[1,2,0],[3,0,2],[3,2,1],[3,1,0]] },
@@ -3549,6 +3555,24 @@ const _dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 const _mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
 const _nrm=a=>{const L=Math.hypot(a[0],a[1],a[2])||1;return [a[0]/L,a[1]/L,a[2]/L];};
 const _mean=ps=>{const c=[0,0,0];ps.forEach(p=>{c[0]+=p[0];c[1]+=p[1];c[2]+=p[2];});return _mul(c,1/ps.length);};
+// Quaternions (orientation du de) — partages par bounceInside et settlePose.
+// Convention Hamilton : qmul(a,b) = appliquer b PUIS a ; qmat = matrix3d CSS
+// (chaine column-major -> la matrice CSS obtenue est la R standard du quaternion).
+const qmul=(a,b)=>[a[3]*b[0]+a[0]*b[3]+a[1]*b[2]-a[2]*b[1],
+                   a[3]*b[1]-a[0]*b[2]+a[1]*b[3]+a[2]*b[0],
+                   a[3]*b[2]+a[0]*b[1]-a[1]*b[0]+a[2]*b[3],
+                   a[3]*b[3]-a[0]*b[0]-a[1]*b[1]-a[2]*b[2]];
+const qaxis=(x,y,z,ang)=>{const h=ang/2,s=Math.sin(h);return [x*s,y*s,z*s,Math.cos(h)];};
+const qnorm=q=>{const L=Math.hypot(q[0],q[1],q[2],q[3])||1;return [q[0]/L,q[1]/L,q[2]/L,q[3]/L];};
+const qmat=q=>{const x=q[0],y=q[1],z=q[2],w=q[3];
+  return "matrix3d("+(1-2*(y*y+z*z))+","+(2*(x*y+z*w))+","+(2*(x*z-y*w))+",0,"
+    +(2*(x*y-z*w))+","+(1-2*(x*x+z*z))+","+(2*(y*z+x*w))+",0,"
+    +(2*(x*z+y*w))+","+(2*(y*z-x*w))+","+(1-2*(x*x+y*y))+",0,0,0,0,1)";};
+// Lignes de la matrice R du quaternion (celle que le navigateur applique via qmat)
+const qrows=q=>{const x=q[0],y=q[1],z=q[2],w=q[3];
+  return [[1-2*(y*y+z*z), 2*(x*y-z*w),   2*(x*z+y*w)],
+          [2*(x*y+z*w),   1-2*(x*x+z*z), 2*(y*z-x*w)],
+          [2*(x*z-y*w),   2*(y*z+x*w),   1-2*(x*x+y*y)]];};
 // Repere orthonorme d'une face : centre c, normale exterieure n (Newell), tangentes u,w
 function _faceFrame(verts, face){
   const ps=face.map(i=>verts[i]);
@@ -3582,32 +3606,58 @@ function _faceClip(fr, scale){
   });
   return `polygon(${pts.join(', ')})`;
 }
-// Rotation MONDE amenant la face faceIdx face camera (+Z)
+// Orientation amenant la face faceIdx a plat face camera (+z), CHIFFRE DROIT :
+// colonnes CSS = lignes (u, wy, n) -> R·n=+z (face devant), R·wy=+y (bas du texte
+// vers le bas de l'ecran). det=+1 quel que soit TEXT_MIRROR.
 function solidFinalRotation(sides, faceIdx){
   const G=DICE_GEOM[sides];
   const fr=_faceFrame(G.v, G.f[faceIdx]);
-  const n=fr.n, z=[0,0,1];
-  const dp=Math.max(-1,Math.min(1,_dot(n,z)));
-  let ang=Math.acos(dp)*180/Math.PI;          // FLAG 2 : si mauvais atterrissage -> ang = -ang
-  if (ang<1e-3)     return 'rotate3d(1,0,0,0deg)';
-  if (ang>179.999)  return 'rotate3d(1,0,0,180deg)';
-  const ax=_nrm(_cross(n,z));
-  return `rotate3d(${ax[0].toFixed(6)},${ax[1].toFixed(6)},${ax[2].toFixed(6)},${ang.toFixed(4)}deg)`;
+  const u = TEXT_MIRROR ? fr.u : _mul(fr.u,-1);
+  const w = TEXT_MIRROR ? fr.w : _mul(fr.w,-1);
+  const n = fr.n, f6=v=>v.toFixed(6);
+  return `matrix3d(${f6(u[0])},${f6(w[0])},${f6(n[0])},0,${f6(u[1])},${f6(w[1])},${f6(n[1])},0,${f6(u[2])},${f6(w[2])},${f6(n[2])},0,0,0,0,1)`;
+}
+// Pose d'arret (PURE, testable hors navigateur). Depuis l'orientation d'arret q et
+// les faces [{n bas-normale, t bas-du-texte, val chiffre}] (repere du de), retourne
+// { idx, q } : la face reellement presentee a la camera, et l'orientation finale qui
+// la met A PLAT (normale sur +z) avec le CHIFFRE DROIT (bas du texte vers +y ecran).
+// Le chiffre annonce doit etre faces[idx].val — rien n'est echange.
+function settlePose(q, faces){
+  let R=qrows(q), best=0, bestd=-2;
+  for (let i=0;i<faces.length;i++){
+    const n=faces[i].n, d=R[2][0]*n[0]+R[2][1]*n[1]+R[2][2]*n[2];
+    if (d>bestd){ bestd=d; best=i; }
+  }
+  const bn=faces[best].n;
+  const nix=R[0][0]*bn[0]+R[0][1]*bn[1]+R[0][2]*bn[2];
+  const niy=R[1][0]*bn[0]+R[1][1]*bn[1]+R[1][2]*bn[2];
+  const ang=Math.acos(Math.max(-1,Math.min(1,bestd)));      // bascule : face a plat (normale +z)
+  if (ang>1e-3){ const al=Math.hypot(nix,niy)||1; q=qnorm(qmul(qaxis(niy/al,-nix/al,0,ang), q)); }
+  R=qrows(q);
+  const t=faces[best].t;                                    // bas du texte de la face
+  const tx=R[0][0]*t[0]+R[0][1]*t[1]+R[0][2]*t[2];
+  const ty=R[1][0]*t[0]+R[1][1]*t[1]+R[1][2]*t[2];
+  let spin=Math.PI/2-Math.atan2(ty,tx);                     // redressement du chiffre
+  if (spin>Math.PI) spin-=2*Math.PI; else if (spin<-Math.PI) spin+=2*Math.PI;
+  if (Math.abs(spin)>1e-6) q=qnorm(qmul(qaxis(0,0,1,spin), q));
+  return { idx:best, q:q };
 }
 // util DOM minimal (independant du el() du projet)
 function _el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
-// Construit le de : un .solid-die contenant N faces .solid-face ; le resultat est
-// sur la face 0 (celle qui arrivera DEVANT a l'arret via dataset.finalRot).
-function buildSolidDie(sides, result, color, isFail){
+// Construit le de : un .solid-die contenant N faces .solid-face. Chaque face porte
+// un chiffre FIXE (permutation aleatoire de 1..N) : le score sera le chiffre de la
+// face sur laquelle le de s'arrete — la physique decide, l'equite vient de la
+// permutation (meme une physique biaisee par face donne un chiffre uniforme).
+function buildSolidDie(sides, color){
   const G=DICE_GEOM[sides];
   const scale=DIE_SCALE[sides]||50;
   const die=_el('div','solid-die');
   die.dataset.sides = sides;
   die.style.setProperty('--die-color', color||'#b03a2e');
-  const others=[];
-  for(let k=1;k<=sides;k++) if(k!==result) others.push(k);
-  for(let i=others.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[others[i],others[j]]=[others[j],others[i]];}
-  const nums=[];
+  const vals=[];
+  for(let k=1;k<=sides;k++) vals.push(k);
+  for(let i=vals.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[vals[i],vals[j]]=[vals[j],vals[i]];}
+  die._faces=[];
   G.f.forEach((face,idx)=>{
     const fr=_faceFrame(G.v,face);
     const f=_el('div','solid-face');
@@ -3615,29 +3665,35 @@ function buildSolidDie(sides, result, color, isFail){
     f.style.transform=_faceMatrix(fr,scale);
     f.style.clipPath=_faceClip(fr,scale);
     f.style.webkitClipPath=f.style.clipPath;
-    const val = idx===0 ? result : others[(idx-1)%others.length];
-    const span=_el('span','solid-num'+(isFail&&idx===0?' fail':''), val);
-    f.appendChild(span); nums.push(span);
+    const val=vals[idx];
+    const span=_el('span','solid-num'+(val===6||val===9?' num69':''), val);
+    f.appendChild(span);
     die.appendChild(f);
+    // n = normale de la face, t = bas du texte (colonne Y du _faceMatrix), val = chiffre
+    die._faces.push({ n:fr.n, t:(TEXT_MIRROR?fr.w:_mul(fr.w,-1)), val:val, el:span });
   });
-  die._nums = nums;                                     // spans par face : pose le résultat sur la face arrêtée
-  die.dataset.finalRot = solidFinalRotation(sides, 0);  // repli (mouvement réduit / sans rAF) : face 0 = résultat
+  die.dataset.finalRot = solidFinalRotation(sides, 0);  // repli (mouvement réduit / sans rAF) : face 0, chiffre aléatoire
   return die;
 }
 
-// Cube d6 réel (6 faces numérotées, ombrées selon l'orientation)
-function build3DCube(result, color) {
+// Cube d6 réel (6 faces numérotées FIXES, opposés = 7, ombrées selon l'orientation).
+// Chaque face porte sa normale n et son bas-du-texte t (repère cube, y écran vers le
+// bas, déduits des transforms CSS .cf-*) pour lire la face d'arrêt comme les solides.
+function build3DCube(color) {
   const cube = el("div", { class:"cube" });
   const faces = [
-    ["cf-front", 1, color],
-    ["cf-back",  6, shadeColor(color,-16)],
-    ["cf-right", 2, shadeColor(color,-8)],
-    ["cf-left",  5, shadeColor(color,-24)],
-    ["cf-top",   3, shadeColor(color,28)],
-    ["cf-bottom",4, shadeColor(color,-34)]
+    ["cf-front", 1, color,                [0,0,1],  [0,1,0]],
+    ["cf-back",  6, shadeColor(color,-16),[0,0,-1], [0,1,0]],
+    ["cf-right", 2, shadeColor(color,-8), [1,0,0],  [0,1,0]],
+    ["cf-left",  5, shadeColor(color,-24),[-1,0,0], [0,1,0]],
+    ["cf-top",   3, shadeColor(color,28), [0,-1,0], [0,0,1]],
+    ["cf-bottom",4, shadeColor(color,-34),[0,1,0],  [0,0,-1]]
   ];
-  faces.forEach(([cls, n, bg]) =>
-    cube.appendChild(el("div", { class:"cube-face "+cls, style:"background:"+bg+";", text:String(n) })));
+  cube._faces = faces.map(([cls, num, bg, nrm, tdn]) => {
+    const f = el("div", { class:"cube-face "+cls+(num===6?" num69":""), style:"background:"+bg+";", text:String(num) });
+    cube.appendChild(f);
+    return { n:nrm, t:tdn, val:num, el:f };
+  });
   return cube;
 }
 // Rotation finale qui amène la face « result » bien en face (chiffre droit, non miroir)
@@ -3654,21 +3710,23 @@ function buildPolyDie(sides, result, color, isFail) {
   wrap.appendChild(el("div", { class:"poly-num"+(isFail?" fail":""), text:String(result) }));
   return wrap;
 }
-// Fait rebondir le dé DANS la fenêtre (host) puis l'arrête sur le résultat
-function bounceInside(stage, dieEl, sides, result, host, done) {
+// Fait rebondir le dé DANS la fenêtre (host) puis l'arrête : le SCORE est le chiffre
+// de la face d'arrêt — done(result, winEl) le reçoit, rien n'est décidé d'avance.
+function bounceInside(stage, dieEl, sides, host, done) {
   const rect = host.getBoundingClientRect();
   const dieSize = (sides===6 ? 72 : 116) * 2;   // dé 3D du lancer animé : double grosseur
   const W = Math.max(dieSize+24, rect.width), H = Math.max(dieSize+24, rect.height);
   const maxX = Math.max(8, W - dieSize - 10), maxY = Math.max(8, H - dieSize - 10);
   const cx = (W - dieSize)/2, cy = (H - dieSize)/2;
-  const finalRot = sides===6 ? cubeFinalRotation(result) : (dieEl.dataset.finalRot || "rotateX(0deg) rotateY(0deg) rotateZ(0deg)");
 
-  // Accessibilité : aucun rebond si l'utilisateur préfère le mouvement réduit (ou sans WAAPI) — le résultat s'affiche direct.
+  // Accessibilité : aucun rebond si l'utilisateur préfère le mouvement réduit (ou sans
+  // WAAPI) — tirage direct : face 0 des solides (chiffre aléatoire) ; d6 : face au hasard.
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduce || !dieEl.animate || !window.requestAnimationFrame) {
     stage.style.transform = "translate("+Math.round(cx)+"px,"+Math.round(cy)+"px) scale(2)";
-    dieEl.style.transform = finalRot;
-    done();
+    const F = dieEl._faces[sides===6 ? (Math.random()*6)|0 : 0];
+    dieEl.style.transform = sides===6 ? cubeFinalRotation(F.val) : (dieEl.dataset.finalRot || "");
+    done(F.val, F.el);
     return;
   }
 
@@ -3682,17 +3740,7 @@ function bounceInside(stage, dieEl, sides, result, host, done) {
   const REST = 0.7;             // restitution aux murs (perte d'énergie au rebond)
   const FORCE = rnd(2.0, 3.8);  // « force du lancer » (range doublé) — LÈVE PRINCIPAL si trop lourd : baisser
 
-  // Quaternions (orientation accumulée du dé) :
-  const qmul=(a,b)=>[a[3]*b[0]+a[0]*b[3]+a[1]*b[2]-a[2]*b[1],
-                     a[3]*b[1]-a[0]*b[2]+a[1]*b[3]+a[2]*b[0],
-                     a[3]*b[2]+a[0]*b[1]-a[1]*b[0]+a[2]*b[3],
-                     a[3]*b[3]-a[0]*b[0]-a[1]*b[1]-a[2]*b[2]];
-  const qaxis=(x,y,z,ang)=>{const h=ang/2,s=Math.sin(h);return [x*s,y*s,z*s,Math.cos(h)];};
-  const qnorm=q=>{const L=Math.hypot(q[0],q[1],q[2],q[3])||1;return [q[0]/L,q[1]/L,q[2]/L,q[3]/L];};
-  const qmat=q=>{const x=q[0],y=q[1],z=q[2],w=q[3];
-    return "matrix3d("+(1-2*(y*y+z*z))+","+(2*(x*y+z*w))+","+(2*(x*z-y*w))+",0,"
-      +(2*(x*y-z*w))+","+(1-2*(x*x+z*z))+","+(2*(y*z+x*w))+",0,"
-      +(2*(x*z+y*w))+","+(2*(y*z-x*w))+","+(1-2*(x*x+y*y))+",0,0,0,0,1)";};
+  // (Quaternions qmul/qaxis/qnorm/qmat : helpers partagés au niveau module.)
 
   // Lancer : entrée hors-champ par un bord, vitesse vers l'intérieur (~une direction).
   const edge=(Math.random()*3)|0;
@@ -3702,7 +3750,10 @@ function bounceInside(stage, dieEl, sides, result, host, done) {
   else { px=W; py=rnd(8,maxY*0.7); dx=-1; dy=rnd(-0.35,0.35); }
   const speed=rnd(560,820)*FORCE, dl=Math.hypot(dx,dy)||1;
   let vx=dx/dl*speed, vy=dy/dl*speed;
-  let q=[0,0,0,1], last=0, elapsed=0;
+  // Orientation de DÉPART aléatoire : équité du d6 (chiffres fixes sur le cube) et
+  // variété visuelle des solides. (Quasi uniforme, largement assez pour un jeu de table.)
+  let q=qnorm([rnd(-1,1),rnd(-1,1),rnd(-1,1),rnd(-1,1)]), last=0, elapsed=0;
+  if (!q[0] && !q[1] && !q[2] && !q[3]) q=[0,0,0,1];
   const MAXT=5.5, VMIN=45;
 
   function step(t){
@@ -3728,53 +3779,33 @@ function bounceInside(stage, dieEl, sides, result, host, done) {
     dieEl.style.transform=qmat(q);
     if (sp>VMIN && elapsed<MAXT){ requestAnimationFrame(step); return; }
     // Le dé s'est arrêté : on le pose à PLAT sur la face naturellement la plus en face
-    // (vrai arrêt à plat) et on y met le résultat — pas de saut vers une face imposée.
+    // et on REDRESSE le chiffre. Le SCORE est le chiffre que cette face portait déjà
+    // pendant tout le roulement — rien n'est échangé, rien n'est imposé.
     const startT=qmat(q);
-    let target=finalRot;
-    const Gd=DICE_GEOM[sides];
-    if (sides!==6 && dieEl._nums && Gd){
-      const x=q[0],y=q[1],z=q[2],w=q[3];
-      const r0=[1-2*(y*y+z*z), 2*(x*y-z*w),   2*(x*z+y*w)];
-      const r1=[2*(x*y+z*w),   1-2*(x*x+z*z), 2*(y*z-x*w)];
-      const r2=[2*(x*z-y*w),   2*(y*z+x*w),   1-2*(x*x+y*y)];   // 3e ligne R = composante vers la caméra
-      let best=0,bestd=-2,bn=null;
-      for (let i=0;i<Gd.f.length;i++){
-        const n=_faceFrame(Gd.v,Gd.f[i]).n;
-        const d=r2[0]*n[0]+r2[1]*n[1]+r2[2]*n[2];
-        if (d>bestd){ bestd=d; best=i; bn=n; }
-      }
-      if (best!==0){                                           // résultat -> face réellement présentée
-        const A=dieEl._nums[0], B=dieEl._nums[best];
-        const tx=A.textContent; A.textContent=B.textContent; B.textContent=tx;
-        if (A.classList.contains("fail")){ A.classList.remove("fail"); B.classList.add("fail"); }
-      }
-      if (bn){
-        const nix=r0[0]*bn[0]+r0[1]*bn[1]+r0[2]*bn[2];
-        const niy=r1[0]*bn[0]+r1[1]*bn[1]+r1[2]*bn[2];
-        const ang=Math.acos(Math.max(-1,Math.min(1,bestd)));   // petit basculement -> face à plat (normale +z)
-        if (ang>1e-3){ const al=Math.hypot(nix,niy)||1; q=qnorm(qmul(qaxis(niy/al,-nix/al,0,ang), q)); }
-        target=qmat(q);
-      }
-    }
-    const a=dieEl.animate([{transform:startT},{transform:target}],
-                          {duration:300, easing:"cubic-bezier(.2,.7,.3,1)", fill:"forwards"});
-    a.onfinish=done;
+    const pose=settlePose(q, dieEl._faces);
+    const F=dieEl._faces[pose.idx];
+    // Durée du posé proportionnelle à l'angle restant (bascule + redressement) :
+    // petit ajustement = bref, gros redressement = plus lent, jamais brusque.
+    const dq=qmul(pose.q, [-q[0],-q[1],-q[2],q[3]]);
+    const moveDeg=2*Math.acos(Math.min(1,Math.abs(dq[3])))*180/Math.PI;
+    q=pose.q;
+    const a=dieEl.animate([{transform:startT},{transform:qmat(q)}],
+                          {duration:Math.round(Math.min(600,150+moveDeg*2.2)), easing:"cubic-bezier(.2,.7,.3,1)", fill:"forwards"});
+    a.onfinish=()=>done(F.val, F.el);
   }
   requestAnimationFrame(step);
 }
 
 function rollDie(sides, ev) {
-  const result = 1 + Math.floor(Math.random() * sides);
-  const isCrit = sides === 20 && result === 20;   // SEUL le d20 donne réussite / échec
-  const isFail = sides === 20 && result === 1;
   const color = state.diceColor || "#b80000";
 
-  // Le dé roule en PLEIN ÉCRAN, puis se révèle GÉANT au centre de l'écran.
+  // Le dé roule en PLEIN ÉCRAN puis se révèle GÉANT au centre. Le SCORE est le chiffre
+  // de la face sur laquelle il s'arrête : la physique décide, rien n'est tiré d'avance.
   const old = document.querySelector(".dice-overlay"); if (old) old.remove();
   const overlay = el("div", { class:"dice-overlay" });
 
-  const dieEl = sides===6 ? build3DCube(result, color) : buildSolidDie(sides, result, color, isFail);
-  const stage = el("div", { class:"die-stage"+(isFail?" fail":"")+(isCrit?" crit":"") }, [dieEl]);
+  const dieEl = sides===6 ? build3DCube(color) : buildSolidDie(sides, color);
+  const stage = el("div", { class:"die-stage" }, [dieEl]);
 
   const closeBtn = el("button", { class:"dice-close", title:"Fermer", text:"✕",
     onclick:(e)=>{ e.stopPropagation(); overlay.remove(); } });
@@ -3786,7 +3817,11 @@ function rollDie(sides, ev) {
   Audio.diceRoll();   // son de roulement au lancer
   // Le dé rebondit dans tout l'écran (host = overlay plein écran), puis on le RAMÈNE
   // AU CENTRE et on le grossit fortement pour l'afficher clairement au joueur.
-  bounceInside(stage, dieEl, sides, result, overlay, () => {
+  bounceInside(stage, dieEl, sides, overlay, (result, winEl) => {
+    const isCrit = sides === 20 && result === 20;   // SEUL le d20 donne réussite / échec
+    const isFail = sides === 20 && result === 1;
+    if (isCrit) stage.classList.add("crit");
+    if (isFail) { stage.classList.add("fail"); if (winEl) winEl.classList.add("fail"); }
     stage.classList.add("settled");
     const base = sides===6 ? 72 : 116;
     const vW = window.innerWidth, vH = window.innerHeight;
