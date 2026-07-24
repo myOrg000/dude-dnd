@@ -455,6 +455,40 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   border: none; background: rgba(0,0,0,.4); color: #fff; font-size: 1rem; cursor: pointer; line-height: 1; }
 .dice-close:hover { background: rgba(0,0,0,.65); }
 
+/* --- Effets spéciaux des dés (réglage MJ ✨, state.fxDice >= 1) --------------
+   Calques FRÈRES du dé dans .fx-back (1er enfant de l'overlay => derrière).
+   Par frame le JS n'écrit que transform/opacity ; le reste est en keyframes.
+   Aucune pulsation au-dessus de 1 Hz (photosensibilité — ne pas accélérer). */
+.fx-back { position: absolute; inset: 0; pointer-events: none; }
+.fx-halo, .fx-shadow { position: absolute; left: 0; top: 0; opacity: 0; will-change: transform, opacity; }
+.fx-halo { width: 46vmin; height: 46vmin; border-radius: 50%; }   /* fond radial posé en JS (couleur MJ) */
+.fx-shadow { width: 36vmin; height: 36vmin; border-radius: 50%;
+  background: radial-gradient(circle, rgba(12,9,4,.6) 0%, rgba(12,9,4,.28) 45%, rgba(0,0,0,0) 70%); }
+.fx-ring { position: absolute; width: 26vmin; height: 26vmin; margin: -13vmin 0 0 -13vmin;
+  border-radius: 50%; border: 3px solid rgba(255,224,130,.85); opacity: 0;
+  animation: fxRing .6s cubic-bezier(.15,.7,.35,1) forwards; }
+.fx-bloom { position: absolute; width: 64vmin; height: 64vmin; margin: -32vmin 0 0 -32vmin; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,214,110,.5) 0%, rgba(255,180,60,.22) 40%, rgba(0,0,0,0) 70%);
+  opacity: 0; animation: fxBloom .55s ease-out forwards; }
+.fx-bloom.fail { background: radial-gradient(circle, rgba(190,70,45,.5) 0%, rgba(120,30,20,.22) 40%, rgba(0,0,0,0) 70%); }
+.fx-glow { position: absolute; width: 84vmin; height: 84vmin; margin: -42vmin 0 0 -42vmin; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,210,63,.38) 0%, rgba(255,210,63,.14) 45%, rgba(0,0,0,0) 70%);
+  animation: fxGlow 1s ease-in-out infinite; }
+@keyframes fxRing  { 0% { transform: scale(.2); opacity: .8; } 100% { transform: scale(3); opacity: 0; } }
+@keyframes fxBloom { 0% { transform: scale(.6); opacity: 0; } 30% { opacity: .9; } 100% { transform: scale(1.5); opacity: 0; } }
+@keyframes fxGlow  { 0%, 100% { transform: scale(.92); opacity: .5; } 50% { transform: scale(1.05); opacity: .85; } }
+/* Enveloppe du dé (niveaux >= 1) : respiration douce à l'arrêt, secousse ADOUCIE à
+   l'échec. Jamais sur .die-stage (transform piloté JS) ni sur le dé (preserve-3d). */
+.die-shell { position: absolute; inset: 0; }
+.die-shell.fx-breath { animation: fxBreath 4s ease-in-out infinite; }
+.die-shell.fx-shake  { animation: fxShakeSoft .4s ease-in-out, fxBreath 4s ease-in-out infinite; }
+@keyframes fxBreath    { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+@keyframes fxShakeSoft { 0%, 100% { translate: 0 0; } 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
+/* Aux niveaux >= 1, la lueur/secousse historiques du stage (filter et margin animés,
+   coûteux) sont remplacées par les calques ci-dessus. Niveau 0 : intactes. */
+.dice-overlay.fx-on .die-stage.settled.crit { animation: none; }
+.dice-overlay.fx-on .die-stage.settled.fail { animation: none; }
+
 /* --- Caractéristiques (octogones + pentagone) ----------------------------- */
 /* Colonnes auto-ajustées : chaque caractéristique garde >= 8em pour que son titre tienne
    sur UNE ligne ; quand l'écran ne peut plus l'afficher, le bloc se ré-enroule sur moins
@@ -1043,6 +1077,7 @@ const CFG = {
   diceColor: "#b80000",
   cardStyles: {},
   showDice: true,
+  fxDice: (RULES.fxDice == null ? 1 : RULES.fxDice),   // effets spéciaux des dés : 0 aucun, 1 sobre (2-3 à venir)
   house: RULES.houseRules || {},
   pin: (RULES.dmPin || "").toString(),
   pinHash: (RULES.dmPinHash || "").toString(),
@@ -1625,6 +1660,7 @@ function blankCharacter() {
     cardStyles: JSON.parse(JSON.stringify(CFG.cardStyles || {})),  // fonds par section (défaut feuille)
     diceColor: CFG.diceColor || "#b80000",      // couleur des dés 3D (Mode MJ), rouge par défaut
     showDice: !!CFG.showDice,   // lanceur de dés affiché ? (affiché par défaut, le MJ peut le cacher)
+    fxDice: (CFG.fxDice == null ? 1 : Math.max(0, Math.min(3, CFG.fxDice|0))),   // effets spéciaux des dés (réglage MJ ✨)
     uiScale: null,             // taille de texte choisie par le joueur (null = défaut feuille)
     uiBold: null,              // tout en gras choisi par le joueur (null = défaut feuille)
     theme: { bgColor: CFG.theme.bgColor, bgImage: CFG.theme.bgImage || "", highContrast: CFG.theme.highContrast },
@@ -3535,6 +3571,13 @@ function diceTray() {
       el("span", { text:"🎨 couleur des dés" }),
       el("input", { type:"color", value:color, onchange:(e)=>{ state.diceColor=e.target.value; save(); render(); } })
     ]));
+    const cur = (state.fxDice == null ? 1 : state.fxDice|0) > 0 ? 1 : 0;
+    const fxSel = el("select", { class:"sel", onchange:(e)=>{ state.fxDice = parseInt(e.target.value, 10) || 0; save(); render(); } });
+    [[0,"aucun"],[1,"sobres"]].forEach(([v,t]) =>
+      fxSel.appendChild(el("option", { value:String(v), text:t, selected: v===cur ? "selected" : null })));
+    children.push(el("label", { class:"dice-color-pick",
+      title:"Effets spéciaux des dés (Mode MJ, sauvegardé). Coupés d'office si « mouvement réduit » ou animations désactivées." }, [
+      el("span", { text:"✨ effets des dés" }), fxSel ]));
   }
   return el("div", { class:"dice-tray"+(!state.showDice ? " dice-tray-off" : "") }, children);
 }
@@ -3744,9 +3787,63 @@ function buildPolyDie(sides, result, color, isFail) {
   wrap.appendChild(el("div", { class:"poly-num"+(isFail?" fail":""), text:String(result) }));
   return wrap;
 }
+/* --- Effets spéciaux du lanceur (réglage MJ state.fxDice) --------------------
+   0 = aucun (comportement historique EXACT). 1 = « sobres » : halo couplé à la
+   vitesse, ombre au sol, onde + souffle à l'arrêt, respiration du dé posé,
+   lueur critique 1 Hz, secousse adoucie. (2 « magiques » / 3 « festifs » : à venir.)
+   Règles dures : UNE seule boucle rAF (le step() existant) ; par frame le JS
+   n'écrit QUE transform/opacity ; les calques sont FRÈRES de .die-stage dans
+   .fx-back (jamais enfants : preserve-3d + scale) ; jamais de pulsation plus
+   rapide que 1 Hz (photosensibilité). L'accessibilité écrase le réglage MJ. */
+function fxLevel(){
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce || document.body.classList.contains("no-anim")) return 0;
+  return Math.max(0, Math.min(3, state.fxDice == null ? 1 : state.fxDice|0));
+}
+function diceFx(overlay, level, color){
+  const back=_el('div','fx-back');            // 1er enfant de l'overlay -> toujours DERRIÈRE le dé
+  overlay.appendChild(back);
+  const halo=_el('div','fx-halo'), shadow=_el('div','fx-shadow');
+  halo.style.background='radial-gradient(circle, '+color+'b0 0%, '+color+'44 42%, rgba(0,0,0,0) 70%)';
+  back.append(shadow, halo);
+  let lx=-999, ly=-999;                       // dernier centre connu du dé (px overlay)
+  return {
+    // Chaque frame du roulement (appelé du step() existant) : transform/opacity SEULEMENT.
+    step(cx, cy, sp){
+      lx=cx; ly=cy;
+      const k=Math.min(1, sp/900);            // 1 = pleine vitesse -> 0 : la magie se dissipe
+      halo.style.transform='translate(-50%,-50%) translate('+cx.toFixed(1)+'px,'+cy.toFixed(1)+'px) scale('+(0.8+k*0.6).toFixed(3)+')';
+      halo.style.opacity=(k*0.5).toFixed(3);
+      shadow.style.transform='translate(-50%,-50%) translate('+cx.toFixed(1)+'px,'+(cy+16).toFixed(1)+'px) scale('+(0.65+k*0.45).toFixed(3)+','+(0.26+k*0.14).toFixed(3)+')';
+      shadow.style.opacity=(0.42-0.18*k).toFixed(3);
+    },
+    // Le dé vient de se poser : halo/ombre s'éteignent, onde double au point d'arrêt.
+    settle(){
+      halo.style.transition='opacity .45s ease-out';   halo.style.opacity='0';
+      shadow.style.transition='opacity .45s ease-out'; shadow.style.opacity='0';
+      [0,120].forEach(ms=>{
+        const ring=_el('div','fx-ring');
+        ring.style.left=lx+'px'; ring.style.top=ly+'px';
+        if (ms) ring.style.animationDelay=ms+'ms';
+        ring.addEventListener('animationend', ()=>ring.remove());
+        back.appendChild(ring);
+      });
+    },
+    // Le dé est centré en grand : souffle lumineux ; lueur 1 Hz si critique.
+    reveal(cx, cy, isCrit, isFail){
+      const bloom=_el('div','fx-bloom'+(isFail?' fail':''));
+      bloom.style.left=cx+'px'; bloom.style.top=cy+'px';
+      bloom.addEventListener('animationend', ()=>bloom.remove());
+      back.appendChild(bloom);
+      if (isCrit){ const g=_el('div','fx-glow'); g.style.left=cx+'px'; g.style.top=cy+'px'; back.appendChild(g); }
+    }
+  };
+}
+
 // Fait rebondir le dé DANS la fenêtre (host) puis l'arrête : le SCORE est le chiffre
 // de la face d'arrêt — done(result, winEl) le reçoit, rien n'est décidé d'avance.
-function bounceInside(stage, dieEl, sides, host, done) {
+// fx (nullable) : effets spéciaux décoratifs, purement EN AVAL du tirage.
+function bounceInside(stage, dieEl, sides, host, fx, done) {
   const rect = host.getBoundingClientRect();
   const dieSize = (sides===6 ? 72 : 116) * 2;   // dé 3D du lancer animé : double grosseur
   const W = Math.max(dieSize+24, rect.width), H = Math.max(dieSize+24, rect.height);
@@ -3811,10 +3908,12 @@ function bounceInside(stage, dieEl, sides, host, done) {
     const damp=Math.exp(-FRICTION*dt); vx*=damp; vy*=damp;
     stage.style.transform="translate("+Math.round(px)+"px,"+Math.round(py)+"px) scale(2)";
     dieEl.style.transform=qmat(q);
+    if (fx) fx.step(px+dieSize/2, py+dieSize/2, sp);
     if (sp>VMIN && elapsed<MAXT){ requestAnimationFrame(step); return; }
     // Le dé s'est arrêté : on le pose à PLAT sur la face naturellement la plus en face
     // et on REDRESSE le chiffre. Le SCORE est le chiffre que cette face portait déjà
     // pendant tout le roulement — rien n'est échangé, rien n'est imposé.
+    if (fx) fx.settle();                      // onde au point d'arrêt, halo qui se dissipe
     const startT=qmat(q);
     const pose=settlePose(q, dieEl._faces);
     const F=dieEl._faces[pose.idx];
@@ -3832,26 +3931,31 @@ function bounceInside(stage, dieEl, sides, host, done) {
 
 function rollDie(sides, ev) {
   const color = state.diceColor || "#b80000";
+  const level = fxLevel();   // effets spéciaux : 0 = comportement historique exact
 
   // Le dé roule en PLEIN ÉCRAN puis se révèle GÉANT au centre. Le SCORE est le chiffre
   // de la face sur laquelle il s'arrête : la physique décide, rien n'est tiré d'avance.
   const old = document.querySelector(".dice-overlay"); if (old) old.remove();
-  const overlay = el("div", { class:"dice-overlay" });
+  const overlay = el("div", { class:"dice-overlay"+(level ? " fx-on" : "") });
+  const fx = level ? diceFx(overlay, level, color) : null;   // calques d'effets, DERRIÈRE le dé
 
   const dieEl = sides===6 ? build3DCube(color) : buildSolidDie(sides, color);
   const stage = el("div", { class:"die-stage" }, [dieEl]);
+  // Aux niveaux >= 1, une ENVELOPPE porte respiration/secousse — jamais le stage
+  // (son transform appartient à la boucle JS) ni le dé (preserve-3d s'aplatirait).
+  const shell = level ? el("div", { class:"die-shell" }, [stage]) : null;
 
   const closeBtn = el("button", { class:"dice-close", title:"Fermer", text:"✕",
     onclick:(e)=>{ e.stopPropagation(); overlay.remove(); } });
 
-  overlay.append(stage, closeBtn);
+  overlay.append(shell || stage, closeBtn);
   overlay.addEventListener("click", () => overlay.remove());
   document.body.appendChild(overlay);
 
   Audio.diceRoll();   // son de roulement au lancer
   // Le dé rebondit dans tout l'écran (host = overlay plein écran), puis on le RAMÈNE
   // AU CENTRE et on le grossit fortement pour l'afficher clairement au joueur.
-  bounceInside(stage, dieEl, sides, overlay, (result, winEl) => {
+  bounceInside(stage, dieEl, sides, overlay, fx, (result, winEl) => {
     const isCrit = sides === 20 && result === 20;   // SEUL le d20 donne réussite / échec
     const isFail = sides === 20 && result === 1;
     if (isCrit) stage.classList.add("crit");
@@ -3864,7 +3968,11 @@ function rollDie(sides, ev) {
     const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!reduce) stage.style.transition = "transform .5s cubic-bezier(.2,.7,.3,1)";
     stage.style.transform = "translate("+bx+"px,"+by+"px) scale("+RS+")";
-    if (isCrit) { spawnConfetti(overlay); Audio.diceWin(); }   // succès/échec : son APRÈS l'arrêt complet
+    if (fx){                                   // ponctuation de fin (souffle ; lueur si crit)
+      fx.reveal(vW/2, vH/2, isCrit, isFail);
+      if (shell) shell.classList.add(isFail ? "fx-shake" : "fx-breath");
+    }
+    if (isCrit) { if (!level) spawnConfetti(overlay); Audio.diceWin(); }   // confettis : niveau 0 (historique) ; niveau 2 à venir
     else if (isFail) Audio.diceFail();
   });
 }
@@ -6092,6 +6200,7 @@ function sheetProfile() {
     cardStyles: state.cardStyles || {},
     diceColor: state.diceColor || "#b80000",
     showDice: !!state.showDice,
+    fxDice: (state.fxDice == null ? 1 : state.fxDice|0),
     display: {
       textScale: (state.uiScale != null ? state.uiScale : CFG.display.textScale),
       uppercase: CFG.display.uppercase,
@@ -6119,6 +6228,7 @@ function applyProfile() {
   CFG.theme.bgImage = prof.bgImage || "";
   if (prof.diceColor) CFG.diceColor = prof.diceColor;
   if (typeof prof.showDice === "boolean") CFG.showDice = prof.showDice;
+  if (prof.fxDice != null) CFG.fxDice = Math.max(0, Math.min(3, prof.fxDice|0));
   CFG.cardStyles = prof.cardStyles || {};
   if (prof.display) Object.assign(CFG.display, prof.display);
 }
