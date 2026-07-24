@@ -484,12 +484,14 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   background: radial-gradient(circle, #ffe27a 0%, rgba(255,180,60,.8) 60%, rgba(0,0,0,0) 100%); }
 .fx-mote.ash { width: 9px; height: 9px;
   background: radial-gradient(circle, rgba(120,110,100,.9) 0%, rgba(70,60,55,.7) 60%, rgba(0,0,0,0) 100%); }
-/* Niveau 3 « festifs » : cercle runique discret DERRIÈRE le dé (opacité <= .3),
-   rotation lente 12 s, fondu d'entrée/sortie puis auto-suppression. */
-.fx-rune { position: absolute; left: 0; top: 0; width: 72vmin; height: 72vmin; margin: -36vmin 0 0 -36vmin;
-  opacity: 0; animation: fxRuneFade 3s ease-in-out forwards; }
+.fx-mote.white { background: radial-gradient(circle, #ffffff 0%, rgba(255,244,214,.85) 55%, rgba(0,0,0,0) 100%); }
+/* Niveau 3 « festifs » : cercle runique druidique, PLUS GRAND que le dé posé
+   (96 vmin > ~70 vmin) pour rester visible en anneau autour de lui, derrière.
+   Rotation lente 12 s, fondu d'entrée/sortie puis auto-suppression. */
+.fx-rune { position: absolute; left: 0; top: 0; width: 96vmin; height: 96vmin; margin: -48vmin 0 0 -48vmin;
+  opacity: 0; animation: fxRuneFade 4.5s ease-in-out forwards; }
 .fx-rune svg { width: 100%; height: 100%; display: block; animation: fxRuneSpin 12s linear infinite; }
-@keyframes fxRuneFade { 0% { opacity: 0; } 13% { opacity: .28; } 72% { opacity: .28; } 100% { opacity: 0; } }
+@keyframes fxRuneFade { 0% { opacity: 0; } 11% { opacity: .35; } 78% { opacity: .35; } 100% { opacity: 0; } }
 @keyframes fxRuneSpin { to { transform: rotate(360deg); } }
 /* Enveloppe du dé (niveaux >= 1) : respiration douce à l'arrêt, secousse ADOUCIE à
    l'échec (pleine amplitude au niveau 3). Jamais sur .die-stage (transform piloté JS)
@@ -498,7 +500,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .die-shell.fx-breath { animation: fxBreath 4s ease-in-out infinite; }
 .die-shell.fx-shake  { animation: fxShakeSoft .4s ease-in-out, fxBreath 4s ease-in-out infinite; }
 .die-shell.fx-shake-full { animation: fxShakeFull .55s ease-in-out, fxBreath 4s ease-in-out infinite; }
-@keyframes fxBreath    { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+@keyframes fxBreath    { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
 @keyframes fxShakeSoft { 0%, 100% { translate: 0 0; } 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
 @keyframes fxShakeFull { 0%, 100% { translate: 0 0; } 20% { translate: -12px 0; } 40% { translate: 12px 0; } 60% { translate: -8px 0; } 80% { translate: 8px 0; } }
 /* Aux niveaux >= 1, la lueur/secousse historiques du stage (filter et margin animés,
@@ -3821,25 +3823,49 @@ function fxLevel(){
   if (reduce || document.body.classList.contains("no-anim")) return 0;
   return Math.max(0, Math.min(3, state.fxDice == null ? 1 : state.fxDice|0));
 }
-// Cercle runique (niveau 3) : SVG dessiné en JS, aucun fichier — anneaux pointillés
-// + 8 marques, rotation lente (12 s) et fondu gérés par le CSS (.fx-rune).
+// Cercle runique (niveau 3) : SVG dessiné en JS, aucun fichier NI police — de
+// VRAIES runes angulaires (futhark : fehu, uruz, thurisaz, kenaz, gebo, hagalaz,
+// isa, tiwaz, algiz, sowilo, laguz, nauthiz) tracées en segments, disposées
+// radialement entre deux anneaux au pointillé irrégulier « tracé main ».
+// Rotation lente et fondu gérés par le CSS (.fx-rune).
+const RUNE_STROKES = [   // chaque rune = polylignes x,y dans une boîte 6x10 (x -3..3, y -5..5)
+  [[0,-5,0,5],[0,-3,3,-5],[0,0,3,-2]],            // fehu
+  [[-2,5,-2,-5,2,-2,2,5]],                        // uruz
+  [[0,-5,0,5],[0,-2,3,0,0,2]],                    // thurisaz
+  [[2,-4,-1,0,2,4]],                              // kenaz
+  [[-3,-4,3,4],[3,-4,-3,4]],                      // gebo
+  [[-2,-5,-2,5],[2,-5,2,5],[-2,-1,2,1]],          // hagalaz
+  [[0,-5,0,5]],                                   // isa
+  [[0,-5,0,5],[-3,-2,0,-5,3,-2]],                 // tiwaz
+  [[0,5,0,-2],[-3,-5,0,-2,3,-5]],                 // algiz
+  [[2,-5,-2,-1,2,1,-2,5]],                        // sowilo
+  [[0,-5,0,5],[0,-5,3,-2]],                       // laguz
+  [[0,-5,0,5],[-2,-2,2,1]]                        // nauthiz
+];
 function runeSVG(){
   const NS='http://www.w3.org/2000/svg';
   const svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox','0 0 100 100');
-  [[46,1.2,'5 4'],[41.5,0.5,'1.5 3'],[38,0.8,null]].forEach(([r,w,dash])=>{
-    const c=document.createElementNS(NS,'circle');
+  const stroke=(n)=>{ n.setAttribute('fill','none'); n.setAttribute('stroke','#e8c97a');
+    n.setAttribute('stroke-linecap','round'); n.setAttribute('stroke-linejoin','round'); return n; };
+  [[47,1.1,'11 4 7 6 13 5'],[45.2,0.6,'4 7 9 3 6 8'],[35.5,0.6,'3 2.2']].forEach(([r,w,dash])=>{
+    const c=stroke(document.createElementNS(NS,'circle'));
     c.setAttribute('cx','50'); c.setAttribute('cy','50'); c.setAttribute('r',String(r));
-    c.setAttribute('fill','none'); c.setAttribute('stroke','#ffe082'); c.setAttribute('stroke-width',String(w));
-    if (dash) c.setAttribute('stroke-dasharray',dash);
+    c.setAttribute('stroke-width',String(w)); c.setAttribute('stroke-dasharray',dash);
     svg.appendChild(c);
   });
-  for (let i=0;i<8;i++){
-    const a=i*Math.PI/4, t=document.createElementNS(NS,'line');
-    t.setAttribute('x1',(50+39.5*Math.cos(a)).toFixed(2)); t.setAttribute('y1',(50+39.5*Math.sin(a)).toFixed(2));
-    t.setAttribute('x2',(50+44.5*Math.cos(a)).toFixed(2)); t.setAttribute('y2',(50+44.5*Math.sin(a)).toFixed(2));
-    t.setAttribute('stroke','#ffe082'); t.setAttribute('stroke-width','1.1');
-    svg.appendChild(t);
-  }
+  RUNE_STROKES.forEach((runes,i)=>{
+    const a=i*Math.PI*2/RUNE_STROKES.length - Math.PI/2;
+    const g=document.createElementNS(NS,'g');
+    g.setAttribute('transform','translate('+(50+40.3*Math.cos(a)).toFixed(2)+' '+(50+40.3*Math.sin(a)).toFixed(2)
+      +') rotate('+(a*180/Math.PI+90).toFixed(1)+') scale(0.72)');
+    runes.forEach(pts=>{
+      const p=stroke(document.createElementNS(NS,'polyline'));
+      const s=[]; for(let j=0;j<pts.length;j+=2) s.push(pts[j]+','+pts[j+1]);
+      p.setAttribute('points',s.join(' ')); p.setAttribute('stroke-width','1.5');
+      g.appendChild(p);
+    });
+    svg.appendChild(g);
+  });
   return svg;
 }
 function diceFx(overlay, level, color){
@@ -3848,71 +3874,91 @@ function diceFx(overlay, level, color){
   const halo=_el('div','fx-halo'), shadow=_el('div','fx-shadow');
   halo.style.background='radial-gradient(circle, '+color+'b0 0%, '+color+'44 42%, rgba(0,0,0,0) 70%)';
   back.append(shadow, halo);
-  // Pools pré-alloués (niveau >= 2) : 10 fantômes de traînée + 24 motes (étincelles
-  // ET cendres — partagés). Créés UNE fois ici, recyclés en rond, jamais dans la boucle.
+  const lite=shadeColor(color,60);            // couleur du dé ÉCLAIRCIE : contraste sur fond sombre
+  // Pools pré-alloués (niveau >= 2) : 18 fantômes de traînée + 32 motes (étincelles
+  // du roulement, rafales d'arrêt ET cendres). Créés UNE fois, recyclés, jamais dans la boucle.
   const ghosts=[], motes=[];
   if (level>=2){
-    for (let i=0;i<10;i++){ const g=_el('div','fx-ghost');
-      g.style.background='radial-gradient(circle, '+color+'aa 0%, '+color+'33 50%, rgba(0,0,0,0) 72%)';
+    for (let i=0;i<18;i++){ const g=_el('div','fx-ghost');
+      g.style.background='radial-gradient(circle, rgba(255,255,235,.9) 0%, '+lite+'cc 26%, '+color+'22 58%, rgba(0,0,0,0) 74%)';
       back.appendChild(g); ghosts.push(g); }
-    for (let i=0;i<24;i++){ const m=_el('div','fx-mote'); back.appendChild(m); motes.push(m); }
+    for (let i=0;i<32;i++){ const m=_el('div','fx-mote'); back.appendChild(m); motes.push(m); }
   }
+  const tintBg='radial-gradient(circle, '+lite+' 0%, '+color+'cc 60%, rgba(0,0,0,0) 100%)';
   let lx=-999, ly=-999, gi=0, mi=0, frame=0;  // dernier centre du dé + index de recyclage
   const vmin=()=>Math.min(window.innerWidth, window.innerHeight)/100;
-  // Rafale de motes (étincelles dorées ou cendres) : WAAPI one-shot, pool recyclé.
+  // Une mote : WAAPI one-shot, pool recyclé. kind : 0 or, 1 blanc, 2 teinte du dé, 3 cendre.
+  function mote(cx, cy, dx, dy, o){
+    const m=motes[mi++ % motes.length];
+    if (m._anim) m._anim.cancel();
+    m.className='fx-mote'+(o.kind===3?' ash':o.kind===1?' white':'');
+    m.style.background = o.kind===2 ? tintBg : '';
+    m._anim=m.animate(
+      [{transform:'translate(-50%,-50%) translate('+cx+'px,'+cy+'px) scale(1)', opacity:o.o0},
+       {transform:'translate(-50%,-50%) translate('+(cx+dx)+'px,'+(cy+dy)+'px) scale('+(o.s1||0.35)+')', opacity:0}],
+      {duration:o.dur, delay:o.delay||0, easing:'cubic-bezier(.1,.6,.3,1)', fill:'forwards'});
+  }
+  // Rafale radiale (arrêt, crit, cendres) ; tri-teintes si o.multi.
   function burst(cx, cy, n, o){
     for (let i=0;i<n && i<motes.length;i++){
-      const m=motes[mi++ % motes.length];
-      if (m._anim) m._anim.cancel();
-      m.className='fx-mote'+(o.ash?' ash':'');
       const a=Math.random()*2*Math.PI, d=(o.dmin+Math.random()*o.dvar)*vmin();
-      const dx=Math.cos(a)*d, dy=Math.sin(a)*d*(o.flat||1)-(o.rise||0)*vmin();
-      m._anim=m.animate(
-        [{transform:'translate(-50%,-50%) translate('+cx+'px,'+cy+'px) scale(1)',       opacity:o.o0},
-         {transform:'translate(-50%,-50%) translate('+(cx+dx)+'px,'+(cy+dy)+'px) scale('+(o.s1||0.35)+')', opacity:0}],
-        {duration:o.dur, easing:'cubic-bezier(.1,.6,.3,1)', fill:'forwards'});
+      mote(cx, cy, Math.cos(a)*d, Math.sin(a)*d*(o.flat||1)-(o.rise||0)*vmin(),
+           {kind:o.ash?3:(o.multi?(i%3):0), o0:o.o0, dur:o.dur, s1:o.s1, delay:o.delay});
     }
+  }
+  function ringAt(x, y, delayMs){
+    const ring=_el('div','fx-ring');
+    ring.style.left=x+'px'; ring.style.top=y+'px';
+    if (delayMs) ring.style.animationDelay=delayMs+'ms';
+    ring.addEventListener('animationend', ()=>ring.remove());
+    back.appendChild(ring);
   }
   return {
     // Chaque frame du roulement (appelé du step() existant) : transform/opacity SEULEMENT.
     step(cx, cy, sp){
       lx=cx; ly=cy;
+      frame++;
       const k=Math.min(1, sp/900);            // 1 = pleine vitesse -> 0 : la magie se dissipe
       halo.style.transform='translate(-50%,-50%) translate('+cx.toFixed(1)+'px,'+cy.toFixed(1)+'px) scale('+(0.8+k*0.6).toFixed(3)+')';
-      halo.style.opacity=(k*0.5).toFixed(3);
+      halo.style.opacity=(k*(0.42+0.09*level)).toFixed(3);          // plus lumineux à chaque niveau
       shadow.style.transform='translate(-50%,-50%) translate('+cx.toFixed(1)+'px,'+(cy+16).toFixed(1)+'px) scale('+(0.65+k*0.45).toFixed(3)+','+(0.26+k*0.14).toFixed(3)+')';
       shadow.style.opacity=(0.42-0.18*k).toFixed(3);
-      // Traînée de rémanence (niveau >= 2) : un fantôme toutes les 3 frames tant que ça file.
-      if (ghosts.length && (++frame)%3===0 && sp>250){
+      // Traînée de rémanence (niveau >= 2) : fantôme LUMINEUX (cœur blanc chaud +
+      // couleur éclaircie) toutes les 2 frames tant que ça file.
+      if (ghosts.length && frame%2===0 && sp>180){
         const g=ghosts[gi++ % ghosts.length];
         if (g._anim) g._anim.cancel();
-        g.style.transform='translate(-50%,-50%) translate('+cx.toFixed(1)+'px,'+cy.toFixed(1)+'px) scale('+(0.45+k*0.4).toFixed(3)+')';
-        g._anim=g.animate([{opacity:.38},{opacity:0}], {duration:380, easing:'linear', fill:'forwards'});
+        g.style.transform='translate(-50%,-50%) translate('+cx.toFixed(1)+'px,'+cy.toFixed(1)+'px) scale('+(0.5+k*0.5).toFixed(3)+')';
+        g._anim=g.animate([{opacity:.55},{opacity:0}], {duration:550, easing:'linear', fill:'forwards'});
+      }
+      // Étincelles PENDANT le roulement (niveau >= 2 ; deux fois plus, tri-teintes, au niveau 3).
+      if (motes.length && sp>300 && frame%(level>=3?2:4)===0){
+        const a=Math.random()*2*Math.PI, d=(4+Math.random()*8)*vmin();
+        mote(cx, cy, Math.cos(a)*d, Math.sin(a)*d*0.6-6*vmin(),
+             {kind:level>=3?(frame>>1)%3:0, o0:.9, dur:700, s1:.3});
       }
     },
-    // Le dé vient de se poser : halo/ombre s'éteignent, onde double au point d'arrêt,
-    // et la magie SE DISSIPE en étincelles (niveau >= 2).
+    // Le dé vient de se poser : halo/ombre s'éteignent, onde double, la magie se
+    // dissipe en rafale d'étincelles (niveau >= 2, plus ample et tri-teintes au 3).
     settle(){
       halo.style.transition='opacity .45s ease-out';   halo.style.opacity='0';
       shadow.style.transition='opacity .45s ease-out'; shadow.style.opacity='0';
-      [0,120].forEach(ms=>{
-        const ring=_el('div','fx-ring');
-        ring.style.left=lx+'px'; ring.style.top=ly+'px';
-        if (ms) ring.style.animationDelay=ms+'ms';
-        ring.addEventListener('animationend', ()=>ring.remove());
-        back.appendChild(ring);
-      });
-      if (motes.length) burst(lx, ly, 18, {dmin:8, dvar:16, o0:.9, dur:900});
+      ringAt(lx, ly, 0); ringAt(lx, ly, 120);
+      if (motes.length) burst(lx, ly, 24, {dmin:10, dvar:20, o0:.9, dur:level>=3?1100:900, multi:level>=3});
     },
-    // Le dé est centré en grand : souffle lumineux ; lueur 1 Hz si critique ;
-    // cendres qui montent sur échec (niveau >= 2) ; cercle runique (niveau 3).
+    // Le dé est centré en grand : souffle ; crit/échec GRADUÉS par niveau (rafales
+    // décalées de 350 ms pour laisser finir la dissipation) ; rune (niveau 3).
     reveal(cx, cy, isCrit, isFail){
       const bloom=_el('div','fx-bloom'+(isFail?' fail':''));
       bloom.style.left=cx+'px'; bloom.style.top=cy+'px';
       bloom.addEventListener('animationend', ()=>bloom.remove());
       back.appendChild(bloom);
-      if (isCrit){ const g=_el('div','fx-glow'); g.style.left=cx+'px'; g.style.top=cy+'px'; back.appendChild(g); }
-      if (isFail && motes.length) burst(cx, cy, 10, {ash:true, dmin:4, dvar:8, rise:14, flat:.4, o0:.7, dur:1400, s1:.8});
+      if (isCrit){
+        const g=_el('div','fx-glow'); g.style.left=cx+'px'; g.style.top=cy+'px'; back.appendChild(g);
+        if (motes.length) burst(cx, cy, level>=3?32:20, {dmin:16, dvar:20, o0:.95, dur:1000, delay:350, multi:level>=3});
+        if (level>=3){ ringAt(cx, cy, 0); ringAt(cx, cy, 150); }
+      }
+      if (isFail && motes.length) burst(cx, cy, level>=3?16:12, {ash:true, dmin:4, dvar:8, rise:14, flat:.4, o0:.7, dur:1400, s1:.8, delay:350});
       if (level>=3){
         const r=_el('div','fx-rune');
         r.style.left=cx+'px'; r.style.top=cy+'px';
@@ -3951,9 +3997,9 @@ function bounceInside(stage, dieEl, sides, host, fx, done) {
   // Réglages cosmétiques, ajustables à l'écran :
   const ROLL_SIGN = 1;          // si le dé tourne à l'envers de son déplacement -> mettre -1
   const R = dieSize * 0.40;     // rayon de roulement (px) : 1 rad de culbute par R px parcourus
-  const FRICTION = 1.25;        // amortissement (s^-1) ; plus grand = s'arrête plus tôt
-  const REST = 0.7;             // restitution aux murs (perte d'énergie au rebond)
-  const FORCE = rnd(2.0, 3.8);  // « force du lancer » (range doublé) — LÈVE PRINCIPAL si trop lourd : baisser
+  const FRICTION = 0.90;        // amortissement (s^-1) — calibré par simulation : 2-4 s selon la force
+  const REST = 0.80;            // restitution aux murs (le dé reste « roulant » après un rebond)
+  const FORCE = rnd(1.4, 3.2);  // « force du lancer » — durée corrélée à la force (corr≈0.8), friction naturelle
 
   // (Quaternions qmul/qaxis/qnorm/qmat : helpers partagés au niveau module.)
 
@@ -3963,7 +4009,7 @@ function bounceInside(stage, dieEl, sides, host, fx, done) {
   if (edge===0){ px=rnd(8,maxX); py=-dieSize; dx=rnd(-0.35,0.35); dy=1; }
   else if (edge===1){ px=-dieSize; py=rnd(8,maxY*0.7); dx=1; dy=rnd(-0.35,0.35); }
   else { px=W; py=rnd(8,maxY*0.7); dx=-1; dy=rnd(-0.35,0.35); }
-  const speed=rnd(560,820)*FORCE, dl=Math.hypot(dx,dy)||1;
+  const speed=rnd(480,640)*FORCE, dl=Math.hypot(dx,dy)||1;
   let vx=dx/dl*speed, vy=dy/dl*speed;
   // Orientation de DÉPART aléatoire : équité du d6 (chiffres fixes sur le cube) et
   // variété visuelle des solides. (Quasi uniforme, largement assez pour un jeu de table.)
@@ -4056,14 +4102,14 @@ function rollDie(sides, ev) {
       fx.reveal(vW/2, vH/2, isCrit, isFail);
       if (shell) shell.classList.add(isFail ? (level>=3 ? "fx-shake-full" : "fx-shake") : "fx-breath");
     }
-    if (isCrit) { if (!level || level>=2) spawnConfetti(overlay); Audio.diceWin(); }   // confettis : historique (0) et magiques+ (>=2)
+    if (isCrit) { if (!level || level>=2) spawnConfetti(overlay, level>=3 ? 170 : level ? 110 : 70); Audio.diceWin(); }   // confettis : 70 historique, 110 magiques, 170 festifs
     else if (isFail) Audio.diceFail();
   });
 }
-function spawnConfetti(container) {
+function spawnConfetti(container, n) {
   const colors = ["#ff5252","#ffb300","#b80000","#2f6fb0","#b8902f","#a01818","#7b4fa0","#ff8fab","#4fd1c5","#ffe27a"];
   const layer = el("div", { class:"confetti-layer" });
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < (n || 70); i++) {
     const p = el("div", { class:"confetti-piece" });
     const c = colors[Math.floor(Math.random()*colors.length)];
     const size = 6 + Math.random()*8;
