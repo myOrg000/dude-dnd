@@ -389,6 +389,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .cube-face { position: absolute; width: 72px; height: 72px; box-sizing: border-box;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-num); font-weight: 800; font-size: 2.1rem; color: #ffd500;
+  background: radial-gradient(circle at 50% 32%, rgba(255,255,255,.22), rgba(255,255,255,0) 55%), var(--die-color, #b03a2e);
   border: 2px solid rgba(0,0,0,.32); border-radius: 10px; backface-visibility: hidden;
   text-shadow: 0 2px 5px rgba(0,0,0,.5);
   box-shadow: inset 0 0 24px rgba(255,255,255,.14), inset 0 -20px 30px rgba(0,0,0,.22); }
@@ -3693,21 +3694,24 @@ function buildSolidDie(sides, color){
   return die;
 }
 
-// Cube d6 réel (6 faces numérotées FIXES, opposés = 7, ombrées selon l'orientation).
+// Cube d6 réel (6 faces numérotées FIXES, opposés = 7). Couleur MJ PURE + reflet,
+// même traitement CSS que .solid-face (--die-color) — plus de teintes par face,
+// qui rendaient le d6 plus foncé que les autres dés (le « 6 » était à -16 %).
 // Chaque face porte sa normale n et son bas-du-texte t (repère cube, y écran vers le
 // bas, déduits des transforms CSS .cf-*) pour lire la face d'arrêt comme les solides.
 function build3DCube(color) {
   const cube = el("div", { class:"cube" });
+  cube.style.setProperty('--die-color', color||'#b03a2e');
   const faces = [
-    ["cf-front", 1, color,                [0,0,1],  [0,1,0]],
-    ["cf-back",  6, shadeColor(color,-16),[0,0,-1], [0,1,0]],
-    ["cf-right", 2, shadeColor(color,-8), [1,0,0],  [0,1,0]],
-    ["cf-left",  5, shadeColor(color,-24),[-1,0,0], [0,1,0]],
-    ["cf-top",   3, shadeColor(color,28), [0,-1,0], [0,0,1]],
-    ["cf-bottom",4, shadeColor(color,-34),[0,1,0],  [0,0,-1]]
+    ["cf-front", 1, [0,0,1],  [0,1,0]],
+    ["cf-back",  6, [0,0,-1], [0,1,0]],
+    ["cf-right", 2, [1,0,0],  [0,1,0]],
+    ["cf-left",  5, [-1,0,0], [0,1,0]],
+    ["cf-top",   3, [0,-1,0], [0,0,1]],
+    ["cf-bottom",4, [0,1,0],  [0,0,-1]]
   ];
-  cube._faces = faces.map(([cls, num, bg, nrm, tdn]) => {
-    const f = el("div", { class:"cube-face "+cls+(num===6?" num69":""), style:"background:"+bg+";", text:String(num) });
+  cube._faces = faces.map(([cls, num, nrm, tdn]) => {
+    const f = el("div", { class:"cube-face "+cls+(num===6?" num69":""), text:String(num) });
     cube.appendChild(f);
     return { n:nrm, t:tdn, val:num, el:f };
   });
