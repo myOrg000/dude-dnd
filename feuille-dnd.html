@@ -176,9 +176,15 @@ body.top-flat #sheet { margin-top: 8px; }
   font-size: 1.7rem; line-height: 1; cursor: pointer; color: #f2e9d5;
   background: linear-gradient(180deg, #2b2620, #221e18);
   border: 2px solid var(--gold); box-shadow: var(--shadow);
+  touch-action: none; -webkit-user-select: none; user-select: none;
 }
 .nav-pager-btn:hover { background: var(--red); }
 .nav-pager-btn:active { transform: translateY(1px); }
+/* Maintien enclenché : la cible se remplit en or, l'icône passe en double
+   chevron (⏫/⏬) — repère visuel « ça défile en continu ». */
+.nav-pager-btn.holding {
+  background: var(--gold); color: #221e18; transform: scale(1.06);
+}
 @media (max-width: 620px) {
   .nav-pager { right: 6px; gap: 6px; }
   .nav-pager-btn { width: 48px; height: 48px; font-size: 1.5rem; }
@@ -6096,12 +6102,54 @@ function mountPager() {
     window.scrollTo({ top: dest, behavior: reduce ? "auto" : "smooth" });
     if (state && state.fx && state.fx.sounds) Audio.click();
   };
+  // --- Maintien = défilement continu ; clic court = une boîte -----------------
+  //  Pointer Events unifient souris/tactile/stylet ; rAF donne un défilement
+  //  régulier. Au-delà de HOLD_MS le maintien bascule en continu et l'icône
+  //  passe en double chevron (repère visuel du mode). Clavier : une boîte/appui.
+  const HOLD_MS = 380, SPEED = 700; // ms avant bascule ; px/s en continu
+  const mkBtn = (dir, glyph, fast, label) => {
+    const b = el("button", { class:"nav-pager-btn", type:"button", text:glyph,
+      title:label, "aria-label":label });
+    let holdTimer = null, rafId = null, lastT = 0, holding = false;
+    const stop = () => {
+      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      if (holding) { holding = false; b.classList.remove("holding"); b.textContent = glyph; }
+    };
+    const step = (t) => {
+      const dt = lastT ? Math.min(t - lastT, 50) / 1000 : 0; // borne si l'onglet a gelé
+      lastT = t;
+      window.scrollBy(0, dir * SPEED * dt);
+      rafId = requestAnimationFrame(step);
+    };
+    const beginHold = () => {
+      holdTimer = null; holding = true; lastT = 0;
+      b.classList.add("holding"); b.textContent = fast; // ▲→⏫ / ▼→⏬
+      if (state && state.fx && state.fx.sounds) Audio.click();
+      rafId = requestAnimationFrame(step);
+    };
+    b.addEventListener("pointerdown", (e) => {
+      e.preventDefault(); // pas de sélection ni de clic de compatibilité
+      if (e.pointerId != null) { try { b.setPointerCapture(e.pointerId); } catch(_){} }
+      stop();
+      holdTimer = setTimeout(beginHold, HOLD_MS);
+    });
+    b.addEventListener("pointerup", () => {
+      const wasClick = holdTimer != null; // relâché AVANT la bascule
+      stop();
+      if (wasClick) go(dir); // clic = une boîte (comportement historique)
+    });
+    b.addEventListener("pointercancel", stop);
+    b.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(dir); } // clavier : une boîte
+    });
+    b.addEventListener("contextmenu", (e) => e.preventDefault()); // appui long : pas de menu
+    return b;
+  };
   const pager = el("div", { id:"nav-pager", class:"nav-pager", role:"navigation",
     "aria-label":"Aller à la boîte précédente ou suivante" }, [
-    el("button", { class:"nav-pager-btn", type:"button", text:"▲",
-      title:"Boîte précédente", "aria-label":"Boîte précédente", onclick:()=>go(-1) }),
-    el("button", { class:"nav-pager-btn", type:"button", text:"▼",
-      title:"Boîte suivante", "aria-label":"Boîte suivante", onclick:()=>go(1) })
+    mkBtn(-1, "▲", "⏫", "Boîte précédente (maintenir : défiler vers le haut)"),
+    mkBtn(1,  "▼", "⏬", "Boîte suivante (maintenir : défiler vers le bas)")
   ]);
   document.body.appendChild(pager);
 }
