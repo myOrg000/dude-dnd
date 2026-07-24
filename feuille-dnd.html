@@ -477,13 +477,30 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 @keyframes fxRing  { 0% { transform: scale(.2); opacity: .8; } 100% { transform: scale(3); opacity: 0; } }
 @keyframes fxBloom { 0% { transform: scale(.6); opacity: 0; } 30% { opacity: .9; } 100% { transform: scale(1.5); opacity: 0; } }
 @keyframes fxGlow  { 0%, 100% { transform: scale(.92); opacity: .5; } 50% { transform: scale(1.05); opacity: .85; } }
+/* Niveau >= 2 « magiques » : traînée de fantômes (pool recyclé, fondu par WAAPI)
+   + motes (étincelles dorées / cendres) animées en one-shot par WAAPI. */
+.fx-ghost { position: absolute; left: 0; top: 0; width: 24vmin; height: 24vmin; border-radius: 50%; opacity: 0; }
+.fx-mote { position: absolute; left: 0; top: 0; width: 7px; height: 7px; border-radius: 50%; opacity: 0;
+  background: radial-gradient(circle, #ffe27a 0%, rgba(255,180,60,.8) 60%, rgba(0,0,0,0) 100%); }
+.fx-mote.ash { width: 9px; height: 9px;
+  background: radial-gradient(circle, rgba(120,110,100,.9) 0%, rgba(70,60,55,.7) 60%, rgba(0,0,0,0) 100%); }
+/* Niveau 3 « festifs » : cercle runique discret DERRIÈRE le dé (opacité <= .3),
+   rotation lente 12 s, fondu d'entrée/sortie puis auto-suppression. */
+.fx-rune { position: absolute; left: 0; top: 0; width: 72vmin; height: 72vmin; margin: -36vmin 0 0 -36vmin;
+  opacity: 0; animation: fxRuneFade 3s ease-in-out forwards; }
+.fx-rune svg { width: 100%; height: 100%; display: block; animation: fxRuneSpin 12s linear infinite; }
+@keyframes fxRuneFade { 0% { opacity: 0; } 13% { opacity: .28; } 72% { opacity: .28; } 100% { opacity: 0; } }
+@keyframes fxRuneSpin { to { transform: rotate(360deg); } }
 /* Enveloppe du dé (niveaux >= 1) : respiration douce à l'arrêt, secousse ADOUCIE à
-   l'échec. Jamais sur .die-stage (transform piloté JS) ni sur le dé (preserve-3d). */
+   l'échec (pleine amplitude au niveau 3). Jamais sur .die-stage (transform piloté JS)
+   ni sur le dé (preserve-3d). */
 .die-shell { position: absolute; inset: 0; }
 .die-shell.fx-breath { animation: fxBreath 4s ease-in-out infinite; }
 .die-shell.fx-shake  { animation: fxShakeSoft .4s ease-in-out, fxBreath 4s ease-in-out infinite; }
+.die-shell.fx-shake-full { animation: fxShakeFull .55s ease-in-out, fxBreath 4s ease-in-out infinite; }
 @keyframes fxBreath    { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
 @keyframes fxShakeSoft { 0%, 100% { translate: 0 0; } 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
+@keyframes fxShakeFull { 0%, 100% { translate: 0 0; } 20% { translate: -12px 0; } 40% { translate: 12px 0; } 60% { translate: -8px 0; } 80% { translate: 8px 0; } }
 /* Aux niveaux >= 1, la lueur/secousse historiques du stage (filter et margin animés,
    coûteux) sont remplacées par les calques ci-dessus. Niveau 0 : intactes. */
 .dice-overlay.fx-on .die-stage.settled.crit { animation: none; }
@@ -3571,9 +3588,9 @@ function diceTray() {
       el("span", { text:"🎨 couleur des dés" }),
       el("input", { type:"color", value:color, onchange:(e)=>{ state.diceColor=e.target.value; save(); render(); } })
     ]));
-    const cur = (state.fxDice == null ? 1 : state.fxDice|0) > 0 ? 1 : 0;
+    const cur = Math.max(0, Math.min(3, state.fxDice == null ? 1 : state.fxDice|0));
     const fxSel = el("select", { class:"sel", onchange:(e)=>{ state.fxDice = parseInt(e.target.value, 10) || 0; save(); render(); } });
-    [[0,"aucun"],[1,"sobres"]].forEach(([v,t]) =>
+    [[0,"aucun"],[1,"sobres"],[2,"magiques"],[3,"festifs"]].forEach(([v,t]) =>
       fxSel.appendChild(el("option", { value:String(v), text:t, selected: v===cur ? "selected" : null })));
     children.push(el("label", { class:"dice-color-pick",
       title:"Effets spéciaux des dés (Mode MJ, sauvegardé). Coupés d'office si « mouvement réduit » ou animations désactivées." }, [
@@ -3790,15 +3807,40 @@ function buildPolyDie(sides, result, color, isFail) {
 /* --- Effets spéciaux du lanceur (réglage MJ state.fxDice) --------------------
    0 = aucun (comportement historique EXACT). 1 = « sobres » : halo couplé à la
    vitesse, ombre au sol, onde + souffle à l'arrêt, respiration du dé posé,
-   lueur critique 1 Hz, secousse adoucie. (2 « magiques » / 3 « festifs » : à venir.)
+   lueur critique 1 Hz, secousse adoucie. 2 = « magiques » : + traînée de
+   fantômes, dissipation d'étincelles à l'arrêt, confettis, cendres sur échec.
+   3 = « festifs » : + cercle runique discret, secousse pleine amplitude.
    Règles dures : UNE seule boucle rAF (le step() existant) ; par frame le JS
-   n'écrit QUE transform/opacity ; les calques sont FRÈRES de .die-stage dans
-   .fx-back (jamais enfants : preserve-3d + scale) ; jamais de pulsation plus
-   rapide que 1 Hz (photosensibilité). L'accessibilité écrase le réglage MJ. */
+   n'écrit QUE transform/opacity ; pools PRÉ-ALLOUÉS recyclés (les rafales sont
+   des animations WAAPI one-shot, pas de createElement dans la boucle) ; les
+   calques sont FRÈRES de .die-stage dans .fx-back (jamais enfants :
+   preserve-3d + scale) ; jamais de pulsation plus rapide que 1 Hz
+   (photosensibilité). L'accessibilité écrase le réglage MJ. */
 function fxLevel(){
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduce || document.body.classList.contains("no-anim")) return 0;
   return Math.max(0, Math.min(3, state.fxDice == null ? 1 : state.fxDice|0));
+}
+// Cercle runique (niveau 3) : SVG dessiné en JS, aucun fichier — anneaux pointillés
+// + 8 marques, rotation lente (12 s) et fondu gérés par le CSS (.fx-rune).
+function runeSVG(){
+  const NS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox','0 0 100 100');
+  [[46,1.2,'5 4'],[41.5,0.5,'1.5 3'],[38,0.8,null]].forEach(([r,w,dash])=>{
+    const c=document.createElementNS(NS,'circle');
+    c.setAttribute('cx','50'); c.setAttribute('cy','50'); c.setAttribute('r',String(r));
+    c.setAttribute('fill','none'); c.setAttribute('stroke','#ffe082'); c.setAttribute('stroke-width',String(w));
+    if (dash) c.setAttribute('stroke-dasharray',dash);
+    svg.appendChild(c);
+  });
+  for (let i=0;i<8;i++){
+    const a=i*Math.PI/4, t=document.createElementNS(NS,'line');
+    t.setAttribute('x1',(50+39.5*Math.cos(a)).toFixed(2)); t.setAttribute('y1',(50+39.5*Math.sin(a)).toFixed(2));
+    t.setAttribute('x2',(50+44.5*Math.cos(a)).toFixed(2)); t.setAttribute('y2',(50+44.5*Math.sin(a)).toFixed(2));
+    t.setAttribute('stroke','#ffe082'); t.setAttribute('stroke-width','1.1');
+    svg.appendChild(t);
+  }
+  return svg;
 }
 function diceFx(overlay, level, color){
   const back=_el('div','fx-back');            // 1er enfant de l'overlay -> toujours DERRIÈRE le dé
@@ -3806,7 +3848,31 @@ function diceFx(overlay, level, color){
   const halo=_el('div','fx-halo'), shadow=_el('div','fx-shadow');
   halo.style.background='radial-gradient(circle, '+color+'b0 0%, '+color+'44 42%, rgba(0,0,0,0) 70%)';
   back.append(shadow, halo);
-  let lx=-999, ly=-999;                       // dernier centre connu du dé (px overlay)
+  // Pools pré-alloués (niveau >= 2) : 10 fantômes de traînée + 24 motes (étincelles
+  // ET cendres — partagés). Créés UNE fois ici, recyclés en rond, jamais dans la boucle.
+  const ghosts=[], motes=[];
+  if (level>=2){
+    for (let i=0;i<10;i++){ const g=_el('div','fx-ghost');
+      g.style.background='radial-gradient(circle, '+color+'aa 0%, '+color+'33 50%, rgba(0,0,0,0) 72%)';
+      back.appendChild(g); ghosts.push(g); }
+    for (let i=0;i<24;i++){ const m=_el('div','fx-mote'); back.appendChild(m); motes.push(m); }
+  }
+  let lx=-999, ly=-999, gi=0, mi=0, frame=0;  // dernier centre du dé + index de recyclage
+  const vmin=()=>Math.min(window.innerWidth, window.innerHeight)/100;
+  // Rafale de motes (étincelles dorées ou cendres) : WAAPI one-shot, pool recyclé.
+  function burst(cx, cy, n, o){
+    for (let i=0;i<n && i<motes.length;i++){
+      const m=motes[mi++ % motes.length];
+      if (m._anim) m._anim.cancel();
+      m.className='fx-mote'+(o.ash?' ash':'');
+      const a=Math.random()*2*Math.PI, d=(o.dmin+Math.random()*o.dvar)*vmin();
+      const dx=Math.cos(a)*d, dy=Math.sin(a)*d*(o.flat||1)-(o.rise||0)*vmin();
+      m._anim=m.animate(
+        [{transform:'translate(-50%,-50%) translate('+cx+'px,'+cy+'px) scale(1)',       opacity:o.o0},
+         {transform:'translate(-50%,-50%) translate('+(cx+dx)+'px,'+(cy+dy)+'px) scale('+(o.s1||0.35)+')', opacity:0}],
+        {duration:o.dur, easing:'cubic-bezier(.1,.6,.3,1)', fill:'forwards'});
+    }
+  }
   return {
     // Chaque frame du roulement (appelé du step() existant) : transform/opacity SEULEMENT.
     step(cx, cy, sp){
@@ -3816,8 +3882,16 @@ function diceFx(overlay, level, color){
       halo.style.opacity=(k*0.5).toFixed(3);
       shadow.style.transform='translate(-50%,-50%) translate('+cx.toFixed(1)+'px,'+(cy+16).toFixed(1)+'px) scale('+(0.65+k*0.45).toFixed(3)+','+(0.26+k*0.14).toFixed(3)+')';
       shadow.style.opacity=(0.42-0.18*k).toFixed(3);
+      // Traînée de rémanence (niveau >= 2) : un fantôme toutes les 3 frames tant que ça file.
+      if (ghosts.length && (++frame)%3===0 && sp>250){
+        const g=ghosts[gi++ % ghosts.length];
+        if (g._anim) g._anim.cancel();
+        g.style.transform='translate(-50%,-50%) translate('+cx.toFixed(1)+'px,'+cy.toFixed(1)+'px) scale('+(0.45+k*0.4).toFixed(3)+')';
+        g._anim=g.animate([{opacity:.38},{opacity:0}], {duration:380, easing:'linear', fill:'forwards'});
+      }
     },
-    // Le dé vient de se poser : halo/ombre s'éteignent, onde double au point d'arrêt.
+    // Le dé vient de se poser : halo/ombre s'éteignent, onde double au point d'arrêt,
+    // et la magie SE DISSIPE en étincelles (niveau >= 2).
     settle(){
       halo.style.transition='opacity .45s ease-out';   halo.style.opacity='0';
       shadow.style.transition='opacity .45s ease-out'; shadow.style.opacity='0';
@@ -3828,14 +3902,24 @@ function diceFx(overlay, level, color){
         ring.addEventListener('animationend', ()=>ring.remove());
         back.appendChild(ring);
       });
+      if (motes.length) burst(lx, ly, 18, {dmin:8, dvar:16, o0:.9, dur:900});
     },
-    // Le dé est centré en grand : souffle lumineux ; lueur 1 Hz si critique.
+    // Le dé est centré en grand : souffle lumineux ; lueur 1 Hz si critique ;
+    // cendres qui montent sur échec (niveau >= 2) ; cercle runique (niveau 3).
     reveal(cx, cy, isCrit, isFail){
       const bloom=_el('div','fx-bloom'+(isFail?' fail':''));
       bloom.style.left=cx+'px'; bloom.style.top=cy+'px';
       bloom.addEventListener('animationend', ()=>bloom.remove());
       back.appendChild(bloom);
       if (isCrit){ const g=_el('div','fx-glow'); g.style.left=cx+'px'; g.style.top=cy+'px'; back.appendChild(g); }
+      if (isFail && motes.length) burst(cx, cy, 10, {ash:true, dmin:4, dvar:8, rise:14, flat:.4, o0:.7, dur:1400, s1:.8});
+      if (level>=3){
+        const r=_el('div','fx-rune');
+        r.style.left=cx+'px'; r.style.top=cy+'px';
+        r.appendChild(runeSVG());
+        r.addEventListener('animationend', (e)=>{ if (e.target===r) r.remove(); });
+        back.appendChild(r);
+      }
     }
   };
 }
@@ -3970,9 +4054,9 @@ function rollDie(sides, ev) {
     stage.style.transform = "translate("+bx+"px,"+by+"px) scale("+RS+")";
     if (fx){                                   // ponctuation de fin (souffle ; lueur si crit)
       fx.reveal(vW/2, vH/2, isCrit, isFail);
-      if (shell) shell.classList.add(isFail ? "fx-shake" : "fx-breath");
+      if (shell) shell.classList.add(isFail ? (level>=3 ? "fx-shake-full" : "fx-shake") : "fx-breath");
     }
-    if (isCrit) { if (!level) spawnConfetti(overlay); Audio.diceWin(); }   // confettis : niveau 0 (historique) ; niveau 2 à venir
+    if (isCrit) { if (!level || level>=2) spawnConfetti(overlay); Audio.diceWin(); }   // confettis : historique (0) et magiques+ (>=2)
     else if (isFail) Audio.diceFail();
   });
 }
