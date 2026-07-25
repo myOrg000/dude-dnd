@@ -6163,17 +6163,15 @@ const MOUNTS = [
   { key:"mastiff",          nom:"Mastiff",          sag:12, ca:12, dex:2,  pv:5,  atk:"+3 · 1d6+1 perforant",  vit:"12 m", charge:"195 lb",  cout:"25 po" },
   { key:"elephant",         nom:"Éléphant",         sag:11, ca:12, dex:-1, pv:76, atk:"+8 · 3d8+6 perforant",  vit:"12 m", charge:"1320 lb", cout:"200 po" }
 ];
-// Bardes = les 12 armures du SRD adaptées à la monture (choix libre du joueur).
+// Bardes = sélection courte d'armures du SRD adaptées à la monture (choix libre).
 // dex : true = Dex entière (légères), 2 = plafonnée à +2 (intermédiaires), 0 = ignorée (lourdes).
+// Une barde retirée mais encore enregistrée sur un vieux personnage est simplement
+// ignorée (CA naturelle) jusqu'au prochain choix.
 const BARDES = [
-  { key:"matelassee",      nom:"Matelassée",         base:11, dex:true },
   { key:"cuir",            nom:"Cuir",               base:11, dex:true },
   { key:"cuir-cloute",     nom:"Cuir clouté",        base:12, dex:true },
-  { key:"peau",            nom:"Peau",               base:12, dex:2 },
-  { key:"chemise-mailles", nom:"Chemise de mailles", base:13, dex:2 },
   { key:"ecailles",        nom:"Écailles",           base:14, dex:2 },
   { key:"cuirasse",        nom:"Cuirasse",           base:14, dex:2 },
-  { key:"demi-plate",      nom:"Demi-plate",         base:15, dex:2 },
   { key:"broigne",         nom:"Broigne",            base:14, dex:0 },
   { key:"cotte-mailles",   nom:"Cotte de mailles",   base:16, dex:0 },
   { key:"clibanion",       nom:"Clibanion",          base:17, dex:0 },
