@@ -469,10 +469,12 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .dice-sum { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
   display: flex; align-items: center; justify-content: center; pointer-events: none;
   text-align: center; animation: diceFadeIn .3s ease-out; }
-.dice-sum-total { font-family: var(--font-num); font-weight: 900;
-  font-size: clamp(4rem, 16vmin, 9rem); line-height: 1; color: #ffe27a;
-  -webkit-text-stroke: 2px rgba(60,30,0,.55);
-  text-shadow: 0 0 22px rgba(0,0,0,.9), 0 0 40px #ffd23f, 0 4px 10px rgba(0,0,0,.85); }
+.dice-sum-total { font-family: var(--font-num); font-weight: 900; display: inline-block;
+  font-size: clamp(8rem, 32vmin, 18rem); line-height: 1; color: #ffe27a;
+  -webkit-text-stroke: 2.5px rgba(60,30,0,.55);
+  text-shadow: 0 0 22px rgba(0,0,0,.9), 0 0 40px #ffd23f, 0 4px 10px rgba(0,0,0,.85);
+  animation: diceSumWiggle 1.6s ease-in-out infinite; }   /* gigote doucement (0,6 Hz < 1 Hz) */
+@keyframes diceSumWiggle { 0%, 100% { transform: rotate(-2deg) scale(1); } 50% { transform: rotate(2deg) scale(1.04); } }
 
 /* --- Effets spéciaux des dés (réglage MJ ✨, state.fxDice >= 1) --------------
    Calques FRÈRES du dé dans .fx-back (1er enfant de l'overlay => derrière).
@@ -3606,16 +3608,16 @@ function diceTray() {
     btn.appendChild(miniDie3D(sides, color));
     row.appendChild(btn);
   });
-  // Compteur [−] N [+] : combien de dés lancer d'un clic (défaut 1, 1..50,
+  // Compteur [−] N [+] : combien de dés lancer d'un clic (défaut 1, 1..30,
   // volontairement NON mémorisé — retour à 1 à chaque ouverture, moins de surprises).
   const lbl = el("div", { class:"dice-tray-lbl muted",
     text: diceCount>1 ? "🎲 Lancer "+diceCount+" dés" : "🎲 Lancer un dé" });
   const val = el("span", { class:"dice-count-val", text:String(diceCount) });
-  const setCount = (n)=>{ const v = Math.max(1, Math.min(50, n));
+  const setCount = (n)=>{ const v = Math.max(1, Math.min(30, n));
     if (v !== diceCount){ diceCount = v; Audio.step();
       val.textContent = String(v);
       lbl.textContent = v>1 ? "🎲 Lancer "+v+" dés" : "🎲 Lancer un dé"; } };
-  const counter = el("div", { class:"dice-count", title:"Nombre de dés lancés d'un clic (1 à 50)" }, [
+  const counter = el("div", { class:"dice-count", title:"Nombre de dés lancés d'un clic (1 à 30)" }, [
     diceHoldBtn("−", "Moins de dés", ()=>setCount(diceCount-1)),
     val,
     diceHoldBtn("+", "Plus de dés", ()=>setCount(diceCount+1))
@@ -4197,7 +4199,7 @@ function rollManyDice(sides, count) {
 }
 
 function rollDie(sides, ev) {
-  const n = Math.max(1, Math.min(50, diceCount||1));
+  const n = Math.max(1, Math.min(30, diceCount||1));
   if (n > 1) { rollManyDice(sides, n); return; }   // compteur > 1 : lancer multiple
   const color = state.diceColor || "#b80000";
   const level = fxLevel();   // effets spéciaux : 0 = comportement historique exact
