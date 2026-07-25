@@ -374,6 +374,14 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .mini-die .solid-die[data-sides="12"] .solid-num { font-size: 1.9rem; }
 .mini-die .solid-die[data-sides="10"] .solid-num { font-size: 1.7rem; }
 .mini-die .solid-die[data-sides="20"] .solid-num { font-size: 1.4rem; }
+/* Compteur de dés [−] N [+] : grandes cibles ; clic = un pas, maintien = répétition */
+.dice-count { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.dice-count-btn { width: 46px; height: 46px; border-radius: 12px; border: 2px solid var(--line);
+  background: var(--paper-2); font-size: 1.6rem; font-weight: 800; line-height: 1;
+  cursor: pointer; font-family: var(--font-num); touch-action: none; }
+.dice-count-btn:active { transform: scale(.93); }
+.dice-count-val { min-width: 2.2em; text-align: center; font-family: var(--font-num);
+  font-size: 1.5rem; font-weight: 800; }
 .dice-color-pick { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; margin-top: 4px; font-size: .8rem; }
 .dice-color-pick input[type=color] { width: 28px; height: 28px; border: 1px solid var(--line);
   border-radius: 6px; padding: 0; cursor: pointer; background: none; }
@@ -426,6 +434,7 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .solid-die[data-sides="10"] .solid-num { font-size: 1.125rem; }
 .solid-die[data-sides="20"] .solid-num { font-size: 0.75rem; }
 .solid-num.fail { color: #ffd5d0; text-shadow: 0 0 14px #c0392b; }
+.solid-num.top20 { color: #ffe27a; text-shadow: 0 0 16px #ffd23f, 0 0 32px #ffb300; } /* 20 naturel en lancer multiple */
 /* 6 et 9 : base du chiffre soulignée (lever l'ambiguïté, comme sur les vrais dés) */
 .solid-num.num69, .cube-face.num69 { text-decoration: underline; text-decoration-thickness: 0.09em; text-underline-offset: 0.14em; }
 
@@ -454,6 +463,16 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .dice-close { position: absolute; top: 8px; right: 10px; width: 30px; height: 30px; border-radius: 50%;
   border: none; background: rgba(0,0,0,.4); color: #fff; font-size: 1rem; cursor: pointer; line-height: 1; }
 .dice-close:hover { background: rgba(0,0,0,.65); }
+
+/* Addition des dés multiples : en clair, en gros, centrée dans la bande du bas */
+.dice-sum { position: absolute; left: 4vw; right: 4vw; bottom: 2.5vh; display: flex;
+  align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 14px;
+  pointer-events: none; text-align: center; animation: diceFadeIn .3s ease-out; }
+.dice-sum-terms { font-family: var(--font-num); font-weight: 800; font-size: 1.9rem;
+  color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.85); }
+.dice-sum-total { font-family: var(--font-num); font-weight: 900; font-size: 3.4rem;
+  color: #ffe27a; text-shadow: 0 0 18px #ffd23f, 0 2px 8px rgba(0,0,0,.85); }
+.dice-sum.compact .dice-sum-terms { font-size: 1.15rem; }
 
 /* --- Effets spéciaux des dés (réglage MJ ✨, state.fxDice >= 1) --------------
    Calques FRÈRES du dé dans .fx-back (1er enfant de l'overlay => derrière).
@@ -795,8 +814,10 @@ input:focus-visible, button:focus-visible, select:focus-visible {
 .mount-table thead th:last-child, .mount-table tbody td:last-child { text-align: right; }
 .mount-table tbody td { font-size: .95rem; color: var(--ink); height: 1.4em; }
 .mount-table .mt-name { font-weight: 700; }
-.mount-table tbody td:nth-child(2), .mount-table tbody td:nth-child(3) { font-family: var(--font-num); }
+.mount-table tbody td:nth-child(2), .mount-table tbody td:nth-child(3),
+.mount-table tbody td:nth-child(5) { font-family: var(--font-num); }   /* SAG, CA, PV en chiffres */
 .mount-table tbody td:last-child { color: var(--red); font-weight: 700; }
+.mount-table td .sel { width: auto; min-width: 9.5em; font-size: .85rem; padding: 3px 6px; } /* pulldown BARDE */
 .mount-note { margin: 10px 0 0; font-size: .8rem; color: var(--ink-soft); }
 
 /* --- Monnaie --------------------------------------------------------------- */
@@ -1665,6 +1686,7 @@ function blankCharacter() {
     money: { pp:0, gp:0, sp:0, cp:0 },
     treasures: "",
     mount: "",                 // clé de la monture choisie ("" = aucune)
+    mountArmor: "",            // barde de la monture ("" = aucune) — conservée si on change de monture
     languages: [],             // langues choisies (multi-select)
     languagesNote: "",
     profNote: "",
@@ -3584,7 +3606,21 @@ function diceTray() {
     btn.appendChild(miniDie3D(sides, color));
     row.appendChild(btn);
   });
-  const children = [ row, el("div", { class:"dice-tray-lbl muted", text:"🎲 Lancer un dé" }) ];
+  // Compteur [−] N [+] : combien de dés lancer d'un clic (défaut 1, 1..50,
+  // volontairement NON mémorisé — retour à 1 à chaque ouverture, moins de surprises).
+  const lbl = el("div", { class:"dice-tray-lbl muted",
+    text: diceCount>1 ? "🎲 Lancer "+diceCount+" dés" : "🎲 Lancer un dé" });
+  const val = el("span", { class:"dice-count-val", text:String(diceCount) });
+  const setCount = (n)=>{ const v = Math.max(1, Math.min(50, n));
+    if (v !== diceCount){ diceCount = v; Audio.step();
+      val.textContent = String(v);
+      lbl.textContent = v>1 ? "🎲 Lancer "+v+" dés" : "🎲 Lancer un dé"; } };
+  const counter = el("div", { class:"dice-count", title:"Nombre de dés lancés d'un clic (1 à 50)" }, [
+    diceHoldBtn("−", "Moins de dés", ()=>setCount(diceCount-1)),
+    val,
+    diceHoldBtn("+", "Plus de dés", ()=>setCount(diceCount+1))
+  ]);
+  const children = [ counter, row, lbl ];
   if (dmMode) {
     children.push(el("label", { class:"dice-color-pick", title:"Couleur des dés (Mode MJ, sauvegardée)" }, [
       el("span", { text:"🎨 couleur des dés" }),
@@ -3599,6 +3635,31 @@ function diceTray() {
       el("span", { text:"✨ effets des dés" }), fxSel ]));
   }
   return el("div", { class:"dice-tray"+(!state.showDice ? " dice-tray-off" : "") }, children);
+}
+// Nombre de dés lancés d'un clic (compteur du plateau). Non sauvegardé : défaut 1.
+let diceCount = 1;
+// Bouton du compteur : clic = un pas ; MAINTIEN = répétition continue (même
+// patron que les flèches de navigation : bascule après HOLD, capture pointeur).
+function diceHoldBtn(txt, label, stepFn){
+  const b = el("button", { class:"dice-count-btn", type:"button", text:txt, title:label, "aria-label":label });
+  let holdTimer=null, iv=null;
+  const stop = ()=>{ if (holdTimer){ clearTimeout(holdTimer); holdTimer=null; }
+                     if (iv){ clearInterval(iv); iv=null; } };
+  b.addEventListener("pointerdown", (e)=>{
+    e.preventDefault();
+    if (e.pointerId != null) { try { b.setPointerCapture(e.pointerId); } catch(_){} }
+    stop();
+    holdTimer = setTimeout(()=>{ holdTimer=null; stepFn(); iv=setInterval(stepFn, 90); }, 380);
+  });
+  b.addEventListener("pointerup", ()=>{
+    const wasClick = holdTimer != null;          // relâché AVANT la bascule
+    stop();
+    if (wasClick) stepFn();                      // clic = un pas
+  });
+  b.addEventListener("pointercancel", stop);
+  b.addEventListener("keydown", (e)=>{ if (e.key==="Enter" || e.key===" "){ e.preventDefault(); stepFn(); } });
+  b.addEventListener("contextmenu", (e)=>e.preventDefault());   // appui long : pas de menu
+  return b;
 }
 
 /* ============================================================================
@@ -4059,7 +4120,87 @@ function bounceInside(stage, dieEl, sides, host, fx, done) {
   requestAnimationFrame(step);
 }
 
+/* --- Lancer MULTIPLE (compteur du plateau) -----------------------------------
+   N dés indépendants : chacun sa physique, sa trajectoire et son score (lu sur
+   SA face d'arrêt, rien ne change au tirage). À mesure qu'ils se posent, ils
+   convergent vers le centre en grappe phyllotaxique : le PREMIER arrivé prend
+   le centre, chaque nouvel arrivant s'insère dans la spirale. Pas d'effets ✨
+   ni de crit/échec global en multi (l'écran est déjà plein) ; sur les d20,
+   chaque 20 s'affiche doré et chaque 1 en rouge (avantage lisible d'un œil). */
+// Grappe centrale (PURE, testable hors navigateur) : n emplacements en spirale
+// de Vogel (angle d'or), taille de dé calculée pour tenir SANS chevauchement
+// (écart >= 1.04 × diamètre ; l'étirement elliptique >= 1 ne rapproche jamais).
+function packLayout(n, base, vW, vH){
+  const pts=[]; let mR=0;
+  for (let i=0;i<n;i++){
+    const r=Math.sqrt(i+0.5), a=i*2.39996322972865;   // angle d'or
+    pts.push([r*Math.cos(a), r*Math.sin(a)]); if (r>mR) mR=r;
+  }
+  let mND=Infinity;
+  for (let i=0;i<n;i++) for (let j=i+1;j<n;j++){
+    const q=Math.hypot(pts[i][0]-pts[j][0], pts[i][1]-pts[j][1]);
+    if (q<mND) mND=q;
+  }
+  const m=Math.min(vW,vH), Rlim=0.41*m;
+  const d=Math.min(0.52*m, Rlim/(mR*1.04/mND + 0.5));   // diamètre d'un dé posé
+  const s=(d*1.04)/mND;                                 // échelle spirale : écart = 1.04 d
+  const Rc=Math.max(1, s*mR);
+  const ax=Math.max(1, Math.min(1.6, (0.41*vW-d/2)/Rc));
+  const ay=Math.max(1, Math.min(1.6, (0.41*vH-d/2)/Rc));
+  return { scale:d/base, slots:pts.map(p=>[vW/2+p[0]*s*ax, vH/2+p[1]*s*ay]) };
+}
+function rollManyDice(sides, count) {
+  const color = state.diceColor || "#b80000";
+  const old = document.querySelector(".dice-overlay"); if (old) old.remove();
+  const overlay = el("div", { class:"dice-overlay" });
+  const closeBtn = el("button", { class:"dice-close", title:"Fermer", text:"✕",
+    onclick:(e)=>{ e.stopPropagation(); overlay.remove(); } });
+  const base = sides===6 ? 72 : 116;
+  const stages = [];
+  for (let i=0;i<count;i++){
+    const dieEl = sides===6 ? build3DCube(color) : buildSolidDie(sides, color);
+    const stage = el("div", { class:"die-stage" }, [dieEl]);
+    overlay.appendChild(stage);
+    stages.push({ stage, dieEl });
+  }
+  overlay.appendChild(closeBtn);
+  overlay.addEventListener("click", () => overlay.remove());
+  document.body.appendChild(overlay);
+
+  Audio.diceRoll();
+  const arrived = [], results = [];              // stages posés + scores, ordre d'arrivée
+  function repack(){                             // ré-organise la grappe à chaque arrivée
+    const vW=window.innerWidth, vH=window.innerHeight;
+    // La grappe vit dans les 84 % du haut ; la bande du bas est réservée à l'ADDITION.
+    const lay=packLayout(count, base, vW, vH*0.84);
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    arrived.forEach((st, i)=>{
+      const x=lay.slots[i][0]-base*lay.scale/2, y=lay.slots[i][1]-base*lay.scale/2;
+      if (!reduce) st.style.transition = "transform .4s cubic-bezier(.2,.7,.3,1)";
+      st.style.transform = "translate("+x.toFixed(1)+"px,"+y.toFixed(1)+"px) scale("+lay.scale.toFixed(3)+")";
+    });
+  }
+  stages.forEach(({stage, dieEl})=>{
+    bounceInside(stage, dieEl, sides, overlay, null, (result, winEl)=>{
+      if (sides===20 && winEl){
+        if (result===20) winEl.classList.add("top20");
+        else if (result===1) winEl.classList.add("fail");
+      }
+      arrived.push(stage); results.push(result);
+      repack();
+      if (arrived.length === count){             // tous posés : l'ADDITION en clair, en gros
+        overlay.appendChild(el("div", { class:"dice-sum"+(count>16?" compact":"") }, [
+          el("span", { class:"dice-sum-terms", text: results.join(" + ") + " =" }),
+          el("span", { class:"dice-sum-total", text: String(results.reduce((a,b)=>a+b,0)) })
+        ]));
+      }
+    });
+  });
+}
+
 function rollDie(sides, ev) {
+  const n = Math.max(1, Math.min(50, diceCount||1));
+  if (n > 1) { rollManyDice(sides, n); return; }   // compteur > 1 : lancer multiple
   const color = state.diceColor || "#b80000";
   const level = fxLevel();   // effets spéciaux : 0 = comportement historique exact
 
@@ -6010,32 +6151,68 @@ function renderMagicItems() {
 
 // --- Montures ---
 // Valeurs SRD 5.1 (CC-BY-4.0). Attaque = bonus · dégâts · type.
+// sag = Sagesse (le modificateur est le jet de sauvegarde contre la peur — les
+// bêtes n'ont pas de maîtrise). dex (modificateur) présent = BARDE possible.
 const MOUNTS = [
-  { key:"cheval-de-selle",  nom:"Cheval de selle",  ca:10, pv:13, atk:"+5 · 2d4+3 contondant", vit:"18 m", charge:"480 lb",  cout:"75 po" },
-  { key:"cheval-de-guerre", nom:"Cheval de guerre", ca:11, pv:19, atk:"+6 · 2d6+4 contondant", vit:"18 m", charge:"540 lb",  cout:"400 po" },
-  { key:"cheval-de-trait",  nom:"Cheval de trait",  ca:10, pv:19, atk:"+6 · 2d4+4 contondant", vit:"12 m", charge:"540 lb",  cout:"50 po" },
-  { key:"poney",            nom:"Poney",            ca:10, pv:11, atk:"+4 · 2d4+2 contondant", vit:"12 m", charge:"225 lb",  cout:"30 po" },
-  { key:"chameau",          nom:"Chameau",          ca:9,  pv:15, atk:"+5 · 1d4 contondant",   vit:"15 m", charge:"480 lb",  cout:"50 po" },
-  { key:"mulet-ane",        nom:"Mulet / Âne",      ca:10, pv:11, atk:"+2 · 1d4+2 contondant", vit:"12 m", charge:"420 lb",  cout:"8 po" },
-  { key:"mastiff",          nom:"Mastiff",          ca:12, pv:5,  atk:"+3 · 1d6+1 perforant",  vit:"12 m", charge:"195 lb",  cout:"25 po" },
-  { key:"elephant",         nom:"Éléphant",         ca:12, pv:76, atk:"+8 · 3d8+6 perforant",  vit:"12 m", charge:"1320 lb", cout:"200 po" }
+  { key:"cheval-de-selle",  nom:"Cheval de selle",  sag:11, ca:10, pv:13, atk:"+5 · 2d4+3 contondant", vit:"18 m", charge:"480 lb",  cout:"75 po" },
+  { key:"cheval-de-guerre", nom:"Cheval de guerre", sag:12, ca:11, dex:1,  pv:19, atk:"+6 · 2d6+4 contondant", vit:"18 m", charge:"540 lb",  cout:"400 po" },
+  { key:"cheval-de-trait",  nom:"Cheval de trait",  sag:11, ca:10, pv:19, atk:"+6 · 2d4+4 contondant", vit:"12 m", charge:"540 lb",  cout:"50 po" },
+  { key:"poney",            nom:"Poney",            sag:11, ca:10, pv:11, atk:"+4 · 2d4+2 contondant", vit:"12 m", charge:"225 lb",  cout:"30 po" },
+  { key:"chameau",          nom:"Chameau",          sag:8,  ca:9,  pv:15, atk:"+5 · 1d4 contondant",   vit:"15 m", charge:"480 lb",  cout:"50 po" },
+  { key:"mulet-ane",        nom:"Mulet / Âne",      sag:10, ca:10, pv:11, atk:"+2 · 1d4+2 contondant", vit:"12 m", charge:"420 lb",  cout:"8 po" },
+  { key:"mastiff",          nom:"Mastiff",          sag:12, ca:12, dex:2,  pv:5,  atk:"+3 · 1d6+1 perforant",  vit:"12 m", charge:"195 lb",  cout:"25 po" },
+  { key:"elephant",         nom:"Éléphant",         sag:11, ca:12, dex:-1, pv:76, atk:"+8 · 3d8+6 perforant",  vit:"12 m", charge:"1320 lb", cout:"200 po" }
 ];
+// Bardes = les 12 armures du SRD adaptées à la monture (choix libre du joueur).
+// dex : true = Dex entière (légères), 2 = plafonnée à +2 (intermédiaires), 0 = ignorée (lourdes).
+const BARDES = [
+  { key:"matelassee",      nom:"Matelassée",         base:11, dex:true },
+  { key:"cuir",            nom:"Cuir",               base:11, dex:true },
+  { key:"cuir-cloute",     nom:"Cuir clouté",        base:12, dex:true },
+  { key:"peau",            nom:"Peau",               base:12, dex:2 },
+  { key:"chemise-mailles", nom:"Chemise de mailles", base:13, dex:2 },
+  { key:"ecailles",        nom:"Écailles",           base:14, dex:2 },
+  { key:"cuirasse",        nom:"Cuirasse",           base:14, dex:2 },
+  { key:"demi-plate",      nom:"Demi-plate",         base:15, dex:2 },
+  { key:"broigne",         nom:"Broigne",            base:14, dex:0 },
+  { key:"cotte-mailles",   nom:"Cotte de mailles",   base:16, dex:0 },
+  { key:"clibanion",       nom:"Clibanion",          base:17, dex:0 },
+  { key:"harnois",         nom:"Harnois",            base:18, dex:0 }
+];
+// CA affichée (PURE, testable) : formule de la barde avec la Dex de la monture,
+// jamais SOUS la CA naturelle (on ne perd rien à s'équiper).
+function mountAC(m, bardeKey){
+  const b = m.dex == null ? null : BARDES.find(x => x.key === bardeKey);
+  if (!b) return m.ca;
+  const dx = b.dex === true ? m.dex : (b.dex === 0 ? 0 : Math.min(m.dex, 2));
+  return Math.max(m.ca, b.base + dx);
+}
 function renderMounts() {
   const chosen = MOUNTS.find(m => m.key === state.mount) || null;
   const pick = field("Ma monture :",
     select(()=>state.mount, v=>state.mount=v, MOUNTS.map(m=>({ value:m.key, label:m.nom })), "Aucune monture…"),
     "fw-mount");
-  const cols = ["MONTURE","CA","PV","ATTAQUE","VITESSE","CHARGE","COÛT"];
+  const cols = ["MONTURE","SAG","CA","BARDE","PV","ATTAQUE","VITESSE","CHARGE","COÛT"];
   const head = el("tr", {}, cols.map((c,i)=> el("th", { class: i===0?"mt-name":"", text:c })));
+  const fmtSag = v => { const mo = Math.floor((v-10)/2); return v+" ("+(mo>=0?"+":"")+mo+")"; };
+  const bardeCell = (chosen && chosen.dex != null)
+    ? select(()=>state.mountArmor, v=>state.mountArmor=v,
+        BARDES.map(b=>({ value:b.key, label:b.nom })), "— aucune —")
+    : "—";
   const vals = chosen
-    ? [chosen.nom, chosen.ca, chosen.pv, chosen.atk, chosen.vit, chosen.charge, chosen.cout]
-    : Array(7).fill("\u00A0");   // ligne vide : espace insécable → garde la hauteur d'une ligne pleine
-  const row = el("tr", {}, vals.map((v,i)=> el("td", { class: i===0?"mt-name":"", text: v===""?"":String(v) })));
+    ? [chosen.nom, fmtSag(chosen.sag), mountAC(chosen, state.mountArmor), bardeCell,
+       chosen.pv, chosen.atk, chosen.vit, chosen.charge, chosen.cout]
+    : Array(9).fill("\u00A0");   // ligne vide : espace insécable → garde la hauteur d'une ligne pleine
+  const row = el("tr", {}, vals.map((v,i)=> {
+    const td = el("td", { class: i===0?"mt-name":"" });
+    if (v && v.nodeType) td.appendChild(v); else td.textContent = String(v);
+    return td;
+  }));
   const table = el("table", { class:"mount-table" }, [
     el("thead", {}, [head]),
     el("tbody", {}, [row])
   ]);
-  const note = el("p", { class:"mount-note", text:"ⓘ Charge en livres (STR×15, doublée par catégorie de taille > M). Attaque = bonus · dégâts · type. Source : SRD 5.1 (CC-BY-4.0)." });
+  const note = el("p", { class:"mount-note", text:"ⓘ Charge en livres (STR×15, doublée par catégorie de taille > M). Attaque = bonus · dégâts · type. SAG : le (±) est le jet de sauvegarde contre la peur. Barde : la CA suit l’armure choisie, jamais sous la CA naturelle. Source : SRD 5.1 (CC-BY-4.0)." });
   return card("Monture", el("div", { class:"mount-box" }, [
     el("div", { class:"mount-pick" }, [pick]),
     table,
