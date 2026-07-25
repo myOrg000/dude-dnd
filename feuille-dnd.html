@@ -464,15 +464,15 @@ input:focus-visible, button:focus-visible, select:focus-visible {
   border: none; background: rgba(0,0,0,.4); color: #fff; font-size: 1rem; cursor: pointer; line-height: 1; }
 .dice-close:hover { background: rgba(0,0,0,.65); }
 
-/* Addition des dés multiples : en clair, en gros, centrée dans la bande du bas */
-.dice-sum { position: absolute; left: 4vw; right: 4vw; bottom: 2.5vh; display: flex;
-  align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 14px;
-  pointer-events: none; text-align: center; animation: diceFadeIn .3s ease-out; }
-.dice-sum-terms { font-family: var(--font-num); font-weight: 800; font-size: 1.9rem;
-  color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.85); }
-.dice-sum-total { font-family: var(--font-num); font-weight: 900; font-size: 3.4rem;
-  color: #ffe27a; text-shadow: 0 0 18px #ffd23f, 0 2px 8px rgba(0,0,0,.85); }
-.dice-sum.compact .dice-sum-terms { font-size: 1.15rem; }
+/* Total des dés multiples : LE SCORE FINAL seul, très gros, AU CENTRE de l'écran,
+   par-dessus la grappe (contour + halo sombre pour rester lisible sur les dés) */
+.dice-sum { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  display: flex; align-items: center; justify-content: center; pointer-events: none;
+  text-align: center; animation: diceFadeIn .3s ease-out; }
+.dice-sum-total { font-family: var(--font-num); font-weight: 900;
+  font-size: clamp(4rem, 16vmin, 9rem); line-height: 1; color: #ffe27a;
+  -webkit-text-stroke: 2px rgba(60,30,0,.55);
+  text-shadow: 0 0 22px rgba(0,0,0,.9), 0 0 40px #ffd23f, 0 4px 10px rgba(0,0,0,.85); }
 
 /* --- Effets spéciaux des dés (réglage MJ ✨, state.fxDice >= 1) --------------
    Calques FRÈRES du dé dans .fx-back (1er enfant de l'overlay => derrière).
@@ -4171,8 +4171,7 @@ function rollManyDice(sides, count) {
   const arrived = [], results = [];              // stages posés + scores, ordre d'arrivée
   function repack(){                             // ré-organise la grappe à chaque arrivée
     const vW=window.innerWidth, vH=window.innerHeight;
-    // La grappe vit dans les 84 % du haut ; la bande du bas est réservée à l'ADDITION.
-    const lay=packLayout(count, base, vW, vH*0.84);
+    const lay=packLayout(count, base, vW, vH);   // le TOTAL flottera par-dessus, au centre
     const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     arrived.forEach((st, i)=>{
       const x=lay.slots[i][0]-base*lay.scale/2, y=lay.slots[i][1]-base*lay.scale/2;
@@ -4188,9 +4187,8 @@ function rollManyDice(sides, count) {
       }
       arrived.push(stage); results.push(result);
       repack();
-      if (arrived.length === count){             // tous posés : l'ADDITION en clair, en gros
-        overlay.appendChild(el("div", { class:"dice-sum"+(count>16?" compact":"") }, [
-          el("span", { class:"dice-sum-terms", text: results.join(" + ") + " =" }),
+      if (arrived.length === count){             // tous posés : LE TOTAL seul, en gros, lisible
+        overlay.appendChild(el("div", { class:"dice-sum" }, [
           el("span", { class:"dice-sum-total", text: String(results.reduce((a,b)=>a+b,0)) })
         ]));
       }
